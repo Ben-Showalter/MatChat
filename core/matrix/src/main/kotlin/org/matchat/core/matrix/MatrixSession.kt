@@ -32,6 +32,9 @@ interface MatrixSession {
     suspend fun acceptInvite(roomId: RoomId): Result<Unit>
     suspend fun declineInvite(roomId: RoomId, ignoreSender: Boolean): Result<Unit>
 
+    /** Our own Matrix user id, or null before login (used for call membership). */
+    suspend fun ownUserId(): UserId?
+
     /** Lookup of a known address to show a name before sending — not a search. */
     suspend fun lookupProfile(address: UserId): Result<Profile>
 

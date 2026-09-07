@@ -175,6 +175,16 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toProfile(userId: UserId) =
         navController.navigate(R.id.profileFragment, bundleOf(ARG_USER_ID to userId.value))
 
+    override fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean) =
+        navController.navigate(
+            R.id.callFragment,
+            bundleOf(
+                ARG_ROOM_ID to roomId.value,
+                "peerName" to peerName.orEmpty(),
+                "incoming" to incoming,
+            ),
+        )
+
     override fun toInvites() = navController.navigate(R.id.invitesFragment)
     override fun toInvite(roomId: RoomId) =
         navController.navigate(R.id.inviteDetailFragment, bundleOf(ARG_ROOM_ID to roomId.value))

@@ -67,6 +67,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/callFragment"
+        android:name="org.matchat.feature.call.CallFragment"
+        android:label="Call">
+        <argument android:name="roomId" app:argType="string" />
+        <argument android:name="peerName" app:argType="string" android:defaultValue="" />
+        <argument android:name="incoming" app:argType="boolean" android:defaultValue="false" />
+    </fragment>
+
+    <fragment
         android:id="@+id/invitesFragment"
         android:name="org.matchat.feature.invites.InvitesFragment"
         android:label="Invitations" />

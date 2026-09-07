@@ -51,6 +51,9 @@ class FakeMatrixSession(
         return Result.success(Unit)
     }
 
+    var ownUser: UserId? = UserId("@me:local")
+    override suspend fun ownUserId(): UserId? = ownUser
+
     override suspend fun lookupProfile(address: UserId): Result<Profile> = profileResult(address)
 
     override suspend fun startDirectChat(address: UserId): Result<RoomId> =

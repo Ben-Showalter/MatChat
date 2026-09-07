@@ -7,6 +7,7 @@
     <string name="timeline_fix_encryption">Fix encryption</string>
 
     <!-- Options (S9). -->
+    <string name="timeline_opt_call">Call</string>
     <string name="timeline_opt_send_photo">Send photo</string>
     <string name="timeline_opt_take_photo">Take photo</string>
     <string name="timeline_opt_record_voice">Record voice</string>

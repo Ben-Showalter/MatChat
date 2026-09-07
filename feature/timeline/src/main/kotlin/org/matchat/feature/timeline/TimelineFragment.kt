@@ -176,6 +176,7 @@ class TimelineFragment : SoftkeyFragment() {
                 if (hasMic()) add(MenuItem(OPT_RECORD_VOICE, getString(R.string.timeline_opt_record_voice)))
                 add(MenuItem(OPT_SEND_FILE, getString(R.string.timeline_opt_send_file)))
             }
+            add(MenuItem(OPT_CALL, getString(R.string.timeline_opt_call)))
             add(MenuItem(OPT_INFO, getString(R.string.timeline_opt_room_info)))
             add(MenuItem(OPT_READ, getString(R.string.timeline_opt_mark_read)))
             add(MenuItem(OPT_MUTE, getString(R.string.timeline_opt_mute)))
@@ -187,6 +188,7 @@ class TimelineFragment : SoftkeyFragment() {
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
                 OPT_SEND_FILE -> launchAttachmentChooser(imageOnly = false)
+                OPT_CALL -> navigator.toCall(roomId(), viewModel.state.value.title, incoming = false)
                 OPT_INFO -> navigator.toRoomInfo(roomId())
                 OPT_HELP -> navigator.toHelp()
                 else -> Unit // mark read / mute wire up in a later milestone
@@ -433,6 +435,7 @@ class TimelineFragment : SoftkeyFragment() {
         const val OPT_READ = "read"
         const val OPT_MUTE = "mute"
         const val OPT_HELP = "help"
+        const val OPT_CALL = "call"
         const val OPT_SEND_PHOTO = "send_photo"
         const val OPT_TAKE_PHOTO = "take_photo"
         const val OPT_RECORD_VOICE = "record_voice"

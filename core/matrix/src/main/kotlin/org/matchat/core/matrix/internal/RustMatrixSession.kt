@@ -59,6 +59,9 @@ internal class RustMatrixSession @Inject constructor(
     override suspend fun declineInvite(roomId: RoomId, ignoreSender: Boolean): Result<Unit> =
         Result.success(Unit)
 
+    override suspend fun ownUserId(): UserId? =
+        withContext(Dispatchers.IO) { holder.ownUserId()?.let { UserId(it) } }
+
     override suspend fun lookupProfile(address: UserId): Result<Profile> = runCatching {
         // A lookup of a known address, never a search (AGENTS.md §0).
         val profile = holder.requireClient().getProfile(address.value)

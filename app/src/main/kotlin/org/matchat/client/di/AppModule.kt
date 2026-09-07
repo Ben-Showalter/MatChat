@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import org.matchat.core.matrix.MatrixDevConfig
 import org.matchat.core.model.MillisClock
+import org.matchat.core.rtc.RtcConfig
 import javax.inject.Singleton
 
 @Module
@@ -29,4 +30,13 @@ object AppModule {
         val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         return MatrixDevConfig(allowInsecureTls = debuggable)
     }
+
+    /**
+     * Call transport endpoints. Blank until the LiveKit SFU + lk-jwt-service are
+     * deployed (docs/VOICE.md §7); blank means the call UI works over signalling
+     * but reports audio unavailable. Fill these in once the server exists.
+     */
+    @Provides
+    @Singleton
+    fun provideRtcConfig(): RtcConfig = RtcConfig(livekitUrl = "", tokenEndpoint = "")
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="call_unknown_peer">Unknown</string>
+    <string name="call_not_e2ee">Not end-to-end encrypted</string>
+
+    <string name="call_answer">Answer</string>
+    <string name="call_mute">Mute</string>
+    <string name="call_speaker">Speaker</string>
+
+    <string name="call_status_dialing">Calling…</string>
+    <string name="call_status_ringing">Incoming call</string>
+    <string name="call_status_connecting">Connecting…</string>
+    <string name="call_status_connected">Connected</string>
+    <string name="call_status_muted">Muted</string>
+    <string name="call_status_no_audio">Connected (audio not available on this build)</string>
+    <string name="call_status_ended">Call ended</string>
+
+    <string name="call_hint_ringing">CALL answer · END decline</string>
+    <string name="call_hint_incall">CENTER mute · Options speaker · END hang up</string>
+    <string name="call_hint_end">END to hang up</string>
+</resources>

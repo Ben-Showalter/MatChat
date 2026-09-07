@@ -64,6 +64,7 @@ dependencies {
     implementation(project(":core:matrix"))
     implementation(project(":core:policy"))
     implementation(project(":core:contacts"))
+    implementation(project(":core:rtc"))
 
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:roomlist"))
@@ -72,6 +73,7 @@ dependencies {
     implementation(project(":feature:newchat"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:verification"))
+    implementation(project(":feature:call"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

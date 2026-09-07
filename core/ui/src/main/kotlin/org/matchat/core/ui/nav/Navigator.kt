@@ -24,6 +24,8 @@ interface Navigator {
     fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long)
     /** A sender's profile, reached from message info. */
     fun toProfile(userId: UserId)
+    /** Voice call screen (docs/VOICE.md). [incoming] true rings; false dials out. */
+    fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean)
     fun toInvites()
     fun toInvite(roomId: RoomId)
     fun toNewChat()
