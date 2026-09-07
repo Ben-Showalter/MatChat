@@ -351,7 +351,12 @@ class TimelineFragment : SoftkeyFragment() {
                     singleLine = false,
                 ) { viewModel.editMessage(row.eventId, it) }
                 MSG_COPY -> copyText(row.body)
-                else -> Unit // reply / info land in a later milestone
+                MSG_INFO -> navigator.toMessageInfo(
+                    row.eventId,
+                    org.matchat.core.model.UserId(row.senderId),
+                    row.timestampEpochMs,
+                )
+                else -> Unit // reply lands in a later milestone
             }
         }
     }

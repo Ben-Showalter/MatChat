@@ -51,6 +51,22 @@
     </fragment>
 
     <fragment
+        android:id="@+id/messageInfoFragment"
+        android:name="org.matchat.feature.timeline.MessageInfoFragment"
+        android:label="Message info">
+        <argument android:name="eventId" app:argType="string" />
+        <argument android:name="senderId" app:argType="string" />
+        <argument android:name="timestamp" app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="org.matchat.feature.timeline.ProfileFragment"
+        android:label="Profile">
+        <argument android:name="userId" app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/invitesFragment"
         android:name="org.matchat.feature.invites.InvitesFragment"
         android:label="Invitations" />

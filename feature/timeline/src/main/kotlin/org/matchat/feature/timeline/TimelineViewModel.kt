@@ -170,6 +170,8 @@ class TimelineViewModel @Inject constructor(
                             item.isRead -> READ_GLYPH
                             else -> TimelineState.glyph(item.sendState)
                         },
+                        senderId = item.sender.value,
+                        timestampEpochMs = item.timestampEpochMs,
                     )
                 }
                 is TimelineItem.Media -> {

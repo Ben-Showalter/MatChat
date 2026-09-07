@@ -150,6 +150,19 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toRoomInfo(roomId: RoomId) =
         navController.navigate(R.id.roomInfoFragment, bundleOf(ARG_ROOM_ID to roomId.value))
 
+    override fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long) =
+        navController.navigate(
+            R.id.messageInfoFragment,
+            bundleOf(
+                ARG_EVENT_ID to eventId.value,
+                ARG_SENDER_ID to senderId.value,
+                ARG_TIMESTAMP to timestampEpochMs,
+            ),
+        )
+
+    override fun toProfile(userId: UserId) =
+        navController.navigate(R.id.profileFragment, bundleOf(ARG_USER_ID to userId.value))
+
     override fun toInvites() = navController.navigate(R.id.invitesFragment)
     override fun toInvite(roomId: RoomId) =
         navController.navigate(R.id.inviteDetailFragment, bundleOf(ARG_ROOM_ID to roomId.value))
@@ -165,5 +178,8 @@ class MainActivity : AppCompatActivity(), Navigator {
     companion object {
         const val ARG_ROOM_ID = "roomId"
         const val ARG_EVENT_ID = "eventId"
+        const val ARG_SENDER_ID = "senderId"
+        const val ARG_TIMESTAMP = "timestamp"
+        const val ARG_USER_ID = "userId"
     }
 }

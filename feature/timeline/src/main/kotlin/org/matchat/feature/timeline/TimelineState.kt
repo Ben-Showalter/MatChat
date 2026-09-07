@@ -16,6 +16,9 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val sendGlyph: String,
+        /** Full sender id and send time, carried for the Message info screen (S11). */
+        val senderId: String,
+        val timestampEpochMs: Long,
     ) : TimelineRow {
         override val stableId: String get() = eventId.value
     }
