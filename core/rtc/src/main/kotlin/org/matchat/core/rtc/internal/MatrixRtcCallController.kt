@@ -24,7 +24,7 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class MatrixRtcCallController @Inject constructor(
-    private val session: MatrixSession,
+    private val matrix: MatrixSession,
     private val transport: AudioTransport,
     private val tokenService: TokenService,
     private val config: RtcConfig,
@@ -56,9 +56,9 @@ internal class MatrixRtcCallController @Inject constructor(
         val current = _session.value
         transport.disconnect()
         current.roomId?.let { roomId ->
-            val uid = session.ownUserId()?.value
+            val uid = matrix.ownUserId()?.value
             if (uid != null) {
-                session.sendStateEvent(
+                matrix.sendStateEvent(
                     roomId,
                     CallMembership.EVENT_TYPE,
                     CallMembership.stateKey(uid),
@@ -93,9 +93,9 @@ internal class MatrixRtcCallController @Inject constructor(
     }
 
     private suspend fun publishMembership(roomId: RoomId): Boolean {
-        val uid = session.ownUserId()?.value ?: return false
+        val uid = matrix.ownUserId()?.value ?: return false
         val content = CallMembership.joinContent(uid, DEVICE_ID, roomId.value, config)
-        return session.sendStateEvent(roomId, CallMembership.EVENT_TYPE, CallMembership.stateKey(uid), content)
+        return matrix.sendStateEvent(roomId, CallMembership.EVENT_TYPE, CallMembership.stateKey(uid), content)
             .isSuccess
     }
 
