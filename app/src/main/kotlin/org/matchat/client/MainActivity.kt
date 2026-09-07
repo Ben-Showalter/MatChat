@@ -15,6 +15,7 @@ import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.matrix.MatrixSessionStore
 import org.matchat.core.model.EventId
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.UserId
 import org.matchat.core.ui.key.KeyMap
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.nav.Navigator
