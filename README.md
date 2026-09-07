@@ -1,63 +1,103 @@
 # MatChat
 
-A Matrix client for D-pad feature phones — Kyocera flip phones and similar AOSP
-dumbphones used as filtered / "kosher" phones.
+A [Matrix](https://matrix.org) messaging app for **D-pad feature phones** —
+Kyocera flip phones and similar AOSP "dumbphones" used as filtered / "kosher"
+phones. Group chat that works with a directional pad and two softkeys, with **no
+way to browse or search for people or rooms** — by design, and enforced by the
+build.
 
-- Fully operable with the D-pad and two softkeys. No touchscreen assumptions.
-- Built for 240 × 320, 2 GB RAM, no Google Play Services.
-- End-to-end encrypted, via the Matrix Rust SDK.
-- **No room discovery, no search, no directory** — by design and by build rule.
+## Who it's for
 
-## Documents
+People who carry a locked-down feature phone — no touchscreen, no Google Play,
+a 2.6″ 240×320 screen — and still need real group messaging. Every mainstream
+messenger ships a directory, a people search, or a media feed that makes it
+unacceptable on such a device. MatChat deliberately has none of those.
+
+## What it does
+
+- **Fully operable with the D-pad and two softkeys.** No touchscreen is
+  assumed or required. LEFT softkey is always *Options*, RIGHT is always *Back*,
+  CENTER activates the focused item — on every screen.
+- **End-to-end encrypted** by default, using the same Matrix Rust SDK that
+  Element X ships. An unencrypted room shows a visible warning.
+- **No discovery, ever.** No public room directory, no user search, no filter
+  boxes. You join a room only by *accepting an invitation* or by *starting a
+  chat with an address you already know* (e.g. `@wayne:example.org`). Contacts
+  and recents are short scrollable lists, never a search surface.
+- **Manageable by an administrator.** On a managed device, an allow-list of
+  homeserver domains can be pushed over standard Android managed configuration
+  (MDM). On an unmanaged phone it stays open — the phone is never left unable to
+  message anyone with no explanation.
+- **Legible without reading glasses** at 2.6″: a strict type floor (body 16 sp,
+  labels 14 sp, metadata 11 sp) and high-contrast focus highlighting.
+
+Designed for the Kyocera DuraXV Extreme+ (reference device), DuraXV Extreme,
+DuraXE Epic, and similar Sonim / TCL AOSP flip phones (2 GB RAM, `minSdk 24`).
+
+## How it's delivered
+
+These phones have no app store. MatChat is **sideloaded** (ADB / WebADB) and
+kept in sync by a foreground service, since there is no Google push. See
+[`docs/DEVICE-SETUP.md`](docs/DEVICE-SETUP.md) for enrollment and
+[`docs/SERVER.md`](docs/SERVER.md) / [`docs/MDM.md`](docs/MDM.md) for the
+homeserver and managed-configuration setup an administrator provides.
+
+## Project status
+
+Actively under development, pre-release. The module graph, build, and CI are in
+place; every screen is reachable with the D-pad and softkeys only. `:core:matrix`
+is wired to the Matrix Rust SDK (`org.matrix.rustcomponents:sdk-android`):
+password sign-in, Keystore-encrypted session persistence and restore, the sync
+foreground service, and the joined **room list** and **timelines** (send, read,
+media) via sliding sync are implemented.
+
+Invitations, device verification (emoji SAS), and direct-chat-by-address are
+partly wired and being completed — search for `FFI follow-up` in `:core:matrix`
+for the remaining SDK bring-up points. This is an FFI integration in progress;
+version-sensitive SDK calls are marked `FFI:` for the first on-device compile.
+
+Not yet built (see [`PLAN.md`](PLAN.md) for milestones and non-goals): battery
+tuning on hardware, the Help screen, and the field pilot. Voice/video calls,
+spaces, threads, and any room/user discovery are **permanent non-goals**.
+
+## Documentation
 
 | File | What it is |
 |---|---|
-| [`PLAN.md`](PLAN.md) | The development plan: goals, stack, milestones, risks |
+| [`PLAN.md`](PLAN.md) | Development plan: goals, stack, architecture, milestones, risks |
 | [`AGENTS.md`](AGENTS.md) | Rules for AI agents (and new humans) contributing code |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Module contracts and data flow |
-| [`docs/UX-SPEC.md`](docs/UX-SPEC.md) | Every screen, key map, focus order |
+| [`docs/UX-SPEC.md`](docs/UX-SPEC.md) | Every screen, key map, and focus order |
+| [`docs/MDM.md`](docs/MDM.md) | Managed-configuration keys and the domain allow-list |
+| [`docs/SERVER.md`](docs/SERVER.md) | Synapse hardening for the lockdown half |
+| [`docs/DEVICE-SETUP.md`](docs/DEVICE-SETUP.md) | Sideloading to Kyocera flips |
 | [`docs/adr/`](docs/adr) | One file per irreversible decision |
 
-## Status
+## Building
 
-**M0 skeleton + M1 in progress.** The module graph, build, and CI are in place;
-every screen in the UX spec is reachable with the D-pad + softkeys only. `:core:matrix`
-is now wired to the Matrix Rust SDK (`org.matrix.rustcomponents:sdk-android`):
-password sign-in, Keystore-encrypted session persistence and restore, the sync
-foreground service, and the joined **room list** and **timelines** via sliding
-sync. Invitations, DM creation, and device verification are the remaining M1/M4
-follow-ups (marked `FFI follow-up` in `:core:matrix`). This is an FFI bring-up —
-the version-sensitive calls are commented `FFI:` for the first on-device compile.
-
-What's real in M0:
-
-- 14 modules with the `PLAN.md §5` dependency graph, enforced by Konsist tests
-  (`:app` `org.matchat.client.arch.*`): SDK import confined to `:core:matrix`, no
-  feature→feature deps, no discovery APIs, ViewModels free of Android/`:core:ui`.
-- `:core:ui` device layer: the single `KeyMap`, `SoftkeyFragment`, the focus
-  engine, the one `MenuSheet`, the theme, type scale and `focus_selector`.
-- `:core:policy` reads the managed-configuration bundle live and fail-open
-  (unit-tested); `:core:contacts` merges admin + local contacts.
-- Every screen (S1–S23) as `State`/`Action`/`ViewModel`/`Fragment`/layout, with
-  reducer unit tests for the ones that carry logic.
-- Sync foreground service, manifest, `app_restrictions.xml`, ABI splits, R8.
-
-The Matrix Rust SDK (`libs.matrix.rustsdk`) is pinned in the version catalog but
-not yet a module dependency — it lands in M1 (`PLAN.md §7`).
-
-## Build
+Requires the Android SDK (`compileSdk 35`, `minSdk 24`) and **JDK 17**.
 
 ```bash
-./gradlew spotlessApply detektAll test          # format, static analysis, unit tests
-./gradlew :app:testDebugUnitTest --tests "org.matchat.client.arch.*"   # architecture rules
-./gradlew verifyPaparazziDebug                  # screenshot diffs (240×320)
-./gradlew :app:assembleDebug
-./gradlew :app:installDebug                     # reference device: Kyocera DuraXV Extreme+
+./gradlew spotlessApply detektAll test   # format, static analysis, unit + architecture tests
+./gradlew verifyPaparazziDebug           # screenshot diffs (240×320)
+./gradlew :app:assembleDebug             # build the debug APK
+./gradlew :app:installDebug              # install to the reference device (Kyocera DuraXV Extreme+)
 ```
 
-Requires the Android SDK (`compileSdk 35`, `minSdk 24`) and JDK 17. Emulator
-profile for UI work: 240×320 mdpi, API 24, touch disabled. The nightly key-only
-traversal suite runs on that emulator (`.github/workflows/traversal.yml`).
+Architecture rules (SDK confined to `:core:matrix`, no feature→feature deps, no
+discovery APIs) run as JVM unit tests in `:app` under
+`org.matchat.client.arch.*` and are covered by `test` above.
+
+For UI work, use an emulator profile of **240×320 mdpi, API 24, touch disabled**.
+The nightly key-only traversal suite runs on that profile
+(`.github/workflows/traversal.yml`).
 
 On an SSL-inspecting corporate proxy, Gradle downloads fail with `PKIX path
-building failed` until the proxy root CA is imported — see `PLAN.md §11`.
+building failed` until the proxy's root CA is imported — see
+[`PLAN.md`](PLAN.md) §11.
+
+## Contributing
+
+Read [`AGENTS.md`](AGENTS.md) first — it applies to human contributors too. The
+three rules that matter most: don't write Matrix protocol code (the SDK does
+it), don't write touch code (D-pad + softkeys only), and don't add discovery.
