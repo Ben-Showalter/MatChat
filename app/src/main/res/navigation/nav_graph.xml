@@ -42,6 +42,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/roomInfoFragment"
+        android:name="org.matchat.feature.timeline.RoomInfoFragment"
+        android:label="Room info">
+        <argument
+            android:name="roomId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/invitesFragment"
         android:name="org.matchat.feature.invites.InvitesFragment"
         android:label="Invitations" />

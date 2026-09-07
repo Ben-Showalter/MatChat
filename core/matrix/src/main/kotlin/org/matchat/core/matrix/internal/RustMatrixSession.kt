@@ -12,8 +12,11 @@ import org.matchat.core.matrix.RoomTimeline
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
 import org.matchat.core.model.InviteSummary
+import org.matchat.core.model.Membership
 import org.matchat.core.model.Profile
+import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.UserId
@@ -109,6 +112,77 @@ internal class RustMatrixSession @Inject constructor(
         Unit
     }
 
+    override suspend fun roomDetails(roomId: RoomId): RoomDetails? = withContext(Dispatchers.IO) {
+        val room = holder.roomFor(roomId) ?: return@withContext null
+        val info = runCatching { room.roomInfo() }.getOrNull()
+        RoomDetails(
+            id = roomId,
+            name = info?.displayName ?: room.displayName() ?: room.id(),
+            topic = runCatching { info?.topic }.getOrNull(),
+            isEncrypted = runCatching { room.isEncrypted() }.getOrDefault(true),
+            isDirect = runCatching { info?.isDirect ?: false }.getOrDefault(false),
+            memberCount = runCatching { info?.joinedMembersCount?.toInt() }.getOrNull() ?: 0,
+        )
+    }
+
+    override suspend fun roomMembers(roomId: RoomId): List<RoomMemberSummary> =
+        withContext(Dispatchers.IO) {
+            val room = holder.roomFor(roomId) ?: return@withContext emptyList()
+            val own = holder.ownUserId()
+            val out = mutableListOf<RoomMemberSummary>()
+            runCatching {
+                val iterator = room.members()
+                while (true) {
+                    val chunk = iterator.nextChunk(MEMBER_PAGE_SIZE) ?: break
+                    if (chunk.isEmpty()) break
+                    chunk.forEach { m ->
+                        out += RoomMemberSummary(
+                            userId = UserId(m.userId),
+                            displayName = m.displayName,
+                            membership = membershipOf(m.membership),
+                            isSelf = m.userId == own,
+                        )
+                    }
+                }
+                iterator.close()
+            }
+            out
+        }
+
+    override suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit> =
+        roomOp(roomId) { it.setName(name) }
+
+    override suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit> =
+        roomOp(roomId) { it.setTopic(topic) }
+
+    override suspend fun inviteMember(roomId: RoomId, address: UserId): Result<Unit> =
+        roomOp(roomId) { it.inviteUserById(address.value) }
+
+    override suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit> =
+        roomOp(roomId) { it.kickUser(userId.value, null) }
+
+    override suspend fun leaveRoom(roomId: RoomId): Result<Unit> =
+        roomOp(roomId) { it.leave() }
+
+    private suspend fun roomOp(
+        roomId: RoomId,
+        block: suspend (org.matrix.rustcomponents.sdk.Room) -> Unit,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        val room = holder.roomFor(roomId)
+            ?: return@withContext Result.failure(IllegalStateException("room not found"))
+        runCatching { block(room) }
+    }
+
+    private fun membershipOf(state: org.matrix.rustcomponents.sdk.MembershipState): Membership =
+        when (state) {
+            is org.matrix.rustcomponents.sdk.MembershipState.Join -> Membership.JOINED
+            is org.matrix.rustcomponents.sdk.MembershipState.Invite -> Membership.INVITED
+            is org.matrix.rustcomponents.sdk.MembershipState.Leave -> Membership.LEFT
+            is org.matrix.rustcomponents.sdk.MembershipState.Ban -> Membership.BANNED
+            is org.matrix.rustcomponents.sdk.MembershipState.Knock -> Membership.KNOCKING
+            else -> Membership.OTHER
+        }
+
     override suspend fun setPresence(online: Boolean) = withContext(Dispatchers.IO) {
         // FFI: setPresence(state, bool). The trailing flag is version-specific; false
         // is the safe default. No-op (via runCatching) when there is no live client.
@@ -130,4 +204,8 @@ internal class RustMatrixSession @Inject constructor(
     }
 
     override suspend fun logout() = holder.logout()
+
+    private companion object {
+        const val MEMBER_PAGE_SIZE: UInt = 50u
+    }
 }

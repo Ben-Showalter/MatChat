@@ -7,6 +7,7 @@
     <string name="softkey_select">Select</string>
     <string name="softkey_open">Open</string>
     <string name="softkey_send">Send</string>
+    <string name="prompt_ok">OK</string>
     <string name="softkey_cancel">Cancel</string>
     <!-- Empty softkey cell; explicit so a blank LEFT is intentional, not missing. -->
     <string name="softkey_blank" translatable="false"></string>

@@ -128,6 +128,13 @@ class TimelineViewModel @Inject constructor(
         super.onCleared()
     }
 
+    /** Edit a previously-sent message (S11). The SDK rejects edits of others'. */
+    fun editMessage(eventId: EventId, newBody: String) {
+        val text = newBody.trim()
+        if (text.isEmpty()) return
+        viewModelScope.launch { timeline.editMessage(eventId, text) }
+    }
+
     private fun paginateBack() {
         if (loadingEarlier.value) return
         loadingEarlier.update { true }

@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.EventId
 import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.menu.MenuItem
@@ -188,8 +187,9 @@ class TimelineFragment : SoftkeyFragment() {
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
                 OPT_SEND_FILE -> launchAttachmentChooser(imageOnly = false)
+                OPT_INFO -> navigator.toRoomInfo(roomId())
                 OPT_HELP -> navigator.toHelp()
-                else -> Unit // room info / mark read / mute wire up in M2–M4
+                else -> Unit // mark read / mute wire up in a later milestone
             }
         }
         return true
@@ -335,14 +335,35 @@ class TimelineFragment : SoftkeyFragment() {
     }
 
     /** S11 message menu, opened with CENTER on a message row. */
-    private fun openMessageMenu(eventId: EventId) {
-        val items = listOf(
-            MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)),
-            MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)),
-            MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)),
-        )
-        MenuSheet.show(requireContext(), items) { /* actions land in M3 */ }
+    private fun openMessageMenu(row: TimelineRow.Message) {
+        val items = buildList {
+            add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
+            if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
+            add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
+        }
+        MenuSheet.show(requireContext(), items) { selected ->
+            when (selected.id) {
+                MSG_EDIT -> org.matchat.core.ui.menu.TextPromptSheet.show(
+                    requireContext(),
+                    getString(R.string.timeline_edit_title),
+                    row.body,
+                    singleLine = false,
+                ) { viewModel.editMessage(row.eventId, it) }
+                MSG_COPY -> copyText(row.body)
+                else -> Unit // reply / info land in a later milestone
+            }
+        }
     }
+
+    private fun copyText(text: String) {
+        val clipboard = requireContext()
+            .getSystemService(android.content.ClipboardManager::class.java)
+        clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("message", text))
+    }
+
+    private fun roomId(): org.matchat.core.model.RoomId =
+        org.matchat.core.model.RoomId(requireArguments().getString(ARG_ROOM_ID).orEmpty())
 
     private fun loadImageInto(eventId: org.matchat.core.model.EventId, image: android.widget.ImageView) {
         image.tag = eventId
@@ -413,7 +434,9 @@ class TimelineFragment : SoftkeyFragment() {
         const val OPT_SEND_FILE = "send_file"
         const val RECORD_TICK_MS = 200L
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
+        const val ARG_ROOM_ID = "roomId"
         const val MSG_REPLY = "reply"
+        const val MSG_EDIT = "edit"
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample

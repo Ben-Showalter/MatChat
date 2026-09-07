@@ -17,6 +17,8 @@ interface Navigator {
     fun toRoom(roomId: RoomId)
     /** Full-screen image viewer for a timeline image (D-pad pan, * / # zoom). */
     fun toImageViewer(eventId: EventId)
+    /** Room info + basic room edits (S12). */
+    fun toRoomInfo(roomId: RoomId)
     fun toInvites()
     fun toInvite(roomId: RoomId)
     fun toNewChat()

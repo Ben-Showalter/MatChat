@@ -6,7 +6,9 @@ import org.matchat.core.model.EventId
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
+import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.TimelineItem
@@ -34,6 +36,21 @@ interface MatrixSession {
 
     /** Create-room with is_direct + trusted-private-chat preset + encryption on. */
     suspend fun startDirectChat(address: UserId): Result<RoomId>
+
+    // --- Room Info (S12) ---------------------------------------------------
+
+    /** Read-only room header (name, topic, encryption, member count). */
+    suspend fun roomDetails(roomId: RoomId): RoomDetails?
+
+    /** All room members (joined + invited), self flagged. */
+    suspend fun roomMembers(roomId: RoomId): List<RoomMemberSummary>
+
+    suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit>
+    suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit>
+    suspend fun inviteMember(roomId: RoomId, address: UserId): Result<Unit>
+    /** Remove (kick) a member from the room. */
+    suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit>
+    suspend fun leaveRoom(roomId: RoomId): Result<Unit>
 
     /**
      * Restore encryption keys from an admin-issued recovery key (S7). On success
@@ -74,6 +91,10 @@ interface RoomTimeline {
     suspend fun paginateBack(count: Int = 20): Boolean
 
     suspend fun send(body: String)
+
+    /** Replace the body of a previously-sent message (Timeline.edit). Only the
+     *  sender can edit; the SDK rejects others. */
+    suspend fun editMessage(eventId: EventId, newBody: String)
 
     /** Publish our typing state in this room (Room.typingNotice). */
     suspend fun sendTyping(isTyping: Boolean)

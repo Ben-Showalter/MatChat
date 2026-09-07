@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A focusable Room Info action row (add member / leave). CENTER acts. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/roominfo_label"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/focus_selector"
+    android:focusable="true"
+    android:focusableInTouchMode="false"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/row_min_height_compact"
+    android:textSize="@dimen/text_body"
+    android:textColor="@color/text_on_focus"
+    android:paddingStart="@dimen/content_pad"
+    android:paddingEnd="@dimen/content_pad" />

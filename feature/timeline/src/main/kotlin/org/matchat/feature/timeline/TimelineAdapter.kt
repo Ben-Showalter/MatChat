@@ -19,7 +19,7 @@ import org.matchat.core.model.EventId
 internal class TimelineAdapter(
     private val onMessageFocused: (EventId) -> Unit,
     private val onFixEncryption: (EventId) -> Unit,
-    private val onMessageActivated: (EventId) -> Unit,
+    private val onMessageActivated: (TimelineRow.Message) -> Unit,
     private val onImageBind: (EventId, ImageView) -> Unit,
     private val onImageActivated: (EventId) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
@@ -68,7 +68,7 @@ internal class TimelineAdapter(
             body.text = row.body
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
-            itemView.setOnClickListener { onMessageActivated(row.eventId) }
+            itemView.setOnClickListener { onMessageActivated(row) }
         }
     }
 

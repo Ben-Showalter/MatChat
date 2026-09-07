@@ -12,6 +12,8 @@ import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.MediaKind
+import org.matchat.core.model.RoomDetails
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 
@@ -77,6 +79,42 @@ class FakeMatrixSession(
 
     override suspend fun setPresence(online: Boolean) { lastPresenceOnline = online }
 
+    var roomDetailsResult: RoomDetails? = null
+    var members: List<RoomMemberSummary> = emptyList()
+    val invited = mutableListOf<Pair<RoomId, UserId>>()
+    val removed = mutableListOf<Pair<RoomId, UserId>>()
+    val leftRooms = mutableListOf<RoomId>()
+    val nameChanges = mutableListOf<Pair<RoomId, String>>()
+    val topicChanges = mutableListOf<Pair<RoomId, String>>()
+
+    override suspend fun roomDetails(roomId: RoomId): RoomDetails? = roomDetailsResult
+    override suspend fun roomMembers(roomId: RoomId): List<RoomMemberSummary> = members
+
+    override suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit> {
+        nameChanges += roomId to name
+        return Result.success(Unit)
+    }
+
+    override suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit> {
+        topicChanges += roomId to topic
+        return Result.success(Unit)
+    }
+
+    override suspend fun inviteMember(roomId: RoomId, address: UserId): Result<Unit> {
+        invited += roomId to address
+        return Result.success(Unit)
+    }
+
+    override suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit> {
+        removed += roomId to userId
+        return Result.success(Unit)
+    }
+
+    override suspend fun leaveRoom(roomId: RoomId): Result<Unit> {
+        leftRooms += roomId
+        return Result.success(Unit)
+    }
+
     override suspend fun logout() = Unit
 }
 
@@ -91,11 +129,13 @@ class FakeTimeline(
     val sent = mutableListOf<String>()
     val sentMedia = mutableListOf<String>()
     val sentVoice = mutableListOf<String>()
+    val edits = mutableListOf<Pair<EventId, String>>()
     val typingNotices = mutableListOf<Boolean>()
     var canPaginate = false
 
     override suspend fun paginateBack(count: Int): Boolean = canPaginate
     override suspend fun send(body: String) { sent += body }
+    override suspend fun editMessage(eventId: EventId, newBody: String) { edits += eventId to newBody }
     override suspend fun sendTyping(isTyping: Boolean) { typingNotices += isTyping }
 
     override suspend fun sendMedia(path: String, mimeType: String, kind: MediaKind, caption: String?) {

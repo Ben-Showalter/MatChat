@@ -147,6 +147,9 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toImageViewer(eventId: EventId) =
         navController.navigate(R.id.imageViewerFragment, bundleOf(ARG_EVENT_ID to eventId.value))
 
+    override fun toRoomInfo(roomId: RoomId) =
+        navController.navigate(R.id.roomInfoFragment, bundleOf(ARG_ROOM_ID to roomId.value))
+
     override fun toInvites() = navController.navigate(R.id.invitesFragment)
     override fun toInvite(roomId: RoomId) =
         navController.navigate(R.id.inviteDetailFragment, bundleOf(ARG_ROOM_ID to roomId.value))

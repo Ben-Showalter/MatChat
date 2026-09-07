@@ -12,6 +12,7 @@ import org.matchat.core.model.MediaKind
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 import org.matrix.rustcomponents.sdk.AudioInfo
+import org.matrix.rustcomponents.sdk.EventOrTransactionId
 import org.matrix.rustcomponents.sdk.FileInfo
 import org.matrix.rustcomponents.sdk.ImageInfo
 import org.matrix.rustcomponents.sdk.Room
@@ -90,6 +91,17 @@ internal class RustRoomTimeline(
     override suspend fun send(body: String) = withContext(Dispatchers.IO) {
         val tl = timeline ?: return@withContext
         runCatching { tl.send(messageEventContentFromMarkdown(body)) }
+        Unit
+    }
+
+    override suspend fun editMessage(eventId: EventId, newBody: String) = withContext(Dispatchers.IO) {
+        val tl = timeline ?: return@withContext
+        runCatching {
+            val content = org.matrix.rustcomponents.sdk.EditedContent.RoomMessage(
+                messageEventContentFromMarkdown(newBody),
+            )
+            tl.edit(EventOrTransactionId.EventId(eventId.value), content)
+        }
         Unit
     }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A non-focusable section header on Room Info. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/roominfo_label"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:focusable="false"
+    android:textStyle="bold"
+    android:textSize="@dimen/text_meta"
+    android:textColor="@color/text_secondary"
+    android:paddingStart="@dimen/content_pad"
+    android:paddingEnd="@dimen/content_pad"
+    android:paddingTop="8dp"
+    android:paddingBottom="2dp" />
