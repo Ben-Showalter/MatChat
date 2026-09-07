@@ -3,6 +3,7 @@ package org.matchat.core.matrix
 import kotlinx.coroutines.flow.Flow
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
+import org.matchat.core.model.CallState
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
@@ -51,6 +52,26 @@ interface MatrixSession {
     /** Remove (kick) a member from the room. */
     suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit>
     suspend fun leaveRoom(roomId: RoomId): Result<Unit>
+
+    // --- MatrixRTC signalling primitives (docs/VOICE.md, ADR 0006) ---------
+    // These are the SDK-backed raw send/observe calls spike 1 confirmed the FFI
+    // supports (Room.sendStateEventRaw / sendRaw / RoomInfo.hasRoomCall). The RTC
+    // protocol logic (m.call.member content, membership lifecycle, LiveKit focus)
+    // lives in :core:rtc and is built on these — the SDK stays confined here.
+
+    /** Send an arbitrary state event (e.g. `m.call.member`); returns its event id. */
+    suspend fun sendStateEvent(
+        roomId: RoomId,
+        eventType: String,
+        stateKey: String,
+        jsonContent: String,
+    ): Result<String>
+
+    /** Send an arbitrary message event (e.g. the RTC ring notification). */
+    suspend fun sendRawEvent(roomId: RoomId, eventType: String, jsonContent: String): Result<Unit>
+
+    /** Whether [roomId] has an active call right now, and who is in it. */
+    suspend fun activeCall(roomId: RoomId): CallState
 
     /**
      * Restore encryption keys from an admin-issued recovery key (S7). On success

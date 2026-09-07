@@ -118,7 +118,14 @@ class MainActivity : AppCompatActivity(), Navigator {
         ) {
             return super.dispatchKeyEvent(event)
         }
-        return receiver()?.onLogicalKey(logical) ?: super.dispatchKeyEvent(event)
+        val handled = receiver()?.onLogicalKey(logical) ?: false
+        // Unhandled hardware call keys must reach the system (so the CALL key still
+        // opens the dialer when no call screen consumes it — docs/VOICE.md §6).
+        // Other unhandled keys stay swallowed, as before.
+        if (!handled && (logical == LogicalKey.CALL || logical == LogicalKey.END)) {
+            return super.dispatchKeyEvent(event)
+        }
+        return handled || receiver() == null && super.dispatchKeyEvent(event)
     }
 
     private fun receiver(): LogicalKeyReceiver? {

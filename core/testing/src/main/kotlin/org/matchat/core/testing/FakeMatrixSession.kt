@@ -11,6 +11,7 @@ import org.matchat.core.model.Profile
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
+import org.matchat.core.model.CallState
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomMemberSummary
@@ -114,6 +115,27 @@ class FakeMatrixSession(
         leftRooms += roomId
         return Result.success(Unit)
     }
+
+    val stateEvents = mutableListOf<Triple<RoomId, String, String>>()
+    val rawEvents = mutableListOf<Triple<RoomId, String, String>>()
+    var callState: CallState = CallState.NONE
+
+    override suspend fun sendStateEvent(
+        roomId: RoomId,
+        eventType: String,
+        stateKey: String,
+        jsonContent: String,
+    ): Result<String> {
+        stateEvents += Triple(roomId, eventType, jsonContent)
+        return Result.success("\$evt")
+    }
+
+    override suspend fun sendRawEvent(roomId: RoomId, eventType: String, jsonContent: String): Result<Unit> {
+        rawEvents += Triple(roomId, eventType, jsonContent)
+        return Result.success(Unit)
+    }
+
+    override suspend fun activeCall(roomId: RoomId): CallState = callState
 
     override suspend fun logout() = Unit
 }

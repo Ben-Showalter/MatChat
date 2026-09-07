@@ -18,4 +18,10 @@ enum class LogicalKey {
     DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9,
     HASH_HOLD, // next unread room
     STAR_HOLD, // toggle large-text mode
+
+    // Hardware call keys (docs/VOICE.md §6, ADR 0006). The only keys that gain a
+    // screen-specific meaning: on an incoming call CALL = Answer, END = Decline;
+    // in a call END = Hang up. Only the call screens act on these.
+    CALL,
+    END,
 }

@@ -30,6 +30,11 @@ object KeyMap {
         // RIGHT softkey = Back. Delivered as BACK on most SKUs; SOFT_RIGHT on some.
         KeyEvent.KEYCODE_SOFT_RIGHT, KeyEvent.KEYCODE_BACK -> LogicalKey.SOFT_RIGHT
 
+        // Hardware call keys (docs/VOICE.md §6). Present on these feature phones;
+        // only the call screens act on them, elsewhere they fall through.
+        KeyEvent.KEYCODE_CALL -> LogicalKey.CALL
+        KeyEvent.KEYCODE_ENDCALL -> LogicalKey.END
+
         KeyEvent.KEYCODE_0 -> LogicalKey.DIGIT_0
         KeyEvent.KEYCODE_1 -> LogicalKey.DIGIT_1
         KeyEvent.KEYCODE_2 -> LogicalKey.DIGIT_2

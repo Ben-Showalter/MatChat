@@ -11,6 +11,7 @@ import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.matrix.RoomTimeline
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
+import org.matchat.core.model.CallState
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.Membership
 import org.matchat.core.model.Profile
@@ -163,6 +164,33 @@ internal class RustMatrixSession @Inject constructor(
 
     override suspend fun leaveRoom(roomId: RoomId): Result<Unit> =
         roomOp(roomId) { it.leave() }
+
+    override suspend fun sendStateEvent(
+        roomId: RoomId,
+        eventType: String,
+        stateKey: String,
+        jsonContent: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val room = holder.roomFor(roomId)
+            ?: return@withContext Result.failure(IllegalStateException("room not found"))
+        runCatching { room.sendStateEventRaw(eventType, stateKey, jsonContent) }
+    }
+
+    override suspend fun sendRawEvent(
+        roomId: RoomId,
+        eventType: String,
+        jsonContent: String,
+    ): Result<Unit> = roomOp(roomId) { it.sendRaw(eventType, jsonContent) }
+
+    override suspend fun activeCall(roomId: RoomId): CallState = withContext(Dispatchers.IO) {
+        val room = holder.roomFor(roomId) ?: return@withContext CallState.NONE
+        val info = runCatching { room.roomInfo() }.getOrNull() ?: return@withContext CallState.NONE
+        CallState(
+            hasActiveCall = runCatching { info.hasRoomCall }.getOrDefault(false),
+            participantIds = runCatching { info.activeRoomCallParticipants }.getOrNull()
+                .orEmpty().map { UserId(it) },
+        )
+    }
 
     private suspend fun roomOp(
         roomId: RoomId,
