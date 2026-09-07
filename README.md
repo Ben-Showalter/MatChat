@@ -92,10 +92,6 @@ For UI work, use an emulator profile of **240×320 mdpi, API 24, touch disabled*
 The nightly key-only traversal suite runs on that profile
 (`.github/workflows/traversal.yml`).
 
-On an SSL-inspecting corporate proxy, Gradle downloads fail with `PKIX path
-building failed` until the proxy's root CA is imported — see
-[`PLAN.md`](PLAN.md) §11.
-
 ## Contributing
 
 Read [`AGENTS.md`](AGENTS.md) first — it applies to human contributors too. The
