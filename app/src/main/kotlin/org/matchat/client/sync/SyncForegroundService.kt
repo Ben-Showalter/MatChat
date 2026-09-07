@@ -89,17 +89,25 @@ class SyncForegroundService : LifecycleService() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService<NotificationManager>() ?: return
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
+        runCatching { manager.deleteNotificationChannel("matchat.sync") } // drop the badged v1
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,
                 getString(R.string.sync_channel_name),
                 NotificationManager.IMPORTANCE_MIN,
-            ),
+            ).apply {
+                // The ongoing sync notification must not put a dot on the launcher
+                // icon — only real incoming messages should badge.
+                setShowBadge(false)
+            },
         )
     }
 
     companion object {
-        private const val CHANNEL_ID = "matchat.sync"
+        // v2: recreated with setShowBadge(false). A channel's badge setting is
+        // locked after creation, so a new id is needed to drop the launcher dot
+        // without a reinstall.
+        private const val CHANNEL_ID = "matchat.sync.v2"
         private const val NOTIFICATION_ID = 1
 
         fun start(context: Context) {

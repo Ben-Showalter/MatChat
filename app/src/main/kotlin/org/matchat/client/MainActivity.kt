@@ -84,15 +84,19 @@ class MainActivity : AppCompatActivity(), Navigator {
         if (sessionStore.hasSession()) toRoom(RoomId(roomValue)) else pendingRoomId = roomValue
     }
 
-    /** Cold start with a saved session: restore it, start sync, jump to the room
-     *  list (S1 → S8). Otherwise stay on Welcome (S2). */
+    /** Cold start with a saved session: show the room list immediately and restore
+     *  the SDK client in the background (S1 → S8). Restoring can take a few seconds
+     *  on low-end hardware, so we must NOT sit on Welcome/Sign-in while it runs —
+     *  that produced a sign-in flash on every launch. Only a genuine restore
+     *  failure falls back to Welcome. Otherwise (no session) stay on Welcome (S2). */
     private fun restoreSessionIfPresent() {
         if (!sessionStore.hasSession()) return
+        toRoomListRoot() // replaces Welcome up front; the list shows until sync warms
         lifecycleScope.launch {
             if (auth.restoreSession().isSuccess) {
-                SyncForegroundService.start(this@MainActivity)
-                toRoomListRoot()
                 pendingRoomId?.let { pendingRoomId = null; toRoom(RoomId(it)) }
+            } else {
+                toWelcomeRoot()
             }
         }
     }
