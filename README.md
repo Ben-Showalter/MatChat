@@ -97,3 +97,15 @@ The nightly key-only traversal suite runs on that profile
 Read [`AGENTS.md`](AGENTS.md) first — it applies to human contributors too. The
 three rules that matter most: don't write Matrix protocol code (the SDK does
 it), don't write touch code (D-pad + softkeys only), and don't add discovery.
+
+## License
+
+MatChat is free software licensed under the **GNU General Public License,
+version 2** — see [`LICENSE`](LICENSE). Copyright © 2026 MatChat contributors.
+
+GPLv2 keeps the source open and prevents proprietary forks, without the GPLv3
+family's anti-tivoization terms — appropriate for an app that ships on
+locked-down devices. Note that the Matrix Rust SDK is Apache-2.0 licensed; that
+license is widely combined with GPLv2 apps in the Android ecosystem but is not
+considered GPLv2-compatible by the FSF. If strict compatibility matters for your
+distribution, a narrow linking exception for the SDK can be added.
