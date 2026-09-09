@@ -1,11 +1,13 @@
 package org.matchat.feature.roomlist
 
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -44,6 +46,15 @@ class RoomListFragment : SoftkeyFragment() {
         binding = b
         b.roomList.layoutManager = LinearLayoutManager(requireContext())
         b.roomList.adapter = adapter
+        // Hairline between rows (TurboText reference): rows read as distinct
+        // list entries even when none is focused, not only via the highlight.
+        b.roomList.addItemDecoration(
+            DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL).apply {
+                setDrawable(
+                    ContextCompat.getDrawable(requireContext(), org.matchat.core.ui.R.drawable.divider_row)!!,
+                )
+            },
+        )
         b.inviteBand.setOnClickListener { viewModel.onAction(RoomListAction.OpenInvites) }
 
         setTitle(getString(R.string.roomlist_title))
