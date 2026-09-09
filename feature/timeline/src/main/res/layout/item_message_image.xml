@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- An inline image message (S9). Same bubble treatment as item_message.xml
-     (see its header comment); the image itself keeps its own 200dp cap
-     (downsampled to the QVGA screen) rather than bubble_max_width, so an
-     image bubble can sit a little wider than a text one. -->
+<!-- An inline image message (S9). Same bubble treatment as item_message.xml,
+     including its focus-via-border exception (see its header comment); the
+     image itself keeps its own 200dp cap (downsampled to the QVGA screen)
+     rather than bubble_max_width, so an image bubble can sit a little wider
+     than a text one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/focus_selector"
     android:focusable="true"
     android:focusableInTouchMode="false"
     android:minHeight="@dimen/row_min_height_compact"

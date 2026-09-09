@@ -55,21 +55,23 @@
     .sep { display: flex; align-items: center; gap: 6px; padding: 3px 6px; }
     .sep i { flex: 1 1 auto; height: 1px; background: #C9C4B8; }
     .sep span { font-size: 11px; color: #55524A; letter-spacing: .06em; text-transform: uppercase; }
-    /* S9 message bubble: rounded fill + a colored accent stripe on the
-       leading edge (the user's chosen accent — #2E7D5B here, the Green
-       default). Own messages trail (right, light-blue fill, stripe on the
-       right); others lead (left, neutral fill, stripe on the left). Matches
-       the reference device's own SMS app, not a copied TurboText style.
-       .body is already a flex column (below), so each bubble just aligns
-       itself within it — no extra row wrapper needed. */
-    .msg { align-self: flex-start; max-width: 170px; margin: 2px 6px; padding: 4px 8px;
-      border-radius: 8px; background: #EDE9DE; border-left: 3px solid #2E7D5B; }
-    .msg.own { align-self: flex-end; background: #D9E8F5; border-left: none; border-right: 3px solid #2E7D5B; }
+    /* S9 message bubble, reaching most of the row's width, matching the
+       reference device's own SMS app (not a copied TurboText style). A
+       received bubble is a plain rounded fill with a thin border (grey by
+       default, accent when focused — see .msg.focused); an own bubble adds
+       a permanent trailing accent stripe on top of that same border
+       treatment, regardless of focus. .body is already a flex column
+       (below), so each bubble just aligns itself within it — no extra row
+       wrapper needed. */
+    .msg { align-self: flex-start; max-width: 200px; margin: 2px 6px; padding: 4px 8px;
+      border-radius: 8px; background: #EDE9DE; border: 1px solid #C9C4B8; }
+    .msg.own { align-self: flex-end; background: #D9E8F5; border-right: 3px solid #2E7D5B; }
+    .msg.focused { border: 2px solid #2E7D5B; }
     .who { font-size: 12px; font-weight: 700; color: #1F5C4A; margin-bottom: 1px; }
     .txt { font-size: 16px; line-height: 19px; }
     .meta { font-size: 11px; color: #55524A; align-self: flex-start; margin: 0 6px; }
     .meta.own { align-self: flex-end; }
-    .utd { align-self: flex-start; max-width: 170px; margin: 2px 6px; padding: 4px 8px;
+    .utd { align-self: flex-start; max-width: 200px; margin: 2px 6px; padding: 4px 8px;
       border-radius: 8px; background: #EDE9DE; }
     .input { flex: 0 0 auto; border-top: 1px solid #C9C4B8; padding: 2px 6px; font-size: 14px;
       color: #55524A; background: #FFFDF7; }
@@ -91,7 +93,7 @@
   <div class="meta">3:30p</div>
   <div class="msg own"><div class="txt">Yes &mdash; I'll bring the trailer.</div></div>
   <div class="meta own">3:34p &#10003;</div>
-  <div class="msg"><div class="who">Ray M.</div>
+  <div class="msg focused"><div class="who">Ray M.</div>
     <div class="txt">Bring the long chains too, we will need them.</div></div>
   <div class="meta">3:40p</div>
   <div class="utd">

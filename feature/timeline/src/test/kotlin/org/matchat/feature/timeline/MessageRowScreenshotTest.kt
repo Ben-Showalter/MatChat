@@ -14,9 +14,15 @@ import org.matchat.feature.timeline.databinding.ItemMessageBinding
  * Screenshot coverage for the S9 message bubble at the reference viewport
  * (PLAN.md §8.2), mirroring RoomRowScreenshotTest. Rendered at 240x320 mdpi
  * portrait and 320x240 landscape (UX-SPEC S17), each at normal and largest
- * font scale, and for both bubble sides (bindBubbleSide — the same function
- * TimelineAdapter binds, not a re-typed copy of its logic). A diff is a
- * review conversation; an unreviewed diff blocks.
+ * font scale, for both bubble sides (bindBubbleSide — the same function
+ * TimelineAdapter binds, not a re-typed copy) and both focus states. Focus
+ * is forced directly on the bubble's background Drawable via
+ * android.R.attr.state_focused rather than View.requestFocus(), since the
+ * latter depends on the test harness's touch-mode/window state — this row
+ * isn't itself what's focusable (the outer row is; the bubble picks its
+ * state up via duplicateParentState, AGENTS.md §4 note), so driving the
+ * drawable state directly is the more reliable and more targeted check. A
+ * diff is a review conversation; an unreviewed diff blocks.
  */
 class MessageRowScreenshotTest {
 
@@ -36,7 +42,7 @@ class MessageRowScreenshotTest {
     @get:Rule
     val paparazzi = Paparazzi(deviceConfig = config)
 
-    private fun row(isOwn: Boolean, showSender: Boolean = false): View {
+    private fun row(isOwn: Boolean, showSender: Boolean = false, focused: Boolean = false): View {
         val binding = ItemMessageBinding.inflate(LayoutInflater.from(paparazzi.context))
         binding.messageBody.text = "See you at six by the north gate."
         binding.messageTime.text = "3:42 PM ✓"
@@ -45,6 +51,9 @@ class MessageRowScreenshotTest {
             binding.messageSender.visibility = View.VISIBLE
         }
         bindBubbleSide(binding.messageBubble, binding.messageTime, isOwn)
+        if (focused) {
+            binding.messageBubble.background.state = intArrayOf(android.R.attr.state_focused)
+        }
         return binding.root
     }
 
@@ -54,8 +63,18 @@ class MessageRowScreenshotTest {
     }
 
     @Test
+    fun messageRow_received_focused() {
+        paparazzi.snapshot(row(isOwn = false, showSender = true, focused = true))
+    }
+
+    @Test
     fun messageRow_own() {
         paparazzi.snapshot(row(isOwn = true))
+    }
+
+    @Test
+    fun messageRow_own_focused() {
+        paparazzi.snapshot(row(isOwn = true, focused = true))
     }
 
     @Test

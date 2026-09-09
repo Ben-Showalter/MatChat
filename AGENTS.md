@@ -157,6 +157,15 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   `android:focusableInTouchMode="false"`, and uses
   `@drawable/focus_selector` from `:core:ui`. Never write a per-screen focus
   highlight.
+  - **Named exception: S9 message bubbles** (`item_message.xml`,
+    `item_message_image.xml`). Per explicit user direction against the
+    reference device's own SMS app, a focused message bubble gets a
+    recolored/thickened *border on the bubble itself*
+    (`bubble_received.xml`/`bubble_own.xml`, both `?attr/colorFocusAccent`
+    on `state_focused`) instead of the row's usual flat fill + trailing
+    bar; the row's own background is left transparent. This is the only
+    screen that does this — do not extend the pattern elsewhere without
+    the same kind of explicit direction, and update it here again if so.
 - Focus order follows XML order. If you need `nextFocusDown`/`nextFocusUp`, add a
   comment on the same line explaining why the visual order differs.
 - Every screen sets deterministic initial focus in `onViewCreated` and restores

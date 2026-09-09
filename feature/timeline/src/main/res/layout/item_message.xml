@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A message row (S9): a chat bubble, aligned to the sender's side (own
-     messages trailing/right, others' leading/left) with a matching
-     leading/trailing accent stripe. Alignment and the bubble background
-     (bubble_own.xml vs bubble_received.xml) are bound in
+     messages trailing/right, others' leading/left). Alignment and the
+     bubble background (bubble_own.xml vs bubble_received.xml) are bound in
      TimelineAdapter.MessageVH per row.isOwn — this layout only declares the
-     default (received) look. The row itself keeps the flat, full-width
-     focus_selector highlight (AGENTS.md §4: never a per-screen focus style);
-     only the bubble inside it is rounded. CENTER opens the message menu
-     (S11). minHeight so it grows at large-text scale. -->
+     default (received) look.
+
+     Exception to the usual row treatment (AGENTS.md §4 note): the row's own
+     background is left transparent here, not focus_selector — the bubble
+     itself carries focus, as a border that recolors/thickens on focus
+     (bubble_received.xml/bubble_own.xml), matching the reference device's
+     own SMS app. message_bubble picks this up via duplicateParentState,
+     since it isn't itself focusable. CENTER opens the message menu (S11).
+     minHeight so it grows at large-text scale. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/focus_selector"
     android:focusable="true"
     android:focusableInTouchMode="false"
     android:minHeight="@dimen/row_min_height_compact"

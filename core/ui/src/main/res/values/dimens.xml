@@ -26,14 +26,21 @@
     <dimen name="content_pad">8dp</dimen>
 
     <!-- S9 message bubbles (item_message.xml, item_message_image.xml). Max
-         width leaves room for the row's own content_pad plus a visible gap
-         on the unoccupied side, on the 240dp-wide reference portrait
-         viewport (PLAN.md §8.2) — this app targets one fixed screen class,
-         not a range, so a dp cap (not a percentage) matches every other
+         width reaches most of the way across the row (reference-device
+         screenshot), leaving a smaller gap on the unoccupied side rather
+         than a hard column, on the 240dp-wide reference portrait viewport
+         (PLAN.md §8.2) — this app targets one fixed screen class, not a
+         range, so a dp cap (not a percentage) matches every other
          dimension here. -->
     <dimen name="bubble_corner_radius">8dp</dimen>
+    <!-- Own-message accent stripe (bubble_own.xml only — received bubbles
+         use a plain border, no stripe, per the reference screenshot). -->
     <dimen name="bubble_stripe_width">3dp</dimen>
-    <dimen name="bubble_max_width">170dp</dimen>
+    <dimen name="bubble_max_width">200dp</dimen>
     <dimen name="bubble_pad_h">8dp</dimen>
     <dimen name="bubble_pad_v">4dp</dimen>
+    <!-- Border-based focus cue (replaces the row-wide flat fill for message
+         bubbles specifically — AGENTS.md §4 exception, see its note). -->
+    <dimen name="bubble_border_width">1dp</dimen>
+    <dimen name="bubble_border_width_focused">2dp</dimen>
 </resources>
