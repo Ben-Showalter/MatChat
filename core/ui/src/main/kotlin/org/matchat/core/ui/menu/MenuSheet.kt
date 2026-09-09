@@ -6,8 +6,8 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import org.matchat.core.ui.R
+import org.matchat.core.ui.theme.themeColor
 
 /** One row of a [MenuSheet]. [enabled] false renders greyed and is not focusable. */
 data class MenuItem(
@@ -31,7 +31,7 @@ object MenuSheet {
     ): Dialog {
         val list = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(ContextCompat.getColor(context, R.color.surface_bright))
+            setBackgroundColor(context.themeColor(R.attr.colorSurfaceBright))
         }
 
         // A plain Dialog (not AppCompatDialog): the bottom-anchored, non-floating
@@ -59,7 +59,7 @@ object MenuSheet {
         TextView(context).apply {
             text = item.label
             textSize = MENU_ROW_TEXT_SP
-            setTextColor(ContextCompat.getColor(context, R.color.text_on_focus))
+            setTextColor(context.themeColor(R.attr.colorTextOnFocus))
             minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
             gravity = Gravity.CENTER_VERTICAL
             val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)

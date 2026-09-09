@@ -19,7 +19,7 @@
             android:text="@string/verify_heading"
             android:textStyle="bold"
             android:textSize="@dimen/text_heading"
-            android:textColor="@color/text_primary" />
+            android:textColor="?attr/colorTextPrimary" />
 
         <TextView
             android:id="@+id/verify_subtext"
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorTextSecondary"
             tools:text="Check that the same picture words appear on your other device." />
 
         <TextView
@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/error"
+            android:textColor="?attr/colorError"
             android:visibility="gone"
             android:text="@string/verify_error" />
 
@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/verify_with_device"
                 android:textSize="@dimen/text_label"
-                android:textColor="@color/text_on_focus" />
+                android:textColor="?attr/colorTextOnFocus" />
 
             <TextView
                 android:id="@+id/choose_recovery"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/verify_use_recovery"
                 android:textSize="@dimen/text_label"
-                android:textColor="@color/text_on_focus" />
+                android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
 
         <!-- WAITING -->
@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:text="@string/verify_waiting"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:visibility="gone" />
 
         <!-- COMPARING: emoji cells added at runtime, then the two buttons. -->
@@ -97,7 +97,7 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/verify_match"
                 android:textSize="@dimen/text_label"
-                android:textColor="@color/text_on_focus" />
+                android:textColor="?attr/colorTextOnFocus" />
 
             <TextView
                 android:id="@+id/sas_no_match"
@@ -106,7 +106,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/verify_no_match"
                 android:textSize="@dimen/text_label"
-                android:textColor="@color/text_on_focus" />
+                android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
 
         <!-- RECOVERY KEY -->
@@ -128,7 +128,7 @@
                 android:importantForAutofill="no"
                 android:hint="@string/verify_recovery_hint"
                 android:textSize="@dimen/text_body"
-                android:textColor="@color/text_primary" />
+                android:textColor="?attr/colorTextPrimary" />
 
             <TextView
                 android:id="@+id/recovery_submit"
@@ -138,7 +138,7 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/verify_continue"
                 android:textSize="@dimen/text_label"
-                android:textColor="@color/text_on_focus" />
+                android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

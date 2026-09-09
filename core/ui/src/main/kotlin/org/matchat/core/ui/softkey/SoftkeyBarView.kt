@@ -3,10 +3,10 @@ package org.matchat.core.ui.softkey
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
-import androidx.core.content.ContextCompat
 import org.matchat.core.ui.R
 import org.matchat.core.ui.databinding.ViewSoftkeyBarBinding
 import org.matchat.core.ui.key.LogicalKey
+import org.matchat.core.ui.theme.themeColor
 
 /**
  * Renders the three softkey labels (UX-SPEC §1). A label may be empty (a screen
@@ -32,7 +32,7 @@ class SoftkeyBarView @JvmOverloads constructor(
 
     init {
         orientation = HORIZONTAL
-        setBackgroundColor(ContextCompat.getColor(context, R.color.surface_inverse))
+        setBackgroundColor(context.themeColor(R.attr.colorSurfaceInverse))
         binding = ViewSoftkeyBarBinding.inflate(android.view.LayoutInflater.from(context), this)
         isFocusable = false
         isFocusableInTouchMode = false
