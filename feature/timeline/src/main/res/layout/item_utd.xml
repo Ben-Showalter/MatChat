@@ -11,8 +11,8 @@
     android:minHeight="@dimen/row_min_height_compact"
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
-    android:paddingTop="2dp"
-    android:paddingBottom="2dp">
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp">
 
     <TextView
         android:layout_width="match_parent"
