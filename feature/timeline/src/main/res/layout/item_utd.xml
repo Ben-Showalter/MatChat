@@ -20,7 +20,7 @@
         android:duplicateParentState="true"
         android:textStyle="italic"
         android:textSize="@dimen/text_body"
-        android:textColor="@color/text_on_focus"
+        android:textColor="?attr/colorTextOnFocus"
         android:text="@string/timeline_utd" />
 
     <TextView
@@ -28,6 +28,6 @@
         android:layout_height="wrap_content"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_label"
-        android:textColor="@color/text_link"
+        android:textColor="?attr/colorTextLink"
         android:text="@string/timeline_fix_encryption" />
 </LinearLayout>

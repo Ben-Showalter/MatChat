@@ -14,8 +14,8 @@
         android:gravity="center_vertical"
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad"
-        android:background="@color/warning"
-        android:textColor="@color/text_on_inverse"
+        android:background="?attr/colorWarning"
+        android:textColor="?attr/colorTextOnInverse"
         android:textSize="@dimen/text_meta"
         android:text="@string/timeline_unencrypted"
         android:visibility="gone" />
@@ -28,7 +28,7 @@
         android:gravity="center"
         android:padding="@dimen/content_pad"
         android:textSize="@dimen/text_body"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorTextSecondary"
         android:text="@string/timeline_empty"
         android:visibility="gone" />
 
@@ -50,7 +50,7 @@
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorTextSecondary"
         android:textStyle="italic"
         android:visibility="gone" />
 
@@ -67,7 +67,7 @@
         android:imeOptions="actionSend"
         android:importantForAutofill="no"
         android:textSize="@dimen/text_body"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorTextPrimary"
         android:hint="@string/timeline_compose_hint" />
 
     <!-- Voice recording bar (S9). Shown only while recording; CENTER sends, Back
@@ -80,8 +80,8 @@
         android:gravity="center_vertical"
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad"
-        android:background="@color/warning"
-        android:textColor="@color/text_on_inverse"
+        android:background="?attr/colorWarning"
+        android:textColor="?attr/colorTextOnInverse"
         android:textSize="@dimen/text_body"
         android:visibility="gone" />
 </LinearLayout>

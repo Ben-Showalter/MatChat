@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_body"
-        android:textColor="@color/text_on_focus" />
+        android:textColor="?attr/colorTextOnFocus" />
 
     <TextView
         android:id="@+id/roominfo_secondary"
@@ -27,5 +27,5 @@
         android:layout_height="wrap_content"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_meta_on_focus" />
+        android:textColor="?attr/colorTextMetaOnFocus" />
 </LinearLayout>

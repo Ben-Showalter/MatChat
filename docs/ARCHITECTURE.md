@@ -103,7 +103,10 @@ fixtures. If the SDK changes shape on upgrade, exactly one file breaks.
 - `FocusEngine` — deterministic initial focus, focus restoration across
   configuration change and back-navigation, traversal assertions used by tests.
 - `MenuSheet` — the only menu construct in the app (S11-style list).
-- Theme, type scale, `focus_selector`, colour roles.
+- Theme, type scale, `focus_selector`, colour roles. Each role is exposed as a
+  `?attr/color<Role>` theme attribute (`attrs.xml`), mapped to its
+  `@color/<role>` value in `Theme.MatChat` (`themes.xml`) — a future
+  switchable palette is a new theme, not a layout rewrite.
 
 This is the **only** module allowed to contain custom `View` subclasses or key
 handling. A feature that needs a new interaction primitive adds it here, with a

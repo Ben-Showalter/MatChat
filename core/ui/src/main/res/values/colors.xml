@@ -35,4 +35,8 @@
     <color name="encrypted">@color/palette_green</color>
     <color name="warning">@color/palette_red</color>
     <color name="error">@color/palette_red</color>
+
+    <!-- Full-screen media-viewer scrim (fragment_image_viewer.xml's key-hint
+         band): translucent ink, not a role that fits the palette above. -->
+    <color name="scrim">#99000000</color>
 </resources>

@@ -3,10 +3,30 @@
      (docs/adr/0002). No ripples, no elevation, no animation over 150 ms. -->
 <resources>
     <style name="Theme.MatChat" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@color/surface</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="colorAccent">@color/encrypted</item>
+        <!-- Theme-attr indirection layer (attrs.xml): every semantic role maps
+             here to its current @color/<role> value, so a future theme is a
+             values-themes.xml addition, not a layout rewrite. -->
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorSurfaceBright">@color/surface_bright</item>
+        <item name="colorSurfaceInverse">@color/surface_inverse</item>
+        <item name="colorSurfaceFocused">@color/surface_focused</item>
+        <item name="colorTextPrimary">@color/text_primary</item>
+        <item name="colorTextSecondary">@color/text_secondary</item>
+        <item name="colorTextOnInverse">@color/text_on_inverse</item>
+        <item name="colorTextOnFocus">@color/text_on_focus</item>
+        <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
+        <item name="colorTextLink">@color/text_link</item>
+        <item name="colorDivider">@color/divider</item>
+        <item name="colorFocusBorder">@color/focus_border</item>
+        <item name="colorEncrypted">@color/encrypted</item>
+        <item name="colorWarning">@color/warning</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorScrim">@color/scrim</item>
+
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
+        <item name="android:textColorSecondary">?attr/colorTextSecondary</item>
+        <item name="colorAccent">?attr/colorEncrypted</item>
         <item name="android:windowAnimationStyle">@null</item>
         <!-- These are D-pad devices: never behave as if a touch is available. -->
         <item name="android:windowIsTranslucent">false</item>
@@ -28,17 +48,17 @@
     <!-- Text.* use parent="" for the same implicit-parent reason as above. -->
     <style name="Text.Body" parent="">
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:textColor">@color/text_on_focus</item>
+        <item name="android:textColor">?attr/colorTextOnFocus</item>
     </style>
 
     <style name="Text.Label" parent="">
         <item name="android:textSize">@dimen/text_label</item>
-        <item name="android:textColor">@color/text_on_focus</item>
+        <item name="android:textColor">?attr/colorTextOnFocus</item>
     </style>
 
     <style name="Text.Meta" parent="">
         <item name="android:textSize">@dimen/text_meta</item>
-        <item name="android:textColor">@color/text_meta_on_focus</item>
+        <item name="android:textColor">?attr/colorTextMetaOnFocus</item>
     </style>
 
     <!-- The MenuSheet dialog: bottom-anchored, non-floating, BACK dismisses. Uses

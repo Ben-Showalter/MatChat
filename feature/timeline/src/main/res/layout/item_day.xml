@@ -9,5 +9,5 @@
     android:paddingTop="3dp"
     android:paddingBottom="3dp"
     android:textSize="@dimen/text_meta"
-    android:textColor="@color/text_secondary"
+    android:textColor="?attr/colorTextSecondary"
     tools:text="Today" />

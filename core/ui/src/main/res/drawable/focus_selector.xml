@@ -5,18 +5,18 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/surface_focused" />
+            <solid android:color="?attr/colorSurfaceFocused" />
             <stroke
                 android:width="@dimen/focus_border_width"
-                android:color="@color/focus_border" />
+                android:color="?attr/colorFocusBorder" />
         </shape>
     </item>
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/surface_focused" />
+            <solid android:color="?attr/colorSurfaceFocused" />
             <stroke
                 android:width="@dimen/focus_border_width"
-                android:color="@color/focus_border" />
+                android:color="?attr/colorFocusBorder" />
         </shape>
     </item>
     <item>

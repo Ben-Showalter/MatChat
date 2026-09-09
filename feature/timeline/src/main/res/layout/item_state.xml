@@ -11,5 +11,5 @@
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
     android:textSize="@dimen/text_meta"
-    android:textColor="@color/text_secondary"
+    android:textColor="?attr/colorTextSecondary"
     tools:text="Wayne joined the group" />

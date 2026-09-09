@@ -18,7 +18,7 @@
         android:layout_alignParentEnd="true"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_meta_on_focus"
+        android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM" />
 
     <TextView
@@ -32,8 +32,8 @@
         android:gravity="center"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:background="@color/surface_inverse"
-        android:textColor="@color/text_on_inverse"
+        android:background="?attr/colorSurfaceInverse"
+        android:textColor="?attr/colorTextOnInverse"
         android:textSize="@dimen/text_meta"
         android:visibility="gone"
         tools:text="3"
@@ -50,7 +50,7 @@
         android:ellipsize="end"
         android:textStyle="bold"
         android:textSize="@dimen/text_room_name"
-        android:textColor="@color/text_on_focus"
+        android:textColor="?attr/colorTextOnFocus"
         tools:text="Barn Crew" />
 
     <TextView
@@ -63,6 +63,6 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textSize="13sp"
-        android:textColor="@color/text_meta_on_focus"
+        android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="See you at six by the north gate" />
 </RelativeLayout>
