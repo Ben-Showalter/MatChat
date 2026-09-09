@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
+import org.matchat.core.ui.R as UiR
 
 /** S9 bubble alignment: own messages trail (right), others lead (left) — the
  *  bubble's background (accent stripe on the matching edge) and the
@@ -21,7 +22,7 @@ import org.matchat.core.model.EventId
  *  MessageVH and ImageVH; item_utd.xml/item_attachment.xml keep their
  *  existing plain row look (out of scope for this pass). */
 internal fun bindBubbleSide(bubble: LinearLayout, time: TextView, isOwn: Boolean) {
-    bubble.setBackgroundResource(if (isOwn) R.drawable.bubble_own else R.drawable.bubble_received)
+    bubble.setBackgroundResource(if (isOwn) UiR.drawable.bubble_own else UiR.drawable.bubble_received)
     val gravity = if (isOwn) Gravity.END else Gravity.START
     (bubble.layoutParams as LinearLayout.LayoutParams).gravity = gravity
     (time.layoutParams as LinearLayout.LayoutParams).gravity = gravity
