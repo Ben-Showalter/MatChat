@@ -67,7 +67,12 @@
     .msg { align-self: flex-start; max-width: 220px; margin: 2px 6px; padding: 4px 8px 4px 11px;
       border-radius: 0 8px 8px 0; background: #EDE9DE; border: 1px solid #C9C4B8;
       border-left: 3px solid #2E7D5B; }
-    .msg.own { align-self: flex-end; background: #D9E8F5; padding: 4px 11px 4px 8px;
+    /* #CEDCD1: colors.xml's accent_green_tint (#332E7D5B, ~20% alpha)
+       composited over the paper surface (#F6F4EE) — own-bubble fill tracks
+       the user's chosen accent in the real app (colorBubbleOwn), it isn't
+       a fixed color; this is what that formula renders as for the Green
+       default specifically, not a value to copy for another accent. */
+    .msg.own { align-self: flex-end; background: #CEDCD1; padding: 4px 11px 4px 8px;
       border-radius: 8px 0 0 8px; border-left: 1px solid #C9C4B8; border-right: 3px solid #2E7D5B; }
     .msg.focused { border-color: #2E7D5B; border-width: 2px; }
     .who { font-size: 12px; font-weight: 700; color: #1F5C4A; margin-bottom: 1px; }

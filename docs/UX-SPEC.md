@@ -54,7 +54,13 @@ solid accent bar on the trailing edge (`?attr/colorFocusAccent`,
 `@dimen/focus_bar_width`), no rounded corners — replaces the earlier full-width
 bordered block. The accent bar is now the primary at-a-glance cue; this
 trades some of the old block's raw contrast for a lighter-weight look, so
-re-check sunlight legibility (PLAN.md G5) once this ships.
+re-check sunlight legibility (PLAN.md G5) once this ships. `colorSurfaceFocused`
+is a translucent wash of the user's chosen accent (`colors.xml`'s
+`accent_<name>_tint`, ~20% alpha, assigned per leaf in `themes.xml`) — it
+used to be a fixed green in every theme regardless of accent, which was a
+bug (found via screenshot: the room-list selection highlight stayed green
+under the Blue/Amber/Plum accents). The same tint drives S9's
+`colorBubbleOwn` (below) for the same reason.
 
 ## 3. Screen inventory
 

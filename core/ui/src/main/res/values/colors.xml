@@ -16,15 +16,13 @@
     <color name="palette_green">#1F5C4A</color>
     <color name="palette_amber">#A15C00</color>
     <color name="palette_red">#8A1E15</color>
-    <color name="palette_green_light">#9ED2BF</color>
 
-    <!-- Message-bubble fills (S9), light mode. Received reuses the same
-         warm off-white the design canvas already uses for a message-shaped
-         background (design/Timeline.dc.html .msg); own is a light blue
-         wash, matching the reference device's own SMS app (the actual
-         screenshot this restyle follows, not TurboText). -->
+    <!-- Received message-bubble fill (S9): reuses the same warm off-white
+         the design canvas already uses for a message-shaped background
+         (design/Timeline.dc.html .msg). Deliberately neutral, not
+         accent-tinted — the accent identifies YOUR messages (colorBubbleOwn
+         below); received ones stay plain regardless of theme. -->
     <color name="palette_bubble_received_light">#EDE9DE</color>
-    <color name="palette_bubble_own_light">#D9E8F5</color>
 
     <!-- Raw palette — dark mode. Mirrors the light set above: a near-black
          surface, a lighter-still panel tone for chrome/dialogs (raised, not
@@ -37,29 +35,41 @@
     <color name="palette_line_dark">#38362D</color>
     <color name="palette_green_bright">#4FAE84</color>
     <color name="palette_amber_bright">#D9A24B</color>
-    <color name="palette_focus_tint_dark">#24382F</color>
 
-    <!-- Message-bubble fill (S9), dark mode. Received reuses palette_night_bright
-         (already the "raised panel" tone) directly in themes.xml, so only the
-         own-message blue wash needs a dedicated dark value here. -->
-    <color name="palette_bubble_own_dark">#1E3548</color>
-
-    <!-- Accent swatches (Settings > Theme > Accent color). One value per
-         accent, shared by both light and dark mode: these are decorative
-         (the focus bar and the system accent tint), never rendered as body
-         text, so they don't need the light/dark contrast split above. Green
-         is deliberately a different, brighter green than palette_green
-         above, so the user's accent choice and the fixed "encrypted" green
-         read as two distinct things. -->
+    <!-- Accent swatches (Settings > Theme > Accent color). One opaque value
+         per accent, shared by both light and dark mode: these are
+         decorative (the focus bar, the chrome bars, the system accent
+         tint), never rendered as body text, so they don't need the
+         light/dark contrast split above. Green is deliberately a different,
+         brighter green than palette_green above, so the user's accent
+         choice and the fixed "encrypted" green read as two distinct
+         things. -->
     <color name="accent_green">#2E7D5B</color>
     <color name="accent_amber">@color/palette_amber</color>
     <color name="accent_blue">#2E6DA4</color>
     <color name="accent_plum">#6B4A80</color>
 
-    <!-- Roles that do not change between light and dark: chrome text stays
-         light because the title/softkey bars stay dark in both modes; the
+    <!-- Every accent's translucent form (~20% alpha over whatever surface it
+         sits on) — the ONE tinted value each accent needs for every "light
+         wash of the current accent" role: colorSurfaceFocused (the focus
+         fill, formerly a fixed green in every theme — the bug this fixes)
+         and colorBubbleOwn (formerly a fixed blue in every theme — same
+         bug). Because it's alpha, not a flat hex, one value per accent
+         serves BOTH light and dark mode: composited over the light paper
+         surface it reads as a pale wash; over the near-black night surface
+         it reads as a dark muted wash. themes.xml assigns these per leaf
+         (Theme.MatChat.{Light,Dark}.{Green,Amber,Blue,Plum}), the same way
+         it already does colorFocusAccent. -->
+    <color name="accent_green_tint">#332E7D5B</color>
+    <color name="accent_amber_tint">#33A15C00</color>
+    <color name="accent_blue_tint">#332E6DA4</color>
+    <color name="accent_plum_tint">#336B4A80</color>
+
+    <!-- Roles that do not change between light and dark, mode or accent: the
          media-viewer scrim and the warning/error fills are always paired
-         with light text on top regardless of theme. -->
+         with light text on top regardless of theme, and chrome text
+         (title/softkey bars, now accent-colored — see themes.xml) stays
+         light against all four accents. -->
     <color name="text_on_inverse">@color/palette_paper_bright</color>
     <color name="warning">@color/palette_red</color>
     <color name="error">@color/palette_red</color>
