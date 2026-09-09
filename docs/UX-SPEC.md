@@ -125,16 +125,19 @@ messages."
 
 ### S9 — Timeline
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
-as rounded bubbles reaching most of the row's width (matching the reference
+as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
 fill) and others lead (left, a neutral fill); sender name 12 sp coloured
 inside the bubble (shown only when the sender changes), body 16 sp, time
 11 sp shown below the bubble on the same side, with a send-state glyph on
-own messages (`○` sending, `✓` sent, `!` failed). Own bubbles carry a small
-colored stripe on their trailing edge (the user's chosen accent, Settings >
-Theme); received bubbles don't. A focused bubble's border recolors to the
-accent and thickens, in place of the app's usual flat-fill-plus-bar focus
-style (AGENTS.md §4's named exception) — the row itself has no background.
+own messages (`○` sending, `✓` sent, `!` failed). Every bubble carries a
+colored stripe (the user's chosen accent, Settings > Theme) on its leading
+edge for received messages, trailing edge for own — the bubble is rounded
+only on the side away from its stripe (square where the stripe sits, so it
+sits flush, not a full rounded rect). A focused bubble's border recolors to
+the accent and thickens, in place of the app's usual flat-fill-plus-bar
+focus style (AGENTS.md §4's named exception) — the row itself has no
+background.
 If the room is **not encrypted**, a persistent 14 dp band sits directly under the
 title bar: "This group is not encrypted." (G4). Encrypted rooms show nothing —
 encryption is the norm, not a decoration.
