@@ -17,7 +17,7 @@
         <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
         <item name="colorTextLink">@color/text_link</item>
         <item name="colorDivider">@color/divider</item>
-        <item name="colorFocusBorder">@color/focus_border</item>
+        <item name="colorFocusAccent">@color/focus_accent</item>
         <item name="colorEncrypted">@color/encrypted</item>
         <item name="colorWarning">@color/warning</item>
         <item name="colorError">@color/error</item>

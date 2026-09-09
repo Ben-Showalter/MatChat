@@ -19,7 +19,7 @@
     <attr name="colorTextLink" format="color" />
 
     <attr name="colorDivider" format="color" />
-    <attr name="colorFocusBorder" format="color" />
+    <attr name="colorFocusAccent" format="color" />
 
     <attr name="colorEncrypted" format="color" />
     <attr name="colorWarning" format="color" />

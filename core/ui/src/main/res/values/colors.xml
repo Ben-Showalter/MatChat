@@ -19,9 +19,10 @@
     <color name="surface">@color/palette_paper</color>
     <color name="surface_bright">@color/palette_paper_bright</color>
     <color name="surface_inverse">@color/palette_ink</color>
-    <!-- Focus highlight fill is LIGHT with a 2 dp ink border, so text stays dark
-         and always legible (no color-flip dependency). High contrast for sunlight
-         (PLAN.md G5). Title bar / softkey bar keep surface_inverse (dark). -->
+    <!-- Focus highlight fill is LIGHT, so text stays dark and always legible
+         (no color-flip dependency). Paired with focus_accent as a trailing-edge
+         bar (docs/UX-SPEC.md §2) rather than a border on every edge. Title bar
+         / softkey bar keep surface_inverse (dark). -->
     <color name="surface_focused">@color/palette_green_light</color>
 
     <color name="text_primary">@color/palette_ink</color>
@@ -30,7 +31,9 @@
     <color name="text_link">@color/palette_amber</color>
 
     <color name="divider">@color/palette_line</color>
-    <color name="focus_border">@color/palette_ink</color>
+    <!-- The focus accent bar (focus_indicator.xml) — the primary at-a-glance
+         "this row is focused" cue now that the fill is subtle. -->
+    <color name="focus_accent">@color/palette_ink</color>
 
     <color name="encrypted">@color/palette_green</color>
     <color name="warning">@color/palette_red</color>

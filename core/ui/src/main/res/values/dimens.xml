@@ -18,8 +18,9 @@
     <dimen name="row_min_height">44dp</dimen>
     <dimen name="row_min_height_compact">36dp</dimen>
 
-    <!-- Focus highlight: 2 dp border, no rounded corners (UX-SPEC §2). -->
-    <dimen name="focus_border_width">2dp</dimen>
+    <!-- Focus highlight: trailing-edge accent bar width, no rounded corners
+         (UX-SPEC §2). -->
+    <dimen name="focus_bar_width">3dp</dimen>
 
     <dimen name="content_pad">8dp</dimen>
 </resources>

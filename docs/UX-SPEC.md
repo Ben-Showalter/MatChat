@@ -44,9 +44,12 @@ Every screen has three fixed bands:
 interactive labels 14 sp · secondary metadata — timestamps, day separators,
 sender names, field captions, softkey labels — 11 sp. Nothing below 11 sp.
 
-Focus highlight: full-width inverse block, 2 dp border, no rounded corners.
-It must be identifiable at a glance in direct sunlight — high contrast wins over
-subtlety.
+Focus highlight: a subtle full-row tint (`?attr/colorSurfaceFocused`) plus a
+solid accent bar on the trailing edge (`?attr/colorFocusAccent`,
+`@dimen/focus_bar_width`), no rounded corners — replaces the earlier full-width
+bordered block. The accent bar is now the primary at-a-glance cue; this
+trades some of the old block's raw contrast for a lighter-weight look, so
+re-check sunlight legibility (PLAN.md G5) once this ships.
 
 ## 3. Screen inventory
 
@@ -105,12 +108,12 @@ Softkeys: Options | Select | Back.
 Rows (44 dp each): room name 16 sp bold · last message 13 sp grey, one line
 ellipsized · relative time 11 sp top-right · unread badge (inverse pill, count)
 right of the name.
-Sorted by most recent activity. Focus = whole row inverse.
+Sorted by most recent activity. Focus = the standard focus highlight (§2).
 **Pending invitations** appear as an 18 dp band directly under the title bar —
-"1 invitation" / "3 invitations", with a 2 dp border and the count in an inverse
-pill. It is the *first* focus stop and opens S18; when focused it inverts like
-any other row (inverse means focus, everywhere, and nothing else). No band when
-there are none.
+"1 invitation" / "3 invitations", with the count in an inverse pill. It is
+the *first* focus stop and opens S18; when focused it uses the
+standard focus highlight like any other row (§2, everywhere, and nothing
+else). No band when there are none.
 Focus order: invitation band (if any) → row 1 → row *n*. Initial focus:
 invitation band, else first unread, else row 1.
 Softkeys: Options | Open | Exit.
