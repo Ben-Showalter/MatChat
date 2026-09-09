@@ -32,6 +32,7 @@ interface Navigator {
     fun toTypeAddress()
     fun toVerification()
     fun toSettings()
+    fun toTheme()
     fun toPolicy()
     fun toHelp()
     fun back()

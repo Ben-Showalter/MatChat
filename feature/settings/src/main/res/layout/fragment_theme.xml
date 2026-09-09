@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- S13 Settings. Rows in fixed order; each is a focus stop. -->
+<!-- S24 Theme. Two focusable lists in fixed order: Appearance (Light/Dark),
+     then Accent color (four swatches). CENTER on a row selects it; the
+     selected row in each list carries a trailing checkmark (never color
+     alone, per AGENTS.md). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -12,52 +15,18 @@
         android:paddingEnd="@dimen/content_pad">
 
         <TextView
-            android:id="@+id/settings_notifications"
-            style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_notifications"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:focusable="false"
+            android:textStyle="bold"
+            android:textSize="@dimen/text_meta"
+            android:textColor="?attr/colorTextSecondary"
+            android:paddingTop="8dp"
+            android:paddingBottom="2dp"
+            android:text="@string/theme_appearance_header" />
 
         <TextView
-            android:id="@+id/settings_text_size"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_text_size"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/settings_theme"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_theme"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/settings_encryption"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_encryption"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/settings_session"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_session"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/settings_policy"
+            android:id="@+id/theme_light"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,20 +34,53 @@
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
-            android:id="@+id/settings_help"
+            android:id="@+id/theme_dark"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_help"
             android:textSize="@dimen/text_label"
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
-            android:id="@+id/settings_sign_out"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:textStyle="bold"
+            android:textSize="@dimen/text_meta"
+            android:textColor="?attr/colorTextSecondary"
+            android:paddingTop="8dp"
+            android:paddingBottom="2dp"
+            android:text="@string/theme_accent_header" />
+
+        <TextView
+            android:id="@+id/theme_accent_green"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_sign_out"
+            android:textSize="@dimen/text_label"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/theme_accent_amber"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_label"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/theme_accent_blue"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_label"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/theme_accent_plum"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:textSize="@dimen/text_label"
             android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>

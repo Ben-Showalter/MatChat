@@ -19,8 +19,9 @@
     <dimen name="row_min_height_compact">36dp</dimen>
 
     <!-- Focus highlight: trailing-edge accent bar width, no rounded corners
-         (UX-SPEC §2). -->
-    <dimen name="focus_bar_width">3dp</dimen>
+         (UX-SPEC §2). Widened from 3dp after the first pass read as barely
+         visible against the subtle fill. -->
+    <dimen name="focus_bar_width">6dp</dimen>
 
     <dimen name="content_pad">8dp</dimen>
 </resources>

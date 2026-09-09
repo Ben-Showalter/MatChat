@@ -104,9 +104,18 @@ fixtures. If the SDK changes shape on upgrade, exactly one file breaks.
   configuration change and back-navigation, traversal assertions used by tests.
 - `MenuSheet` — the only menu construct in the app (S11-style list).
 - Theme, type scale, `focus_selector`, colour roles. Each role is exposed as a
-  `?attr/color<Role>` theme attribute (`attrs.xml`), mapped to its
-  `@color/<role>` value in `Theme.MatChat` (`themes.xml`) — a future
-  switchable palette is a new theme, not a layout rewrite.
+  `?attr/color<Role>` theme attribute (`attrs.xml`); `themes.xml` now defines
+  that switchable palette — `Theme.MatChat.Base.{Light,Dark}` carry every
+  role except the accent, and 8 leaves (`Theme.MatChat.{Light,Dark}.{Green,
+  Amber,Blue,Plum}`) each add just the accent on top. `MainActivity` resolves
+  the stored preference to one of these 8 and calls `setTheme()` before
+  `super.onCreate()` (a Hilt `EntryPoint`, not `@Inject`, since normal field
+  injection runs too late for that).
+- `UserPreferences` (`prefs/`) — the user's theme mode and accent color, a
+  Hilt singleton backed by plain `SharedPreferences`, live as a `StateFlow`
+  like `PolicyProvider` (`:core:policy`). The only writer today is the Theme
+  settings screen (S24); `MainActivity` recreates itself on a change since
+  attrs already resolved into inflated Views don't update live.
 
 This is the **only** module allowed to contain custom `View` subclasses or key
 handling. A feature that needs a new interaction primitive adds it here, with a

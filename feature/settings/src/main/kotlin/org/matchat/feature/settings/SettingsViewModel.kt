@@ -32,6 +32,7 @@ class SettingsViewModel @Inject constructor(
     fun onAction(action: SettingsAction) {
         when (action) {
             SettingsAction.OpenEncryption -> emit(SettingsNav.Encryption)
+            SettingsAction.OpenTheme -> emit(SettingsNav.Theme)
             SettingsAction.OpenPolicy -> emit(SettingsNav.Policy)
             SettingsAction.OpenHelp -> emit(SettingsNav.Help)
             SettingsAction.ConfirmSignOut -> signOut()

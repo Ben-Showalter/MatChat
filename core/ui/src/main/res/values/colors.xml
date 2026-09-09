@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Palette from the design canvas (design/*.dc.html). Layouts use the named
-     roles below, never a raw hex (AGENTS.md §5). Contrast: body/controls ≥ 7:1,
-     metadata ≥ 4.5:1 (PLAN.md G5), verified against surface #F6F4EE. -->
+<!-- Palette from the design canvas (design/*.dc.html), plus a parallel dark set
+     and a small selectable accent set (Settings > Theme). Layouts use theme
+     attrs (?attr/color<Role>, attrs.xml), never a raw hex or a bare @color/
+     role (AGENTS.md §5) — the values here are what themes.xml points those
+     attrs at, per theme. Contrast: body/controls ≥ 7:1, metadata ≥ 4.5:1
+     (PLAN.md G5), verified against each mode's own surface. -->
 <resources>
-    <!-- Raw palette (do not reference from layouts; use the roles below). -->
+    <!-- Raw palette — light mode (do not reference from layouts). -->
     <color name="palette_ink">#14130E</color>
     <color name="palette_paper">#F6F4EE</color>
     <color name="palette_paper_bright">#FFFDF7</color>
@@ -15,31 +18,37 @@
     <color name="palette_red">#8A1E15</color>
     <color name="palette_green_light">#9ED2BF</color>
 
-    <!-- Semantic roles -->
-    <color name="surface">@color/palette_paper</color>
-    <color name="surface_bright">@color/palette_paper_bright</color>
-    <color name="surface_inverse">@color/palette_ink</color>
-    <!-- Focus highlight fill is LIGHT, so text stays dark and always legible
-         (no color-flip dependency). Paired with focus_accent as a trailing-edge
-         bar (docs/UX-SPEC.md §2) rather than a border on every edge. Title bar
-         / softkey bar keep surface_inverse (dark). -->
-    <color name="surface_focused">@color/palette_green_light</color>
+    <!-- Raw palette — dark mode. Mirrors the light set above: a near-black
+         surface, a lighter-still panel tone for chrome/dialogs (raised, not
+         sunken — the usual dark-theme convention), and brighter variants of
+         the green/amber roles where the light-mode value would fail contrast
+         against a dark surface (a plain lightness flip, not a re-hue). -->
+    <color name="palette_night">#1B1A15</color>
+    <color name="palette_night_bright">#252319</color>
+    <color name="palette_mist_dim">#B7B2A5</color>
+    <color name="palette_line_dark">#38362D</color>
+    <color name="palette_green_bright">#4FAE84</color>
+    <color name="palette_amber_bright">#D9A24B</color>
+    <color name="palette_focus_tint_dark">#24382F</color>
 
-    <color name="text_primary">@color/palette_ink</color>
-    <color name="text_secondary">@color/palette_stone</color>
+    <!-- Accent swatches (Settings > Theme > Accent color). One value per
+         accent, shared by both light and dark mode: these are decorative
+         (the focus bar and the system accent tint), never rendered as body
+         text, so they don't need the light/dark contrast split above. Green
+         is deliberately a different, brighter green than palette_green
+         above, so the user's accent choice and the fixed "encrypted" green
+         read as two distinct things. -->
+    <color name="accent_green">#2E7D5B</color>
+    <color name="accent_amber">@color/palette_amber</color>
+    <color name="accent_blue">#2E6DA4</color>
+    <color name="accent_plum">#6B4A80</color>
+
+    <!-- Roles that do not change between light and dark: chrome text stays
+         light because the title/softkey bars stay dark in both modes; the
+         media-viewer scrim and the warning/error fills are always paired
+         with light text on top regardless of theme. -->
     <color name="text_on_inverse">@color/palette_paper_bright</color>
-    <color name="text_link">@color/palette_amber</color>
-
-    <color name="divider">@color/palette_line</color>
-    <!-- The focus accent bar (focus_indicator.xml) — the primary at-a-glance
-         "this row is focused" cue now that the fill is subtle. -->
-    <color name="focus_accent">@color/palette_ink</color>
-
-    <color name="encrypted">@color/palette_green</color>
     <color name="warning">@color/palette_red</color>
     <color name="error">@color/palette_red</color>
-
-    <!-- Full-screen media-viewer scrim (fragment_image_viewer.xml's key-hint
-         band): translucent ink, not a role that fits the palette above. -->
     <color name="scrim">#99000000</color>
 </resources>

@@ -169,8 +169,9 @@ There is **no** "add member" here in v1 — group membership is administered on
 the server. (Direct chats are different: those the user starts themselves, S20.)
 
 ### S13 — Settings
-Rows: `Notifications` · `Text size` · `Encryption` (verification status) ·
-`About this phone's session` · `Policy` · `Help` · `Sign out`.
+Rows: `Notifications` · `Text size` · `Theme` (opens S24) · `Encryption`
+(verification status) · `About this phone's session` · `Policy` · `Help` ·
+`Sign out`.
 The `Policy` row reads "Managed by your organization" or "Not managed" and opens
 a read-only screen listing the homeserver, the allowed servers (or "All servers
 allowed"), and whether direct chat is on. A user who cannot message someone must
@@ -275,6 +276,20 @@ messages (Allowed / Not allowed).
 Focus: none (nothing is actionable). Softkeys: (blank) | (blank) | Back.
 This screen exists so a user who has just been blocked can find out why without
 phoning anyone. It never offers a way around the policy.
+
+### S24 — Theme
+Reached from Settings → Theme. Two focusable lists, in fixed order:
+**Appearance** (`Light` · `Dark`) then **Accent color** (`Green` · `Amber` ·
+`Blue` · `Plum`). CENTER on a row selects it immediately — no separate
+confirm — and the change takes effect right away (the app recreates itself
+once, keeping the same screen). The selected row in each list carries a
+trailing checkmark; selection is never conveyed by color alone.
+The accent color governs only the focus-highlight bar (§2) and the system
+accent tint. It never changes the "encrypted" green or the link color —
+those stay fixed so they keep meaning what they mean regardless of the
+user's taste.
+Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus:
+Light. Softkeys: (blank) | Select | Back.
 
 ## 4. Content voice
 

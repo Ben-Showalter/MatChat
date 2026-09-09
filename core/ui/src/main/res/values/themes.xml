@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Base theme for MatChat. AppCompat, not Material: Views deliberately
-     (docs/adr/0002). No ripples, no elevation, no animation over 150 ms. -->
+     (docs/adr/0002). No ripples, no elevation, no animation over 150 ms.
+
+     Theme.MatChat.Base.{Light,Dark} carry every semantic role attr
+     (attrs.xml) except the two accent-driven ones. Theme.MatChat.{Light,
+     Dark}.{Green,Amber,Blue,Plum} are the 8 concrete leaves Settings > Theme
+     switches between (MainActivity resolves the stored preference to one of
+     these), each just adding colorFocusAccent + colorAccent on top of a
+     base. Theme.MatChat itself is the manifest/default fallback, aliased to
+     Light.Green, for any context built before the stored preference is read. -->
 <resources>
-    <style name="Theme.MatChat" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Theme-attr indirection layer (attrs.xml): every semantic role maps
-             here to its current @color/<role> value, so a future theme is a
-             values-themes.xml addition, not a layout rewrite. -->
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorSurfaceBright">@color/surface_bright</item>
-        <item name="colorSurfaceInverse">@color/surface_inverse</item>
-        <item name="colorSurfaceFocused">@color/surface_focused</item>
-        <item name="colorTextPrimary">@color/text_primary</item>
-        <item name="colorTextSecondary">@color/text_secondary</item>
+    <style name="Theme.MatChat.Base.Light" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorSurface">@color/palette_paper</item>
+        <item name="colorSurfaceBright">@color/palette_paper_bright</item>
+        <item name="colorSurfaceInverse">@color/palette_ink</item>
+        <item name="colorSurfaceFocused">@color/palette_green_light</item>
+        <item name="colorTextPrimary">@color/palette_ink</item>
+        <item name="colorTextSecondary">@color/palette_stone</item>
         <item name="colorTextOnInverse">@color/text_on_inverse</item>
         <item name="colorTextOnFocus">@color/text_on_focus</item>
         <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
-        <item name="colorTextLink">@color/text_link</item>
-        <item name="colorDivider">@color/divider</item>
-        <item name="colorFocusAccent">@color/focus_accent</item>
-        <item name="colorEncrypted">@color/encrypted</item>
+        <item name="colorTextLink">@color/palette_amber</item>
+        <item name="colorDivider">@color/palette_line</item>
+        <item name="colorEncrypted">@color/palette_green</item>
         <item name="colorWarning">@color/warning</item>
         <item name="colorError">@color/error</item>
         <item name="colorScrim">@color/scrim</item>
@@ -26,11 +30,79 @@
         <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
         <item name="android:textColorSecondary">?attr/colorTextSecondary</item>
-        <item name="colorAccent">?attr/colorEncrypted</item>
         <item name="android:windowAnimationStyle">@null</item>
         <!-- These are D-pad devices: never behave as if a touch is available. -->
         <item name="android:windowIsTranslucent">false</item>
     </style>
+
+    <!-- Mirrors Base.Light role for role: a near-black surface, a lighter
+         "raised panel" tone for chrome/dialogs, and brighter green/amber so
+         the encrypted indicator and the link text keep their contrast
+         against a dark surface (colors.xml). -->
+    <style name="Theme.MatChat.Base.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorSurface">@color/palette_night</item>
+        <item name="colorSurfaceBright">@color/palette_night_bright</item>
+        <item name="colorSurfaceInverse">@color/palette_night_bright</item>
+        <item name="colorSurfaceFocused">@color/palette_focus_tint_dark</item>
+        <item name="colorTextPrimary">@color/palette_paper_bright</item>
+        <item name="colorTextSecondary">@color/palette_mist_dim</item>
+        <item name="colorTextOnInverse">@color/text_on_inverse</item>
+        <item name="colorTextOnFocus">@color/text_on_focus</item>
+        <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
+        <item name="colorTextLink">@color/palette_amber_bright</item>
+        <item name="colorDivider">@color/palette_line_dark</item>
+        <item name="colorEncrypted">@color/palette_green_bright</item>
+        <item name="colorWarning">@color/warning</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorScrim">@color/scrim</item>
+
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
+        <item name="android:textColorSecondary">?attr/colorTextSecondary</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowIsTranslucent">false</item>
+    </style>
+
+    <!-- Accent leaves: colorFocusAccent (the trailing-edge focus bar,
+         focus_indicator.xml) and colorAccent (AppCompat's own tint, e.g. the
+         text-field cursor) are the only things that differ between these. -->
+    <style name="Theme.MatChat.Light.Green" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Light.Amber" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_amber</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Light.Blue" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_blue</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Light.Plum" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_plum</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Green" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Amber" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_amber</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Blue" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_blue</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Plum" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_plum</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+    </style>
+
+    <!-- Manifest default / fallback for any context built before the stored
+         preference is read (MainActivity always calls setTheme() with the
+         resolved leaf first, so this is a safety net, not the normal path). -->
+    <style name="Theme.MatChat" parent="Theme.MatChat.Light.Green" />
 
     <!-- A focusable row: full-width inverse focus block, no touch feedback.
          parent="" so the dotted name is not read as inheriting from a
