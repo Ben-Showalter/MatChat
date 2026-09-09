@@ -26,6 +26,8 @@
         <item name="colorWarning">@color/warning</item>
         <item name="colorError">@color/error</item>
         <item name="colorScrim">@color/scrim</item>
+        <item name="colorBubbleReceived">@color/palette_bubble_received_light</item>
+        <item name="colorBubbleOwn">@color/palette_bubble_own_light</item>
 
         <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
@@ -55,6 +57,8 @@
         <item name="colorWarning">@color/warning</item>
         <item name="colorError">@color/error</item>
         <item name="colorScrim">@color/scrim</item>
+        <item name="colorBubbleReceived">@color/palette_night_bright</item>
+        <item name="colorBubbleOwn">@color/palette_bubble_own_dark</item>
 
         <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="android:textColorPrimary">?attr/colorTextPrimary</item>

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- An inline image message (S9). Focusable row; the bitmap is downloaded and
-     decoded (downsampled to the QVGA screen) on bind. -->
+<!-- An inline image message (S9). Same bubble treatment as item_message.xml
+     (see its header comment); the image itself keeps its own 200dp cap
+     (downsampled to the QVGA screen) rather than bubble_max_width, so an
+     image bubble can sit a little wider than a text one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,43 +17,60 @@
     android:paddingTop="3dp"
     android:paddingBottom="3dp">
 
-    <TextView
-        android:id="@+id/image_sender"
+    <LinearLayout
+        android:id="@+id/image_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="1dp"
+        android:layout_gravity="start"
+        android:orientation="vertical"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_sender"
-        android:textColor="?attr/colorEncrypted"
-        android:visibility="gone"
-        tools:text="Wayne"
-        tools:visibility="visible" />
+        android:background="@drawable/bubble_received"
+        android:paddingStart="@dimen/bubble_pad_h"
+        android:paddingEnd="@dimen/bubble_pad_h"
+        android:paddingTop="@dimen/bubble_pad_v"
+        android:paddingBottom="@dimen/bubble_pad_v">
 
-    <ImageView
-        android:id="@+id/message_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxWidth="200dp"
-        android:maxHeight="200dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/timeline_image"
-        android:scaleType="fitStart" />
+        <TextView
+            android:id="@+id/image_sender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="1dp"
+            android:duplicateParentState="true"
+            android:maxWidth="@dimen/bubble_max_width"
+            android:textSize="@dimen/text_sender"
+            android:textColor="?attr/colorEncrypted"
+            android:visibility="gone"
+            tools:text="Wayne"
+            tools:visibility="visible" />
 
-    <TextView
-        android:id="@+id/image_caption"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:duplicateParentState="true"
-        android:textSize="@dimen/text_body"
-        android:textColor="?attr/colorTextOnFocus"
-        android:visibility="gone"
-        tools:text="At the north gate" />
+        <ImageView
+            android:id="@+id/message_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="200dp"
+            android:maxHeight="200dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/timeline_image"
+            android:scaleType="fitStart" />
+
+        <TextView
+            android:id="@+id/image_caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:duplicateParentState="true"
+            android:maxWidth="@dimen/bubble_max_width"
+            android:textSize="@dimen/text_body"
+            android:textColor="?attr/colorTextOnFocus"
+            android:visibility="gone"
+            tools:text="At the north gate" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/image_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
+        android:layout_gravity="start"
+        android:layout_marginTop="1dp"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
         android:textColor="?attr/colorTextMetaOnFocus"

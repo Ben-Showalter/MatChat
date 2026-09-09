@@ -18,6 +18,14 @@
     <color name="palette_red">#8A1E15</color>
     <color name="palette_green_light">#9ED2BF</color>
 
+    <!-- Message-bubble fills (S9), light mode. Received reuses the same
+         warm off-white the design canvas already uses for a message-shaped
+         background (design/Timeline.dc.html .msg); own is a light blue
+         wash, matching the reference device's own SMS app (the actual
+         screenshot this restyle follows, not TurboText). -->
+    <color name="palette_bubble_received_light">#EDE9DE</color>
+    <color name="palette_bubble_own_light">#D9E8F5</color>
+
     <!-- Raw palette — dark mode. Mirrors the light set above: a near-black
          surface, a lighter-still panel tone for chrome/dialogs (raised, not
          sunken — the usual dark-theme convention), and brighter variants of
@@ -30,6 +38,11 @@
     <color name="palette_green_bright">#4FAE84</color>
     <color name="palette_amber_bright">#D9A24B</color>
     <color name="palette_focus_tint_dark">#24382F</color>
+
+    <!-- Message-bubble fill (S9), dark mode. Received reuses palette_night_bright
+         (already the "raised panel" tone) directly in themes.xml, so only the
+         own-message blue wash needs a dedicated dark value here. -->
+    <color name="palette_bubble_own_dark">#1E3548</color>
 
     <!-- Accent swatches (Settings > Theme > Accent color). One value per
          accent, shared by both light and dark mode: these are decorative

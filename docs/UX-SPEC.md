@@ -124,10 +124,14 @@ Offline: title bar `!` plus a 16 dp banner "No connection — showing saved
 messages."
 
 ### S9 — Timeline
-Content: day separator rows (centred, 11 sp, grey rule); message rows —
-sender name 12 sp coloured (shown only when the sender changes), body 16 sp,
-time 11 sp right-aligned on the last line; own messages right-aligned with a
-send-state glyph (`○` sending, `✓` sent, `!` failed).
+Content: day separator rows (centred, 11 sp, grey rule); message rows shown
+as rounded bubbles (matching the reference device's own SMS app), each with
+a colored accent stripe (the user's chosen accent, Settings > Theme) on the
+bubble's leading edge — own messages trail (right, a light accent-tinted
+fill) and others lead (left, a neutral fill); sender name 12 sp coloured
+inside the bubble (shown only when the sender changes), body 16 sp, time
+11 sp shown below the bubble on the same side, with a send-state glyph on
+own messages (`○` sending, `✓` sent, `!` failed).
 If the room is **not encrypted**, a persistent 14 dp band sits directly under the
 title bar: "This group is not encrypted." (G4). Encrypted rooms show nothing —
 encryption is the norm, not a decoration.

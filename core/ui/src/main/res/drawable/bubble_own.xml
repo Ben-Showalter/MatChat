@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An own (sent) message bubble (S9): mirrors bubble_received.xml, with the
+     fill and accent stripe swapped to the trailing (end) edge. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorBubbleOwn" />
+            <corners android:radius="@dimen/bubble_corner_radius" />
+        </shape>
+    </item>
+    <item
+        android:width="@dimen/bubble_stripe_width"
+        android:gravity="end">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorFocusAccent" />
+            <corners
+                android:topRightRadius="@dimen/bubble_corner_radius"
+                android:bottomRightRadius="@dimen/bubble_corner_radius"
+                android:topLeftRadius="0dp"
+                android:bottomLeftRadius="0dp" />
+        </shape>
+    </item>
+</layer-list>

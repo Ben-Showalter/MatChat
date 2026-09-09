@@ -11,12 +11,12 @@ import org.junit.Test
 import org.matchat.feature.timeline.databinding.ItemMessageBinding
 
 /**
- * Screenshot coverage for the S9 message row at the reference viewport
+ * Screenshot coverage for the S9 message bubble at the reference viewport
  * (PLAN.md §8.2), mirroring RoomRowScreenshotTest. Rendered at 240x320 mdpi
  * portrait and 320x240 landscape (UX-SPEC S17), each at normal and largest
- * font scale, both with and without a visible sender name (own messages
- * never show one; other-sender rows do). A diff is a review conversation;
- * an unreviewed diff blocks.
+ * font scale, and for both bubble sides (bindBubbleSide — the same function
+ * TimelineAdapter binds, not a re-typed copy of its logic). A diff is a
+ * review conversation; an unreviewed diff blocks.
  */
 class MessageRowScreenshotTest {
 
@@ -36,7 +36,7 @@ class MessageRowScreenshotTest {
     @get:Rule
     val paparazzi = Paparazzi(deviceConfig = config)
 
-    private fun row(showSender: Boolean): View {
+    private fun row(isOwn: Boolean, showSender: Boolean = false): View {
         val binding = ItemMessageBinding.inflate(LayoutInflater.from(paparazzi.context))
         binding.messageBody.text = "See you at six by the north gate."
         binding.messageTime.text = "3:42 PM ✓"
@@ -44,34 +44,41 @@ class MessageRowScreenshotTest {
             binding.messageSender.text = "Wayne"
             binding.messageSender.visibility = View.VISIBLE
         }
+        bindBubbleSide(binding.messageBubble, binding.messageTime, isOwn)
         return binding.root
     }
 
     @Test
-    fun messageRow_normal() {
-        paparazzi.snapshot(row(showSender = true))
+    fun messageRow_received() {
+        paparazzi.snapshot(row(isOwn = false, showSender = true))
     }
 
     @Test
-    fun messageRow_noSender_normal() {
-        paparazzi.snapshot(row(showSender = false))
+    fun messageRow_own() {
+        paparazzi.snapshot(row(isOwn = true))
     }
 
     @Test
-    fun messageRow_largestFont() {
+    fun messageRow_received_largestFont() {
         paparazzi.unsafeUpdateConfig(deviceConfig = config.copy(fontScale = 1.5f))
-        paparazzi.snapshot(row(showSender = true))
+        paparazzi.snapshot(row(isOwn = false, showSender = true))
     }
 
     @Test
-    fun messageRow_landscape() {
+    fun messageRow_own_largestFont() {
+        paparazzi.unsafeUpdateConfig(deviceConfig = config.copy(fontScale = 1.5f))
+        paparazzi.snapshot(row(isOwn = true))
+    }
+
+    @Test
+    fun messageRow_received_landscape() {
         paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig)
-        paparazzi.snapshot(row(showSender = true))
+        paparazzi.snapshot(row(isOwn = false, showSender = true))
     }
 
     @Test
-    fun messageRow_landscape_largestFont() {
-        paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig.copy(fontScale = 1.5f))
-        paparazzi.snapshot(row(showSender = true))
+    fun messageRow_own_landscape() {
+        paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig)
+        paparazzi.snapshot(row(isOwn = true))
     }
 }

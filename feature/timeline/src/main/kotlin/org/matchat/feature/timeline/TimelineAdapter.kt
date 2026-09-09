@@ -1,15 +1,31 @@
 package org.matchat.feature.timeline
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
+
+/** S9 bubble alignment: own messages trail (right), others lead (left) — the
+ *  bubble's background (accent stripe on the matching edge) and the
+ *  timestamp row below it both flip together. A top-level function (not a
+ *  private adapter method) so MessageRowScreenshotTest can exercise the same
+ *  binding logic the real adapter uses, not a re-typed copy of it. Shared by
+ *  MessageVH and ImageVH; item_utd.xml/item_attachment.xml keep their
+ *  existing plain row look (out of scope for this pass). */
+internal fun bindBubbleSide(bubble: LinearLayout, time: TextView, isOwn: Boolean) {
+    bubble.setBackgroundResource(if (isOwn) R.drawable.bubble_own else R.drawable.bubble_received)
+    val gravity = if (isOwn) Gravity.END else Gravity.START
+    (bubble.layoutParams as LinearLayout.LayoutParams).gravity = gravity
+    (time.layoutParams as LinearLayout.LayoutParams).gravity = gravity
+}
 
 /**
  * Timeline rows: text messages, images, attachments, day/state separators.
@@ -58,6 +74,7 @@ internal class TimelineAdapter(
     }
 
     inner class MessageVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val bubble: LinearLayout = view.findViewById(R.id.message_bubble)
         private val sender: TextView = view.findViewById(R.id.message_sender)
         private val body: TextView = view.findViewById(R.id.message_body)
         private val time: TextView = view.findViewById(R.id.message_time)
@@ -67,12 +84,14 @@ internal class TimelineAdapter(
             sender.text = row.senderName.orEmpty()
             body.text = row.body
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            bindBubbleSide(bubble, time, row.isOwn)
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
             itemView.setOnClickListener { onMessageActivated(row) }
         }
     }
 
     inner class ImageVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val bubble: LinearLayout = view.findViewById(R.id.image_bubble)
         private val sender: TextView = view.findViewById(R.id.image_sender)
         private val image: ImageView = view.findViewById(R.id.message_image)
         private val caption: TextView = view.findViewById(R.id.image_caption)
@@ -84,6 +103,7 @@ internal class TimelineAdapter(
             caption.isVisible = !row.caption.isNullOrEmpty()
             caption.text = row.caption.orEmpty()
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            bindBubbleSide(bubble, time, row.isOwn)
             image.setImageDrawable(null)
             onImageBind(row.eventId, image)
             itemView.setOnClickListener { onImageActivated(row.eventId) }

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A received message bubble (S9): a rounded fill plus a colored accent
+     stripe on the leading (start) edge, matching the reference device's own
+     SMS app. Same layer-list technique as focus_indicator.xml (fill +
+     gravity-positioned bar); the stripe's outer corners are rounded to
+     match the fill so they blend, its inner corners square. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorBubbleReceived" />
+            <corners android:radius="@dimen/bubble_corner_radius" />
+        </shape>
+    </item>
+    <item
+        android:width="@dimen/bubble_stripe_width"
+        android:gravity="start">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorFocusAccent" />
+            <corners
+                android:topLeftRadius="@dimen/bubble_corner_radius"
+                android:bottomLeftRadius="@dimen/bubble_corner_radius"
+                android:topRightRadius="0dp"
+                android:bottomRightRadius="0dp" />
+        </shape>
+    </item>
+</layer-list>

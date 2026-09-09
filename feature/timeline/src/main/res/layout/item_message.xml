@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A message row (S9). Focus lands on the message; CENTER opens the message
-     menu (S11). minHeight so it grows at large-text scale. -->
+<!-- A message row (S9): a chat bubble, aligned to the sender's side (own
+     messages trailing/right, others' leading/left) with a matching
+     leading/trailing accent stripe. Alignment and the bubble background
+     (bubble_own.xml vs bubble_received.xml) are bound in
+     TimelineAdapter.MessageVH per row.isOwn — this layout only declares the
+     default (received) look. The row itself keeps the flat, full-width
+     focus_selector highlight (AGENTS.md §4: never a per-screen focus style);
+     only the bubble inside it is rounded. CENTER opens the message menu
+     (S11). minHeight so it grows at large-text scale. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,32 +22,49 @@
     android:paddingTop="3dp"
     android:paddingBottom="3dp">
 
-    <TextView
-        android:id="@+id/message_sender"
+    <LinearLayout
+        android:id="@+id/message_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="1dp"
+        android:layout_gravity="start"
+        android:orientation="vertical"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_sender"
-        android:textColor="?attr/colorEncrypted"
-        android:visibility="gone"
-        tools:text="Wayne"
-        tools:visibility="visible" />
+        android:background="@drawable/bubble_received"
+        android:paddingStart="@dimen/bubble_pad_h"
+        android:paddingEnd="@dimen/bubble_pad_h"
+        android:paddingTop="@dimen/bubble_pad_v"
+        android:paddingBottom="@dimen/bubble_pad_v">
 
-    <TextView
-        android:id="@+id/message_body"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:duplicateParentState="true"
-        android:textSize="@dimen/text_body"
-        android:textColor="?attr/colorTextOnFocus"
-        tools:text="See you at six by the north gate." />
+        <TextView
+            android:id="@+id/message_sender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="1dp"
+            android:duplicateParentState="true"
+            android:maxWidth="@dimen/bubble_max_width"
+            android:textSize="@dimen/text_sender"
+            android:textColor="?attr/colorEncrypted"
+            android:visibility="gone"
+            tools:text="Wayne"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/message_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:duplicateParentState="true"
+            android:maxWidth="@dimen/bubble_max_width"
+            android:textSize="@dimen/text_body"
+            android:textColor="?attr/colorTextOnFocus"
+            tools:text="See you at six by the north gate." />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/message_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
+        android:layout_gravity="start"
+        android:layout_marginTop="1dp"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
         android:textColor="?attr/colorTextMetaOnFocus"
