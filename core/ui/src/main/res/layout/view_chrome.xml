@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The three fixed bands every screen shares (UX-SPEC §1): title bar (18 dp),
      content (fills), softkey bar (20 dp). Feature layouts inflate into
-     @id/chrome_content; they never redraw the chrome. -->
+     @id/chrome_content; they never redraw the chrome. The title bar (below)
+     and the softkey bar (SoftkeyBarView) both use ?attr/colorFocusAccent —
+     the user's chosen accent, Settings > Theme — not colorSurfaceInverse,
+     per explicit user direction against the reference device's own SMS app
+     (Phase 4 of the UI improvement plan). colorTextOnInverse still supplies
+     the light label text on top; only the fill changed. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/title_bar_height"
         android:orientation="horizontal"
-        android:background="?attr/colorSurfaceInverse"
+        android:background="?attr/colorFocusAccent"
         android:gravity="center_vertical">
 
         <TextView

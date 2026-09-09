@@ -178,7 +178,10 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
 
 - Type floor, no exceptions: **body 16 sp · interactive labels 14 sp · secondary
   metadata (timestamps, day separators, sender names, field captions) 11 sp**.
-  Nothing a user reads goes below 11 sp.
+  Softkey labels are their own dedicated size, `text_softkey_label` (13 sp) —
+  not part of the metadata floor above, since they don't share a dimen with
+  timestamps/day-separators/sender-names (UX-SPEC.md §1). Nothing a user
+  reads goes below 11 sp.
 - Design for 240 dp width **and** 320×240 landscape devices. Rows have a
   `minHeight`, never a fixed `height` — content must be free to grow at the
   largest font scale, which the screenshot suite checks.

@@ -19,10 +19,14 @@ Every screen has three fixed bands:
 └────────────────────────────┘
 ```
 
-- Title bar: 14 sp, single line, ellipsized at the end. Right side shows sync
-  state (`⟳` syncing, `!` offline) — nothing else.
-- Softkey bar: three cells, left-aligned / centre / right-aligned, 11 sp, on the
-  inverse surface so it is never confused with content.
+- Title bar: 14 sp, single line, ellipsized at the end, on the accent surface
+  (`?attr/colorFocusAccent` — the user's chosen accent, Settings > Theme, not
+  the inverse/near-black surface used elsewhere). Right side shows sync state
+  (`⟳` syncing, `!` offline) — nothing else.
+- Softkey bar: three cells, left-aligned / centre / right-aligned, 13 sp (its
+  own dedicated size, `text_softkey_label` — not the shared 11 sp metadata
+  floor), on the same accent surface as the title bar so it is never confused
+  with content.
 - Content never scrolls by pixel drag. It scrolls because focus moved.
 
 ## 2. Key map (global, unchangeable)
@@ -42,7 +46,8 @@ Every screen has three fixed bands:
 
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`): body 16 sp ·
 interactive labels 14 sp · secondary metadata — timestamps, day separators,
-sender names, field captions, softkey labels — 11 sp. Nothing below 11 sp.
+sender names, field captions — 11 sp; softkey labels 13 sp, their own
+dedicated size (§1). Nothing below 11 sp.
 
 Focus highlight: a subtle full-row tint (`?attr/colorSurfaceFocused`) plus a
 solid accent bar on the trailing edge (`?attr/colorFocusAccent`,

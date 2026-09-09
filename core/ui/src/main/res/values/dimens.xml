@@ -9,6 +9,12 @@
     <dimen name="text_room_name">16sp</dimen>
     <dimen name="text_sender">12sp</dimen>
     <dimen name="text_heading">17sp</dimen>
+    <!-- Softkey bar labels only (view_softkey_bar.xml) — a dedicated size,
+         bumped from the shared 11sp text_meta floor for legibility
+         (UI improvement plan, Phase 4). Do not reuse text_meta's dimen for
+         this or bump text_meta itself: timestamps/day-separators/sender
+         names also use it and UX-SPEC.md specifies them separately. -->
+    <dimen name="text_softkey_label">13sp</dimen>
 
     <!-- Chrome bands (UX-SPEC §1) -->
     <dimen name="title_bar_height">18dp</dimen>

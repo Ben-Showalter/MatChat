@@ -32,7 +32,12 @@ class SoftkeyBarView @JvmOverloads constructor(
 
     init {
         orientation = HORIZONTAL
-        setBackgroundColor(context.themeColor(R.attr.colorSurfaceInverse))
+        // Accent surface, not the inverse surface — matches the title bar
+        // (view_chrome.xml) and the reference device's own SMS app (Phase 4
+        // of the UI improvement plan); tracks the user's chosen accent
+        // (Settings > Theme) automatically since it's an attr, not a fixed
+        // color.
+        setBackgroundColor(context.themeColor(R.attr.colorFocusAccent))
         binding = ViewSoftkeyBarBinding.inflate(android.view.LayoutInflater.from(context), this)
         isFocusable = false
         isFocusableInTouchMode = false

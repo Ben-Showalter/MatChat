@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The softkey bar (UX-SPEC §1): three cells on the inverse surface, 11 sp.
+<!-- The softkey bar (UX-SPEC §1): three cells on the accent surface
+     (SoftkeyBarView sets the background to ?attr/colorFocusAccent —
+     Phase 4 of the UI improvement plan), 13 sp (text_softkey_label, its own
+     dedicated size — not the shared 11sp text_meta).
      LEFT = Options, CENTRE = activate, RIGHT = Back — always (AGENTS.md §4).
      Not focusable: it is a label strip driven by the hardware keys, never tapped. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
@@ -15,7 +18,7 @@
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="4dp"
         android:textColor="?attr/colorTextOnInverse"
-        android:textSize="@dimen/text_meta"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
         tools:text="Options" />
@@ -28,7 +31,7 @@
         android:gravity="center"
         android:textColor="?attr/colorTextOnInverse"
         android:textStyle="bold"
-        android:textSize="@dimen/text_meta"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
         tools:text="Select" />
@@ -42,7 +45,7 @@
         android:paddingStart="4dp"
         android:paddingEnd="@dimen/content_pad"
         android:textColor="?attr/colorTextOnInverse"
-        android:textSize="@dimen/text_meta"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
         tools:text="Back" />
