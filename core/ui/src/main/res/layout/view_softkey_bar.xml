@@ -4,7 +4,16 @@
      Phase 4 of the UI improvement plan), 13 sp (text_softkey_label, its own
      dedicated size — not the shared 11sp text_meta).
      LEFT = Options, CENTRE = activate, RIGHT = Back — always (AGENTS.md §4).
-     Not focusable: it is a label strip driven by the hardware keys, never tapped. -->
+     Not focusable: it is a label strip driven by the hardware keys, never
+     D-pad-focused, only (optionally) tapped. android:focusable="false" is
+     REQUIRED here, explicitly, on each cell, not just on the container
+     (SoftkeyBarView sets isFocusable=false on itself, which does not cascade
+     to its children) — a confirmed bug: SoftkeyBarView.render() sets
+     isClickable=true on a non-blank cell, and since API 26 a clickable View
+     with no explicit focusable value becomes focusable automatically. That
+     let a softkey cell (typically CENTER, "Select") win D-pad focus-search
+     over compose_input from the last timeline row, instead of being skipped
+     as chrome. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="android.widget.LinearLayout">
@@ -21,6 +30,8 @@
         android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Options" />
 
     <TextView
@@ -34,6 +45,8 @@
         android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Select" />
 
     <TextView
@@ -48,5 +61,7 @@
         android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Back" />
 </merge>
