@@ -33,6 +33,10 @@ Every screen has three fixed bands:
   already nearly full. On the same accent surface as the title bar so it is
   never confused with content.
 - Content never scrolls by pixel drag. It scrolls because focus moved.
+  One documented exception (S9, long-message round): a message bubble
+  taller than the visible list area scrolls in small fixed steps (~0.75")
+  per DOWN/UP press before focus moves to the next/previous row — still
+  driven entirely by key presses, never by touch/drag.
 
 ## 2. Key map (global, unchangeable)
 

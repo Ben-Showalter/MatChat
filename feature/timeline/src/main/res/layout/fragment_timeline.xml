@@ -58,7 +58,11 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:descendantFocusability="afterDescendants"
-        android:focusable="false" />
+        android:focusable="false"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbarSize="6dp" />
 
     <!-- Typing indicator (S9): "Alice is typing…". Hidden when nobody is typing. -->
     <TextView

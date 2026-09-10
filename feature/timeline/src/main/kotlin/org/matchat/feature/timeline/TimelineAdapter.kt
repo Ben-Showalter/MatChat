@@ -1,6 +1,8 @@
 package org.matchat.feature.timeline
 
+import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -70,13 +72,59 @@ internal class TimelineAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return when (viewType) {
+        val holder = when (viewType) {
             TYPE_MESSAGE -> MessageVH(inflater.inflate(R.layout.item_message, parent, false))
             TYPE_IMAGE -> ImageVH(inflater.inflate(R.layout.item_message_image, parent, false))
             TYPE_ATTACHMENT -> AttachmentVH(inflater.inflate(R.layout.item_attachment, parent, false))
             TYPE_DAY -> SimpleVH(inflater.inflate(R.layout.item_day, parent, false))
             TYPE_UTD -> UtdVH(inflater.inflate(R.layout.item_utd, parent, false))
             else -> SimpleVH(inflater.inflate(R.layout.item_state, parent, false))
+        }
+        // Long-message round: every row type's focusable unit is its whole
+        // itemView, and this is the one place all of them pass through, so
+        // wire the oversized-row scroll intercept here once rather than per
+        // ViewHolder class. See onRowKey's own doc comment.
+        holder.itemView.setOnKeyListener(::onRowKey)
+        return holder
+    }
+
+    /** Lets a message bubble taller than the visible list area scroll by a
+     *  small fixed step per DOWN/UP press instead of jumping straight past
+     *  its content to the next/previous row (on-device report: a long
+     *  message "jumps from the bottom of the message bubble to the top
+     *  without letting me read what is in between" — the default
+     *  View.requestRectangleOnScreen() behavior on focus change). UP/DOWN
+     *  never reach LogicalKeyReceiver (MainActivity.dispatchKeyEvent hands
+     *  them straight to the platform's focus search), so the only
+     *  interception point is a key listener on the currently focused row
+     *  itself — a KeyEvent is offered to the focused View before any
+     *  default focus-search behavior runs.
+     *
+     *  Consumes the key only while there's more of *this* row's content
+     *  off-screen in the pressed direction (checked via the row's current
+     *  top/bottom relative to the RecyclerView's own bounds — LinearLayoutManager
+     *  lays children out with real offsets, not a canvas translate, so no
+     *  separate scroll-position bookkeeping is needed); once exhausted,
+     *  returns false and lets the platform's normal focus search move to
+     *  the next/previous row exactly as before. Short rows (day separators,
+     *  state rows, any message that already fits) never trip the overflow
+     *  check, so they're completely unaffected. */
+    private fun onRowKey(view: View, keyCode: Int, event: KeyEvent): Boolean {
+        if (event.action != KeyEvent.ACTION_DOWN) return false
+        val rv = view.parent as? RecyclerView ?: return false
+        val stepPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_IN, SCROLL_STEP_INCHES, view.resources.displayMetrics,
+        ).toInt()
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                val overflow = view.bottom - rv.height
+                (overflow > OVERFLOW_SLOP_PX).also { if (it) rv.scrollBy(0, minOf(stepPx, overflow)) }
+            }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                val overflow = -view.top
+                (overflow > OVERFLOW_SLOP_PX).also { if (it) rv.scrollBy(0, -minOf(stepPx, overflow)) }
+            }
+            else -> false
         }
     }
 
@@ -191,6 +239,11 @@ internal class TimelineAdapter(
         const val TYPE_STATE = 3
         const val TYPE_IMAGE = 4
         const val TYPE_ATTACHMENT = 5
+
+        // Long-message round: how far a focused oversized row scrolls per
+        // DOWN/UP press, per the user's own "like .75 inches" ask.
+        const val SCROLL_STEP_INCHES = 0.75f
+        const val OVERFLOW_SLOP_PX = 4 // ignore sub-pixel rounding noise near an edge
 
         val DIFF = object : DiffUtil.ItemCallback<TimelineRow>() {
             override fun areItemsTheSame(a: TimelineRow, b: TimelineRow) = a.stableId == b.stableId
