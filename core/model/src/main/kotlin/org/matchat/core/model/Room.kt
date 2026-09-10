@@ -22,11 +22,14 @@ data class InviteSummary(
     val roomId: RoomId,
     val roomName: String,
     val inviter: UserId,
-    val inviterName: String?, // null until the profile lookup resolves
+    // null until the profile lookup resolves
+    val inviterName: String?,
     val isDirect: Boolean,
     val isEncrypted: Boolean,
-    val senderDomain: String, // shown to the user, and checked against policy
-    val allowedByPolicy: Boolean, // false => the screen offers Decline only
+    // shown to the user, and checked against policy
+    val senderDomain: String,
+    // false => the screen offers Decline only
+    val allowedByPolicy: Boolean,
 )
 
 /** A profile fetched by a lookup of a known address — never a search (AGENTS.md §0). */
