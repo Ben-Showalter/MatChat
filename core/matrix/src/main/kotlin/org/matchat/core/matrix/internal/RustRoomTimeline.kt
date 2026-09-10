@@ -239,9 +239,12 @@ internal class RustRoomTimeline(
 
     /** userId -> displayName for every member with one set, paginated the same way
      *  as RustMatrixSession.roomMembers (a member with no displayName is simply
-     *  omitted — Mappers.resolveSenderName's raw-ID fallback covers them). Must be
-     *  called off the main thread (blocking FFI) — see the one call site. */
-    private fun fetchMemberNames(room: Room): Map<String, String> {
+     *  omitted — Mappers.resolveSenderName's raw-ID fallback covers them).
+     *  room.members()/nextChunk() are themselves suspend functions (the actual
+     *  compile error a non-suspend version of this hit — "should be called only
+     *  from a coroutine" — not just "blocking FFI" as I'd assumed); must still be
+     *  called off the main thread regardless — see the one call site. */
+    private suspend fun fetchMemberNames(room: Room): Map<String, String> {
         val out = mutableMapOf<String, String>()
         runCatching {
             val iterator = room.members()
