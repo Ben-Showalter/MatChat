@@ -13,5 +13,7 @@ class FakePolicyProvider(
     override val policy: StateFlow<Policy> = state
 
     /** Simulate ACTION_APPLICATION_RESTRICTIONS_CHANGED with a new policy. */
-    fun push(policy: Policy) { state.value = policy }
+    fun push(policy: Policy) {
+        state.value = policy
+    }
 }

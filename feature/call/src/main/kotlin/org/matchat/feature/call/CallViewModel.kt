@@ -3,6 +3,7 @@ package org.matchat.feature.call
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -10,7 +11,6 @@ import kotlinx.coroutines.launch
 import org.matchat.core.model.RoomId
 import org.matchat.core.rtc.CallController
 import org.matchat.core.rtc.CallSession
-import javax.inject.Inject
 
 /** Drives the call screens off the single [CallController] session. */
 @HiltViewModel
@@ -35,5 +35,7 @@ class CallViewModel @Inject constructor(
     fun toggleMute() = calls.toggleMute()
     fun toggleSpeaker() = calls.toggleSpeaker()
 
-    private companion object { const val STOP_MS = 5_000L }
+    private companion object {
+        const val STOP_MS = 5_000L
+    }
 }

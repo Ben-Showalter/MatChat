@@ -19,6 +19,7 @@ class AdvancedViewModelTest {
     private fun subject() = AdvancedViewModel(prefs)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test

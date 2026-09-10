@@ -1,5 +1,7 @@
 package org.matchat.core.rtc.internal
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -13,8 +15,6 @@ import org.matchat.core.rtc.CallSession
 import org.matchat.core.rtc.IncomingCall
 import org.matchat.core.rtc.RtcConfig
 import org.matchat.core.rtc.TokenService
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * MatrixRTC signalling on top of :core:matrix primitives, with media delegated to

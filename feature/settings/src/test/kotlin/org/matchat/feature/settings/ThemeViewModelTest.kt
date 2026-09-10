@@ -21,6 +21,7 @@ class ThemeViewModelTest {
     private fun subject() = ThemeViewModel(prefs)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test

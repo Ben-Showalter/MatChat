@@ -1,12 +1,12 @@
 package org.matchat.core.rtc.internal
 
 import android.util.Log
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.matchat.core.rtc.AudioTransport
 import org.matchat.core.rtc.TokenService
 import org.matchat.core.rtc.TransportConfig
-import javax.inject.Inject
 
 /**
  * Placeholder media transport until the LiveKit Android SDK is wired against a
@@ -24,11 +24,15 @@ internal class StubAudioTransport @Inject constructor() : AudioTransport {
         return false
     }
 
-    override fun disconnect() { _connected.value = false }
+    override fun disconnect() {
+        _connected.value = false
+    }
     override fun setMicMuted(muted: Boolean) = Unit
     override fun setSpeakerOn(on: Boolean) = Unit
 
-    private companion object { const val TAG = "StubAudioTransport" }
+    private companion object {
+        const val TAG = "StubAudioTransport"
+    }
 }
 
 /** Placeholder token service. Real impl POSTs to lk-jwt-service /get_token. */

@@ -33,9 +33,19 @@ internal class AudioPlayback {
     /** Starts playback; [onDone] fires on completion or error so the UI can reset. */
     fun start(onDone: () -> Unit) {
         val p = player ?: return onDone()
-        p.setOnCompletionListener { stop(); onDone() }
-        p.setOnErrorListener { _, _, _ -> stop(); onDone(); true }
-        runCatching { p.start() }.onFailure { stop(); onDone() }
+        p.setOnCompletionListener {
+            stop()
+            onDone()
+        }
+        p.setOnErrorListener { _, _, _ ->
+            stop()
+            onDone()
+            true
+        }
+        runCatching { p.start() }.onFailure {
+            stop()
+            onDone()
+        }
     }
 
     fun isPlaying(path: String): Boolean =

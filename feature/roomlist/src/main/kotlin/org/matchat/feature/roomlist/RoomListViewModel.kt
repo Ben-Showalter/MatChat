@@ -3,6 +3,7 @@ package org.matchat.feature.roomlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,6 @@ import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.format.RelativeTime
 import org.matchat.core.policy.PolicyProvider
-import javax.inject.Inject
 
 /**
  * S8 logic. All formatting and the loading/empty/offline decisions live here so
@@ -94,8 +94,7 @@ class RoomListViewModel @Inject constructor(
     /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
     suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
 
-    private fun List<InviteSummary>.toBand(): InviteBand? =
-        if (isEmpty()) null else InviteBand(size)
+    private fun List<InviteSummary>.toBand(): InviteBand? = if (isEmpty()) null else InviteBand(size)
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

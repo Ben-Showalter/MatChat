@@ -3,6 +3,7 @@ package org.matchat.feature.newchat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +16,6 @@ import org.matchat.core.contacts.ContactsRepository
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.Contact
 import org.matchat.core.model.UserId
-import javax.inject.Inject
 
 @HiltViewModel
 class NewChatViewModel @Inject constructor(

@@ -26,7 +26,10 @@ object AvatarBinder {
             image.setImageResource(R.drawable.avatar_placeholder)
             return
         }
-        AvatarCache.get(url)?.let { image.setImageBitmap(it); return }
+        AvatarCache.get(url)?.let {
+            image.setImageBitmap(it)
+            return
+        }
         image.setImageResource(R.drawable.avatar_placeholder)
         val bytes = withContext(Dispatchers.IO) { loadBytes(url) } ?: return
         val bitmap = withContext(Dispatchers.Default) { AvatarCache.decodeAndCache(url, bytes, maxPx) }

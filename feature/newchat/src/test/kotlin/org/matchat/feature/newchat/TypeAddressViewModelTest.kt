@@ -1,6 +1,8 @@
 package org.matchat.feature.newchat
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -19,8 +21,6 @@ import org.matchat.core.model.UserId
 import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeMatrixSession
 import org.matchat.core.testing.FakePolicyProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 
 class TypeAddressViewModelTest {
 
@@ -33,6 +33,7 @@ class TypeAddressViewModelTest {
     }
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     private fun subject(policy: Policy = Policy.UNMANAGED) =

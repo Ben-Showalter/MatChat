@@ -3,6 +3,7 @@ package org.matchat.feature.newchat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,6 @@ import org.matchat.core.contacts.ContactsRepository
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.ErrorText
 import org.matchat.core.policy.PolicyProvider
-import javax.inject.Inject
 
 /**
  * S21 logic — the guarded pipeline for a direct chat by address (PLAN.md §6.9):

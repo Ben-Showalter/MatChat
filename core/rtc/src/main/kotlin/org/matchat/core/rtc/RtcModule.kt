@@ -4,10 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import org.matchat.core.rtc.internal.MatrixRtcCallController
 import org.matchat.core.rtc.internal.StubAudioTransport
 import org.matchat.core.rtc.internal.StubTokenService
-import javax.inject.Singleton
 
 /**
  * Wires the call stack. The audio transport + token service are the stub

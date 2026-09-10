@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.EventId
-import javax.inject.Inject
 
 /** Loads one image's bytes by event id for the full-screen viewer (S9). */
 @HiltViewModel
@@ -29,8 +29,11 @@ class ImageViewerViewModel @Inject constructor(
         viewModelScope.launch {
             val bytes = session.loadMedia(eventId)
             _state.update {
-                if (bytes == null) it.copy(isLoading = false, failed = true)
-                else it.copy(isLoading = false, bytes = bytes)
+                if (bytes == null) {
+                    it.copy(isLoading = false, failed = true)
+                } else {
+                    it.copy(isLoading = false, bytes = bytes)
+                }
             }
         }
     }

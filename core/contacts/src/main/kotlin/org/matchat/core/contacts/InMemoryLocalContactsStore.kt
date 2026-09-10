@@ -1,12 +1,12 @@
 package org.matchat.core.contacts
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import org.matchat.core.model.Contact
 import org.matchat.core.model.UserId
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /** M0 in-memory store. Persistence (DataStore) replaces this in M5. */
 @Singleton

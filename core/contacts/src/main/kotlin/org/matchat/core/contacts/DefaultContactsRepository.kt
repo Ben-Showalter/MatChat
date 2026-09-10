@@ -1,12 +1,12 @@
 package org.matchat.core.contacts
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import org.matchat.core.model.Contact
 import org.matchat.core.model.UserId
 import org.matchat.core.policy.PolicyProvider
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Merges the admin-pushed contacts (from live policy) with local contacts and

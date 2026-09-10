@@ -30,6 +30,7 @@ class RoomListViewModelTest {
     private fun subject() = RoomListViewModel(session, policy, clock)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test
@@ -47,7 +48,8 @@ class RoomListViewModelTest {
     @Test
     fun `invites produce a band with the count`() = runTest {
         session.invitesFlow.value = listOf(
-            invite("!a:server"), invite("!b:server"),
+            invite("!a:server"),
+            invite("!b:server"),
         )
         subject().state.test {
             assertEquals(InviteBand(2), expectMostRecentItem().inviteBand)
@@ -105,14 +107,23 @@ class RoomListViewModelTest {
     }
 
     private fun room(id: String, avatarUrl: String? = null) = RoomSummary(
-        id = RoomId(id), name = "Room", lastMessage = "hi",
-        lastActivityEpochMs = 0L, unreadCount = 0, isEncrypted = true,
+        id = RoomId(id),
+        name = "Room",
+        lastMessage = "hi",
+        lastActivityEpochMs = 0L,
+        unreadCount = 0,
+        isEncrypted = true,
         avatarUrl = avatarUrl,
     )
 
     private fun invite(id: String) = InviteSummary(
-        roomId = RoomId(id), roomName = "R", inviter = org.matchat.core.model.UserId("@w:server"),
-        inviterName = null, isDirect = false, isEncrypted = true,
-        senderDomain = "server", allowedByPolicy = true,
+        roomId = RoomId(id),
+        roomName = "R",
+        inviter = org.matchat.core.model.UserId("@w:server"),
+        inviterName = null,
+        isDirect = false,
+        isEncrypted = true,
+        senderDomain = "server",
+        allowedByPolicy = true,
     )
 }

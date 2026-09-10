@@ -1,5 +1,7 @@
 package org.matchat.core.matrix.internal
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,8 +16,6 @@ import org.matrix.rustcomponents.sdk.SessionVerificationController
 import org.matrix.rustcomponents.sdk.SessionVerificationControllerDelegate
 import org.matrix.rustcomponents.sdk.SessionVerificationData
 import org.matrix.rustcomponents.sdk.SessionVerificationRequestDetails
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * SDK-backed emoji (SAS) verification (S6). Wraps SessionVerificationController and
@@ -53,9 +53,15 @@ internal class RustSessionVerification @Inject constructor(
             if (emojis.isNotEmpty()) _state.value = SasState.Comparing(emojis)
         }
 
-        override fun didFinish() { _state.value = SasState.Success }
-        override fun didFail() { _state.value = SasState.Cancelled }
-        override fun didCancel() { _state.value = SasState.Cancelled }
+        override fun didFinish() {
+            _state.value = SasState.Success
+        }
+        override fun didFail() {
+            _state.value = SasState.Cancelled
+        }
+        override fun didCancel() {
+            _state.value = SasState.Cancelled
+        }
     }
 
     override suspend fun start() {

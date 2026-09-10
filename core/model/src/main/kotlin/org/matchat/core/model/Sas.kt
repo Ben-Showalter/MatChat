@@ -10,11 +10,14 @@ data class SasEmoji(val symbol: String, val name: String)
  */
 sealed interface SasState {
     data object Idle : SasState
+
     /** Requested; waiting for the other device to accept. */
     data object Requested : SasState
+
     /** Compare these emojis with the other device. */
     data class Comparing(val emojis: List<SasEmoji>) : SasState
     data object Success : SasState
+
     /** Cancelled, declined, timed out, or failed — the UI offers a retry. */
     data object Cancelled : SasState
 }

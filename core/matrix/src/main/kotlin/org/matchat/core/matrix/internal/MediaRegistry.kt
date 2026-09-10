@@ -1,7 +1,7 @@
 package org.matchat.core.matrix.internal
 
-import org.matrix.rustcomponents.sdk.MediaSource
 import java.util.concurrent.ConcurrentHashMap
+import org.matrix.rustcomponents.sdk.MediaSource
 
 /**
  * Keeps the SDK [MediaSource] for each media event, keyed by event id, so the UI

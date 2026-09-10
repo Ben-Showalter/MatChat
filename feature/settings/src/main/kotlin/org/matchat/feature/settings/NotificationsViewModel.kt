@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.matchat.core.ui.prefs.SILENT_NOTIFICATION_SOUND
 import org.matchat.core.ui.prefs.UserPreferences
-import javax.inject.Inject
 
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
@@ -44,13 +44,12 @@ class NotificationsViewModel @Inject constructor(
     /** The current sound's stored uri, for pre-selecting the picker. */
     fun currentSoundUri(): String? = userPreferences.notificationSoundUri.value
 
-    private fun combineState() =
-        combine(
-            userPreferences.notificationsEnabled,
-            userPreferences.notificationSoundUri,
-        ) { enabled, soundUri ->
-            NotificationsState(enabled = enabled, sound = soundChoiceFor(soundUri))
-        }
+    private fun combineState() = combine(
+        userPreferences.notificationsEnabled,
+        userPreferences.notificationSoundUri,
+    ) { enabled, soundUri ->
+        NotificationsState(enabled = enabled, sound = soundChoiceFor(soundUri))
+    }
 
     private fun soundChoiceFor(soundUri: String?): SoundChoice = when (soundUri) {
         null -> SoundChoice.Default

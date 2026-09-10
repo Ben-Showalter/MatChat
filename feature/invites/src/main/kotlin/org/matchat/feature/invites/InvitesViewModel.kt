@@ -3,13 +3,13 @@ package org.matchat.feature.invites
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.InviteSummary
-import javax.inject.Inject
 
 @HiltViewModel
 class InvitesViewModel @Inject constructor(

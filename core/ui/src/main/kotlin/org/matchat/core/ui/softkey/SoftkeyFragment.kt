@@ -9,13 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SyncState
 import org.matchat.core.ui.R
 import org.matchat.core.ui.databinding.ViewChromeBinding
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.prefs.UserPreferences
-import javax.inject.Inject
 
 /** Swaps which screen position (left/right) shows which label when the
  *  physical keys are swapped (Settings > Advanced, Phase 6 of the UI

@@ -2,12 +2,12 @@ package org.matchat.core.matrix.internal
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.matchat.core.matrix.MatrixSessionStore
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.matchat.core.matrix.MatrixSessionStore
 
 /**
  * Persists the session blob to a Keystore-encrypted file (MatrixSessionStore).

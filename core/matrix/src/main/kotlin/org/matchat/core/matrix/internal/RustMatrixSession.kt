@@ -1,17 +1,19 @@
 package org.matchat.core.matrix.internal
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.withContext
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.matrix.RoomTimeline
+import org.matchat.core.model.CallState
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
-import org.matchat.core.model.CallState
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.Membership
 import org.matchat.core.model.Profile
@@ -24,8 +26,6 @@ import org.matchat.core.model.UserId
 import org.matrix.rustcomponents.sdk.CreateRoomParameters
 import org.matrix.rustcomponents.sdk.RoomPreset
 import org.matrix.rustcomponents.sdk.RoomVisibility
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * The app-facing session, backed by [RustMatrixClientHolder]. Joined rooms and
@@ -56,11 +56,9 @@ internal class RustMatrixSession @Inject constructor(
     // not yet reachable from the UI.
     override suspend fun acceptInvite(roomId: RoomId): Result<Unit> = Result.success(Unit)
 
-    override suspend fun declineInvite(roomId: RoomId, ignoreSender: Boolean): Result<Unit> =
-        Result.success(Unit)
+    override suspend fun declineInvite(roomId: RoomId, ignoreSender: Boolean): Result<Unit> = Result.success(Unit)
 
-    override suspend fun ownUserId(): UserId? =
-        withContext(Dispatchers.IO) { holder.ownUserId()?.let { UserId(it) } }
+    override suspend fun ownUserId(): UserId? = withContext(Dispatchers.IO) { holder.ownUserId()?.let { UserId(it) } }
 
     override suspend fun lookupProfile(address: UserId): Result<Profile> = runCatching {
         // A lookup of a known address, never a search (AGENTS.md §0).
@@ -72,32 +70,31 @@ internal class RustMatrixSession @Inject constructor(
     }
 
     /** Create (or reuse) an encrypted 1:1 room and invite [address] (S21). */
-    override suspend fun startDirectChat(address: UserId): Result<RoomId> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val client = holder.requireClient()
-                // Reuse the existing DM with this person if the server has one.
-                val existing = runCatching { client.getDmRoom(address.value)?.id() }.getOrNull()
-                val roomId = existing ?: client.createRoom(
-                    CreateRoomParameters(
-                        name = null,
-                        topic = null,
-                        isEncrypted = true,
-                        isDirect = true,
-                        visibility = RoomVisibility.Private,
-                        preset = RoomPreset.TRUSTED_PRIVATE_CHAT,
-                        invite = listOf(address.value),
-                        avatar = null,
-                        powerLevelContentOverride = null,
-                        joinRuleOverride = null,
-                        historyVisibilityOverride = null,
-                        canonicalAlias = null,
-                        isSpace = false,
-                    ),
-                )
-                RoomId(roomId)
-            }
+    override suspend fun startDirectChat(address: UserId): Result<RoomId> = withContext(Dispatchers.IO) {
+        runCatching {
+            val client = holder.requireClient()
+            // Reuse the existing DM with this person if the server has one.
+            val existing = runCatching { client.getDmRoom(address.value)?.id() }.getOrNull()
+            val roomId = existing ?: client.createRoom(
+                CreateRoomParameters(
+                    name = null,
+                    topic = null,
+                    isEncrypted = true,
+                    isDirect = true,
+                    visibility = RoomVisibility.Private,
+                    preset = RoomPreset.TRUSTED_PRIVATE_CHAT,
+                    invite = listOf(address.value),
+                    avatar = null,
+                    powerLevelContentOverride = null,
+                    joinRuleOverride = null,
+                    historyVisibilityOverride = null,
+                    canonicalAlias = null,
+                    isSpace = false,
+                ),
+            )
+            RoomId(roomId)
         }
+    }
 
     override suspend fun sendMessage(roomId: RoomId, body: String) = withContext(Dispatchers.IO) {
         val room = holder.roomFor(roomId) ?: return@withContext
@@ -129,33 +126,31 @@ internal class RustMatrixSession @Inject constructor(
         )
     }
 
-    override suspend fun roomMembers(roomId: RoomId): List<RoomMemberSummary> =
-        withContext(Dispatchers.IO) {
-            val room = holder.roomFor(roomId) ?: return@withContext emptyList()
-            val own = holder.ownUserId()
-            val out = mutableListOf<RoomMemberSummary>()
-            runCatching {
-                val iterator = room.members()
-                while (true) {
-                    val chunk = iterator.nextChunk(MEMBER_PAGE_SIZE) ?: break
-                    if (chunk.isEmpty()) break
-                    chunk.forEach { m ->
-                        out += RoomMemberSummary(
-                            userId = UserId(m.userId),
-                            displayName = m.displayName,
-                            membership = membershipOf(m.membership),
-                            isSelf = m.userId == own,
-                            avatarUrl = m.avatarUrl,
-                        )
-                    }
+    override suspend fun roomMembers(roomId: RoomId): List<RoomMemberSummary> = withContext(Dispatchers.IO) {
+        val room = holder.roomFor(roomId) ?: return@withContext emptyList()
+        val own = holder.ownUserId()
+        val out = mutableListOf<RoomMemberSummary>()
+        runCatching {
+            val iterator = room.members()
+            while (true) {
+                val chunk = iterator.nextChunk(MEMBER_PAGE_SIZE) ?: break
+                if (chunk.isEmpty()) break
+                chunk.forEach { m ->
+                    out += RoomMemberSummary(
+                        userId = UserId(m.userId),
+                        displayName = m.displayName,
+                        membership = membershipOf(m.membership),
+                        isSelf = m.userId == own,
+                        avatarUrl = m.avatarUrl,
+                    )
                 }
-                iterator.close()
             }
-            out
+            iterator.close()
         }
+        out
+    }
 
-    override suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit> =
-        roomOp(roomId) { it.setName(name) }
+    override suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit> = roomOp(roomId) { it.setName(name) }
 
     override suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit> =
         roomOp(roomId) { it.setTopic(topic) }
@@ -166,8 +161,7 @@ internal class RustMatrixSession @Inject constructor(
     override suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit> =
         roomOp(roomId) { it.kickUser(userId.value, null) }
 
-    override suspend fun leaveRoom(roomId: RoomId): Result<Unit> =
-        roomOp(roomId) { it.leave() }
+    override suspend fun leaveRoom(roomId: RoomId): Result<Unit> = roomOp(roomId) { it.leave() }
 
     override suspend fun sendStateEvent(
         roomId: RoomId,
@@ -180,11 +174,8 @@ internal class RustMatrixSession @Inject constructor(
         runCatching { room.sendStateEventRaw(eventType, stateKey, jsonContent) }
     }
 
-    override suspend fun sendRawEvent(
-        roomId: RoomId,
-        eventType: String,
-        jsonContent: String,
-    ): Result<Unit> = roomOp(roomId) { it.sendRaw(eventType, jsonContent) }
+    override suspend fun sendRawEvent(roomId: RoomId, eventType: String, jsonContent: String): Result<Unit> =
+        roomOp(roomId) { it.sendRaw(eventType, jsonContent) }
 
     override suspend fun activeCall(roomId: RoomId): CallState = withContext(Dispatchers.IO) {
         val room = holder.roomFor(roomId) ?: return@withContext CallState.NONE
@@ -205,15 +196,14 @@ internal class RustMatrixSession @Inject constructor(
         runCatching { block(room) }
     }
 
-    private fun membershipOf(state: org.matrix.rustcomponents.sdk.MembershipState): Membership =
-        when (state) {
-            is org.matrix.rustcomponents.sdk.MembershipState.Join -> Membership.JOINED
-            is org.matrix.rustcomponents.sdk.MembershipState.Invite -> Membership.INVITED
-            is org.matrix.rustcomponents.sdk.MembershipState.Leave -> Membership.LEFT
-            is org.matrix.rustcomponents.sdk.MembershipState.Ban -> Membership.BANNED
-            is org.matrix.rustcomponents.sdk.MembershipState.Knock -> Membership.KNOCKING
-            else -> Membership.OTHER
-        }
+    private fun membershipOf(state: org.matrix.rustcomponents.sdk.MembershipState): Membership = when (state) {
+        is org.matrix.rustcomponents.sdk.MembershipState.Join -> Membership.JOINED
+        is org.matrix.rustcomponents.sdk.MembershipState.Invite -> Membership.INVITED
+        is org.matrix.rustcomponents.sdk.MembershipState.Leave -> Membership.LEFT
+        is org.matrix.rustcomponents.sdk.MembershipState.Ban -> Membership.BANNED
+        is org.matrix.rustcomponents.sdk.MembershipState.Knock -> Membership.KNOCKING
+        else -> Membership.OTHER
+    }
 
     override suspend fun setPresence(online: Boolean) = withContext(Dispatchers.IO) {
         // FFI: setPresence(state, bool). The trailing flag is version-specific; false

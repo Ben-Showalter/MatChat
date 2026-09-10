@@ -11,13 +11,13 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import org.matchat.client.R
 import org.matchat.client.notify.MessageNotifier
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.ui.prefs.UserPreferences
-import javax.inject.Inject
 
 /**
  * The single owner of the SDK sync loop (ARCHITECTURE.md "Sync lifecycle").
@@ -34,6 +34,7 @@ import javax.inject.Inject
 class SyncForegroundService : LifecycleService() {
 
     @Inject lateinit var session: MatrixSession
+
     @Inject lateinit var userPreferences: UserPreferences
 
     private val lastUnread = HashMap<String, Int>()

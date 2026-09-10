@@ -1,14 +1,14 @@
 package org.matchat.core.matrix.internal
 
 import android.util.Log
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.QrLoginStep
 import org.matchat.core.policy.PolicyProvider
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Password sign-in and session restore against the SDK. The homeserver comes
@@ -34,8 +34,7 @@ internal class RustMatrixAuth @Inject constructor(
     }
 
     // QR sign-in (S4) is a v1.1 candidate; not wired in M1.
-    override fun signInWithQr(): Flow<QrLoginStep> =
-        flowOf(QrLoginStep.Failed(ErrorText(ErrorText.Key.UNKNOWN)))
+    override fun signInWithQr(): Flow<QrLoginStep> = flowOf(QrLoginStep.Failed(ErrorText(ErrorText.Key.UNKNOWN)))
 
     override suspend fun restoreSession(): Result<Unit> =
         if (holder.restore()) Result.success(Unit) else Result.failure(IllegalStateException("no session"))

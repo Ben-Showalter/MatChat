@@ -7,10 +7,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import org.matchat.core.matrix.MatrixDevConfig
 import org.matchat.core.model.MillisClock
 import org.matchat.core.rtc.RtcConfig
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
