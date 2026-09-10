@@ -32,7 +32,31 @@ interface UserPreferences {
      *  every key press — swapping takes effect immediately, no recreate. */
     val softkeysSwapped: StateFlow<Boolean>
 
+    /** Settings > Notifications — whether the incoming-message notification
+     *  (raised by SyncForegroundService) fires at all. Read directly
+     *  (.value) by the sync service on every unread-count increase, same as
+     *  [softkeysSwapped]'s read shape. Does not affect the persistent
+     *  "MatChat is running" sync notification, which is not user-optional
+     *  (docs/adr/0004). */
+    val notificationsEnabled: StateFlow<Boolean>
+
+    /** The chosen message-notification sound, as a content URI string from
+     *  RingtoneManager's picker; null means the system default sound. */
+    val notificationSoundUri: StateFlow<String?>
+
+    /** Bumped every time [notificationSoundUri] changes. Not shown in any
+     *  UI — a NotificationChannel's sound is immutable once created (the
+     *  same wall SyncForegroundService's own CHANNEL_ID = "matchat.sync.v2"
+     *  already hit), so a new sound means a new channel id
+     *  ("matchat.messages.s$version"), not mutating the old one. */
+    val notificationChannelVersion: StateFlow<Int>
+
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setAccentColor(color: AccentColor)
     suspend fun setSoftkeysSwapped(swapped: Boolean)
+    suspend fun setNotificationsEnabled(enabled: Boolean)
+
+    /** Also bumps [notificationChannelVersion] so the next notification is
+     *  posted on a fresh channel carrying the new sound. */
+    suspend fun setNotificationSoundUri(uri: String?)
 }

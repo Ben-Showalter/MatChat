@@ -244,6 +244,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toSettings() = navController.navigate(R.id.settingsFragment)
     override fun toTheme() = navController.navigate(R.id.themeFragment)
     override fun toAdvanced() = navController.navigate(R.id.advancedFragment)
+    override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
     override fun toHelp() = navController.navigate(R.id.helpFragment)
     override fun back() { navController.navigateUp() }

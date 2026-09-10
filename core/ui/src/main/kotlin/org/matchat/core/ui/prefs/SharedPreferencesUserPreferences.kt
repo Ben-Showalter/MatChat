@@ -29,6 +29,16 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
 
+    private val notificationsEnabledState = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true))
+    override val notificationsEnabled: StateFlow<Boolean> = notificationsEnabledState
+
+    private val notificationSoundUriState = MutableStateFlow(prefs.getString(KEY_NOTIFICATION_SOUND_URI, null))
+    override val notificationSoundUri: StateFlow<String?> = notificationSoundUriState
+
+    private val notificationChannelVersionState =
+        MutableStateFlow(prefs.getInt(KEY_NOTIFICATION_CHANNEL_VERSION, 0))
+    override val notificationChannelVersion: StateFlow<Int> = notificationChannelVersionState
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         prefs.edit { putString(KEY_THEME_MODE, mode.name) }
         themeModeState.value = mode
@@ -44,6 +54,21 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         softkeysSwappedState.value = swapped
     }
 
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled) }
+        notificationsEnabledState.value = enabled
+    }
+
+    override suspend fun setNotificationSoundUri(uri: String?) {
+        val nextVersion = notificationChannelVersionState.value + 1
+        prefs.edit {
+            putString(KEY_NOTIFICATION_SOUND_URI, uri)
+            putInt(KEY_NOTIFICATION_CHANNEL_VERSION, nextVersion)
+        }
+        notificationSoundUriState.value = uri
+        notificationChannelVersionState.value = nextVersion
+    }
+
     private inline fun <reified T : Enum<T>> readEnum(key: String, default: T): T =
         prefs.getString(key, null)?.let { stored ->
             enumValues<T>().firstOrNull { it.name == stored }
@@ -54,5 +79,8 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_ACCENT_COLOR = "accent_color"
         const val KEY_SOFTKEYS_SWAPPED = "softkeys_swapped"
+        const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        const val KEY_NOTIFICATION_SOUND_URI = "notification_sound_uri"
+        const val KEY_NOTIFICATION_CHANNEL_VERSION = "notification_channel_version"
     }
 }

@@ -37,6 +37,14 @@
     <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
     <string name="advanced_swap_softkeys_sub">For a phone whose hardware Left and Right keys are reversed.</string>
 
+    <!-- S26 Notifications (reached from S13 Settings > Notifications). -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_enabled">Notifications</string>
+    <string name="notifications_enabled_sub">New messages alert with a status-bar notification.</string>
+    <string name="notifications_sound">Sound</string>
+    <string name="notifications_sound_default">Default</string>
+    <string name="notifications_sound_silent">Silent</string>
+
     <!-- S23 Policy. -->
     <string name="policy_title">Policy</string>
     <string name="policy_managed">Managed by your organization</string>

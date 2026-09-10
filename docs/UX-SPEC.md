@@ -197,8 +197,9 @@ There is **no** "add member" here in v1 — group membership is administered on
 the server. (Direct chats are different: those the user starts themselves, S20.)
 
 ### S13 — Settings
-Rows: `Notifications` · `Text size` · `Theme` (opens S24) · `Advanced` (opens
-S25) · `Encryption` (verification status) · `About this phone's session` ·
+Rows: `Notifications` (opens S26) · `Text size` · `Theme` (opens S24) ·
+`Advanced` (opens S25) · `Encryption` (verification status) ·
+`About this phone's session` ·
 `Policy` · `Help` · `Sign out`.
 The `Policy` row reads "Managed by your organization" or "Not managed" and opens
 a read-only screen listing the homeserver, the allowed servers (or "All servers
@@ -216,10 +217,13 @@ Softkeys: (blank) | Select | Back.
 ### S15 — Notification
 *Not a screen we draw — this is the system notification surface; the entries
 below are what we put into it.*
-Heads-up collapsed notification: room name + count ("Barn Crew · 3 new").
-Selecting deep-links to S9 for that room, with the back stack rooted at S8.
+Heads-up collapsed notification: room name + count ("Barn Crew · 3 new"), a
+message-bubble small icon. Selecting deep-links to S9 for that room, with the
+back stack rooted at S8. Whether it fires at all, and what sound it plays,
+are user-configurable — Settings → Notifications (S26).
 Persistent low-priority notification while the sync service runs:
-"MatChat is running."
+"MatChat is running." — always on, its own circular-arrows icon, not
+user-configurable (docs/adr/0004).
 
 ### S16 — Large-text mode
 Toggled by holding `*` (and from Settings → Text size). Every row grows: room
@@ -328,6 +332,18 @@ trailing checkmark when on; selection is never conveyed by color alone.
 Takes effect on the very next key press — no recreate, unlike S24 (there's
 no chrome to rebuild, just future key events reading the new preference).
 Focus: the one row. Softkeys: (blank) | Select | Back.
+
+### S26 — Notifications
+Reached from Settings → Notifications. Two focusable rows, in fixed order:
+"Notifications" (a toggle, CENTER flips it immediately, trailing checkmark
+when on — same convention as S24/S25) then "Sound" (CENTER launches the
+system ringtone picker; its 11 sp subtitle shows the current choice —
+"Default", "Silent", or the picked ringtone's name). Turning notifications
+off silences only the incoming-message notification (S15); the persistent
+sync notification is unaffected. Per-room/per-thread sound is not offered
+here — every room shares the one chosen sound (future work).
+Focus order: Notifications → Sound. Initial focus: Notifications.
+Softkeys: (blank) | Select | Back.
 
 ## 4. Content voice
 

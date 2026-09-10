@@ -11,6 +11,9 @@ class FakeUserPreferences(
     initialThemeMode: ThemeMode = ThemeMode.LIGHT,
     initialAccentColor: AccentColor = AccentColor.GREEN,
     initialSoftkeysSwapped: Boolean = false,
+    initialNotificationsEnabled: Boolean = true,
+    initialNotificationSoundUri: String? = null,
+    initialNotificationChannelVersion: Int = 0,
 ) : UserPreferences {
 
     private val themeModeState = MutableStateFlow(initialThemeMode)
@@ -22,6 +25,15 @@ class FakeUserPreferences(
     private val softkeysSwappedState = MutableStateFlow(initialSoftkeysSwapped)
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
 
+    private val notificationsEnabledState = MutableStateFlow(initialNotificationsEnabled)
+    override val notificationsEnabled: StateFlow<Boolean> = notificationsEnabledState
+
+    private val notificationSoundUriState = MutableStateFlow(initialNotificationSoundUri)
+    override val notificationSoundUri: StateFlow<String?> = notificationSoundUriState
+
+    private val notificationChannelVersionState = MutableStateFlow(initialNotificationChannelVersion)
+    override val notificationChannelVersion: StateFlow<Int> = notificationChannelVersionState
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         themeModeState.value = mode
     }
@@ -32,5 +44,14 @@ class FakeUserPreferences(
 
     override suspend fun setSoftkeysSwapped(swapped: Boolean) {
         softkeysSwappedState.value = swapped
+    }
+
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        notificationsEnabledState.value = enabled
+    }
+
+    override suspend fun setNotificationSoundUri(uri: String?) {
+        notificationSoundUriState.value = uri
+        notificationChannelVersionState.value = notificationChannelVersionState.value + 1
     }
 }

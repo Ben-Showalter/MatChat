@@ -34,6 +34,7 @@ class SettingsFragment : SoftkeyFragment() {
         b.settingsEncryption.setOnClickListener { viewModel.onAction(SettingsAction.OpenEncryption) }
         b.settingsTheme.setOnClickListener { viewModel.onAction(SettingsAction.OpenTheme) }
         b.settingsAdvanced.setOnClickListener { viewModel.onAction(SettingsAction.OpenAdvanced) }
+        b.settingsNotifications.setOnClickListener { viewModel.onAction(SettingsAction.OpenNotifications) }
         b.settingsPolicy.setOnClickListener { viewModel.onAction(SettingsAction.OpenPolicy) }
         b.settingsHelp.setOnClickListener { viewModel.onAction(SettingsAction.OpenHelp) }
         b.settingsSignOut.setOnClickListener { confirmSignOut() }
@@ -59,6 +60,7 @@ class SettingsFragment : SoftkeyFragment() {
             SettingsNav.Encryption -> navigator.toVerification()
             SettingsNav.Theme -> navigator.toTheme()
             SettingsNav.Advanced -> navigator.toAdvanced()
+            SettingsNav.Notifications -> navigator.toNotifications()
             SettingsNav.Policy -> navigator.toPolicy()
             SettingsNav.Help -> navigator.toHelp()
             SettingsNav.SignedOut -> navigator.toWelcomeRoot()
