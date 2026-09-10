@@ -86,9 +86,28 @@ class RoomListViewModelTest {
         }
     }
 
-    private fun room(id: String) = RoomSummary(
+    @Test
+    fun `a room's avatarUrl carries through to its row`() = runTest {
+        session.roomsFlow.value = listOf(room("!a:server", avatarUrl = "mxc://server/room-avatar"))
+        subject().state.test {
+            assertEquals("mxc://server/room-avatar", expectMostRecentItem().rooms.single().avatarUrl)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `no avatar set maps to a null avatarUrl`() = runTest {
+        session.roomsFlow.value = listOf(room("!a:server"))
+        subject().state.test {
+            assertEquals(null, expectMostRecentItem().rooms.single().avatarUrl)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private fun room(id: String, avatarUrl: String? = null) = RoomSummary(
         id = RoomId(id), name = "Room", lastMessage = "hi",
         lastActivityEpochMs = 0L, unreadCount = 0, isEncrypted = true,
+        avatarUrl = avatarUrl,
     )
 
     private fun invite(id: String) = InviteSummary(

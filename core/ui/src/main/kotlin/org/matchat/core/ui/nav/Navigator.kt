@@ -32,6 +32,11 @@ interface Navigator {
     fun toTypeAddress()
     fun toVerification()
     fun toSettings()
+    fun toTheme()
+    /** Settings > Advanced (Phase 6, UI improvement plan): softkey swap. */
+    fun toAdvanced()
+    /** Settings > Notifications: on/off + sound. */
+    fun toNotifications()
     fun toPolicy()
     fun toHelp()
     fun back()

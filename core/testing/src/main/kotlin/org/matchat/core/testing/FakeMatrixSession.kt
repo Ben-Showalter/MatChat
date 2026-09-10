@@ -71,6 +71,14 @@ class FakeMatrixSession(
 
     override suspend fun loadMedia(eventId: EventId): ByteArray? = mediaBytes
 
+    var avatarBytes: ByteArray? = null
+    val avatarLoads = mutableListOf<String>()
+
+    override suspend fun loadAvatar(mxcUrl: String): ByteArray? {
+        avatarLoads += mxcUrl
+        return avatarBytes
+    }
+
     val sentMessages = mutableListOf<Pair<RoomId, String>>()
     val readRooms = mutableListOf<RoomId>()
     var lastPresenceOnline: Boolean? = null
@@ -172,6 +180,12 @@ class FakeTimeline(
     }
 
     override suspend fun markRead(eventId: EventId) = Unit
+
+    val toggledReactions = mutableListOf<Pair<EventId, String>>()
+
+    override suspend fun toggleReaction(eventId: EventId, key: String) {
+        toggledReactions += eventId to key
+    }
 
     fun emit(items: List<TimelineItem>) { itemsFlow.value = items }
     fun emitTyping(users: List<UserId>) { typingFlow.value = users }

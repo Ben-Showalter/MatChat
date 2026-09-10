@@ -23,6 +23,7 @@ dependencies {
     api(project(":core:matrix"))
     api(project(":core:policy"))
     api(project(":core:contacts"))
+    api(project(":core:ui"))
 
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.test)

@@ -1,16 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Base theme for MatChat. AppCompat, not Material: Views deliberately
-     (docs/adr/0002). No ripples, no elevation, no animation over 150 ms. -->
+     (docs/adr/0002). No ripples, no elevation, no animation over 150 ms.
+
+     Theme.MatChat.Base.{Light,Dark} carry every role attr (attrs.xml) that
+     does NOT depend on the user's chosen accent. Theme.MatChat.{Light,
+     Dark}.{Green,Amber,Blue,Plum} are the 8 concrete leaves Settings > Theme
+     switches between (MainActivity resolves the stored preference to one of
+     these); each adds the three accent-driven roles on top of a base:
+     colorFocusAccent (the trailing-edge focus bar and the chrome bars),
+     colorAccent (AppCompat's own tint), and colorSurfaceFocused +
+     colorBubbleOwn (both a translucent wash of the SAME accent,
+     colors.xml's accent_<name>_tint — every "light shade of the accent"
+     role in the app must be one of these two attrs, not a fixed hex, or it
+     silently stops tracking the user's theme choice; that was a real bug
+     here twice, on both of these, before this fix). Theme.MatChat itself is
+     the manifest/default fallback, aliased to Light.Green, for any context
+     built before the stored preference is read. -->
 <resources>
-    <style name="Theme.MatChat" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@color/surface</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="colorAccent">@color/encrypted</item>
+    <style name="Theme.MatChat.Base.Light" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorSurface">@color/palette_paper</item>
+        <item name="colorSurfaceBright">@color/palette_paper_bright</item>
+        <item name="colorSurfaceInverse">@color/palette_ink</item>
+        <item name="colorTextPrimary">@color/palette_ink</item>
+        <item name="colorTextSecondary">@color/palette_stone</item>
+        <item name="colorTextOnInverse">@color/text_on_inverse</item>
+        <item name="colorTextOnFocus">@color/text_on_focus</item>
+        <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
+        <item name="colorTextLink">@color/palette_amber</item>
+        <item name="colorDivider">@color/palette_line</item>
+        <item name="colorEncrypted">@color/palette_green</item>
+        <item name="colorWarning">@color/warning</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorScrim">@color/scrim</item>
+        <item name="colorBubbleReceived">@color/palette_bubble_received_light</item>
+
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
+        <item name="android:textColorSecondary">?attr/colorTextSecondary</item>
         <item name="android:windowAnimationStyle">@null</item>
         <!-- These are D-pad devices: never behave as if a touch is available. -->
         <item name="android:windowIsTranslucent">false</item>
     </style>
+
+    <!-- Mirrors Base.Light role for role: a near-black surface, a lighter
+         "raised panel" tone for chrome/dialogs, and brighter green/amber so
+         the encrypted indicator and the link text keep their contrast
+         against a dark surface (colors.xml). -->
+    <style name="Theme.MatChat.Base.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorSurface">@color/palette_night</item>
+        <item name="colorSurfaceBright">@color/palette_night_bright</item>
+        <item name="colorSurfaceInverse">@color/palette_night_bright</item>
+        <item name="colorTextPrimary">@color/palette_paper_bright</item>
+        <item name="colorTextSecondary">@color/palette_mist_dim</item>
+        <item name="colorTextOnInverse">@color/text_on_inverse</item>
+        <item name="colorTextOnFocus">@color/text_on_focus</item>
+        <item name="colorTextMetaOnFocus">@color/text_meta_on_focus</item>
+        <item name="colorTextLink">@color/palette_amber_bright</item>
+        <item name="colorDivider">@color/palette_line_dark</item>
+        <item name="colorEncrypted">@color/palette_green_bright</item>
+        <item name="colorWarning">@color/warning</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorScrim">@color/scrim</item>
+        <item name="colorBubbleReceived">@color/palette_night_bright</item>
+
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorTextPrimary</item>
+        <item name="android:textColorSecondary">?attr/colorTextSecondary</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowIsTranslucent">false</item>
+    </style>
+
+    <!-- Accent leaves: three roles differ between these, all driven by the
+         same accent per leaf — colorFocusAccent (the trailing-edge focus
+         bar and the chrome bars), colorAccent (AppCompat's own tint, e.g.
+         the text-field cursor), and colorSurfaceFocused + colorBubbleOwn
+         (a translucent wash of that same accent — accent_<name>_tint,
+         colors.xml). -->
+    <style name="Theme.MatChat.Light.Green" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
+        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+    </style>
+    <style name="Theme.MatChat.Light.Amber" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_amber</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_amber_tint</item>
+        <item name="colorBubbleOwn">@color/accent_amber_tint</item>
+    </style>
+    <style name="Theme.MatChat.Light.Blue" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_blue</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_blue_tint</item>
+        <item name="colorBubbleOwn">@color/accent_blue_tint</item>
+    </style>
+    <style name="Theme.MatChat.Light.Plum" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_plum</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_plum_tint</item>
+        <item name="colorBubbleOwn">@color/accent_plum_tint</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Green" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
+        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Amber" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_amber</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_amber_tint</item>
+        <item name="colorBubbleOwn">@color/accent_amber_tint</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Blue" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_blue</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_blue_tint</item>
+        <item name="colorBubbleOwn">@color/accent_blue_tint</item>
+    </style>
+    <style name="Theme.MatChat.Dark.Plum" parent="Theme.MatChat.Base.Dark">
+        <item name="colorFocusAccent">@color/accent_plum</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_plum_tint</item>
+        <item name="colorBubbleOwn">@color/accent_plum_tint</item>
+    </style>
+
+    <!-- Manifest default / fallback for any context built before the stored
+         preference is read (MainActivity always calls setTheme() with the
+         resolved leaf first, so this is a safety net, not the normal path). -->
+    <style name="Theme.MatChat" parent="Theme.MatChat.Light.Green" />
 
     <!-- A focusable row: full-width inverse focus block, no touch feedback.
          parent="" so the dotted name is not read as inheriting from a
@@ -28,17 +146,17 @@
     <!-- Text.* use parent="" for the same implicit-parent reason as above. -->
     <style name="Text.Body" parent="">
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:textColor">@color/text_on_focus</item>
+        <item name="android:textColor">?attr/colorTextOnFocus</item>
     </style>
 
     <style name="Text.Label" parent="">
         <item name="android:textSize">@dimen/text_label</item>
-        <item name="android:textColor">@color/text_on_focus</item>
+        <item name="android:textColor">?attr/colorTextOnFocus</item>
     </style>
 
     <style name="Text.Meta" parent="">
         <item name="android:textSize">@dimen/text_meta</item>
-        <item name="android:textColor">@color/text_meta_on_focus</item>
+        <item name="android:textColor">?attr/colorTextMetaOnFocus</item>
     </style>
 
     <!-- The MenuSheet dialog: bottom-anchored, non-floating, BACK dismisses. Uses

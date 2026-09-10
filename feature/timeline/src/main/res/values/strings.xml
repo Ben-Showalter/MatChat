@@ -28,8 +28,14 @@
     <!-- Message menu (S11). -->
     <string name="timeline_msg_reply">Reply</string>
     <string name="timeline_msg_edit">Edit</string>
+    <string name="timeline_msg_react">React</string>
     <string name="timeline_msg_copy">Copy text</string>
     <string name="timeline_msg_info">Message info</string>
+    <!-- Marks a row already selected/active — a local copy of the same
+         "%1$s ✓" idiom feature/settings' theme_row_selected_format uses
+         (non-transitive R classes mean it can't be reused across modules);
+         used by the reaction picker for a choice already reacted with. -->
+    <string name="timeline_row_selected_format">%1$s ✓</string>
 
     <!-- Room info (S12). -->
     <string name="roominfo_title">Room info</string>

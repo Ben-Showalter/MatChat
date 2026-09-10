@@ -5,7 +5,6 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -17,6 +16,7 @@ import org.matchat.core.model.SasEmoji
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.verification.databinding.FragmentVerificationBinding
 import org.matchat.core.ui.R as UiR
 
@@ -121,7 +121,7 @@ class VerificationFragment : SoftkeyFragment() {
                     text = emoji.name
                     textSize = LABEL_SP
                     gravity = Gravity.CENTER
-                    setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
+                    setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
                 },
             )
         }

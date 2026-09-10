@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme-attr indirection over the semantic color roles in colors.xml. Each
+     attr lets a future theme (e.g. a dark or high-contrast variant) remap a
+     role in one place (themes.xml) without touching any layout. Theme.MatChat
+     maps every attr below to its current @color/<role> value, so this layer
+     changes no pixel on its own. Layouts reference ?attr/color<Role>, never
+     @color/<role> directly (AGENTS.md §5). -->
+<resources>
+    <attr name="colorSurface" format="color" />
+    <attr name="colorSurfaceBright" format="color" />
+    <attr name="colorSurfaceInverse" format="color" />
+    <attr name="colorSurfaceFocused" format="color" />
+
+    <attr name="colorTextPrimary" format="color" />
+    <attr name="colorTextSecondary" format="color" />
+    <attr name="colorTextOnInverse" format="color" />
+    <attr name="colorTextOnFocus" format="color" />
+    <attr name="colorTextMetaOnFocus" format="color" />
+    <attr name="colorTextLink" format="color" />
+
+    <attr name="colorDivider" format="color" />
+    <attr name="colorFocusAccent" format="color" />
+
+    <attr name="colorEncrypted" format="color" />
+    <attr name="colorWarning" format="color" />
+    <attr name="colorError" format="color" />
+
+    <!-- New role: the full-screen media-viewer scrim behind the key hint in
+         fragment_image_viewer.xml. No existing role fit a translucent
+         overlay, so this is the one genuinely new role this layer adds
+         rather than just re-plumbing an existing one. -->
+    <attr name="colorScrim" format="color" />
+
+    <!-- New roles: S9 message-bubble fills (item_message.xml,
+         item_message_image.xml) — a received message's bubble, and an own
+         message's bubble. The bubble's accent stripe reuses
+         colorFocusAccent, not a new role, so it stays in step with the
+         user's chosen accent (Settings > Theme). -->
+    <attr name="colorBubbleReceived" format="color" />
+    <attr name="colorBubbleOwn" format="color" />
+</resources>

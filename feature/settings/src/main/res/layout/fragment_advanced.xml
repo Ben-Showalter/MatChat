@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings > Advanced (Phase 6, UI improvement plan; docs/adr/0007). One
+     focusable toggle row; CENTER (or a tap) flips it. The selected state is
+     a trailing checkmark on the label (theme_row_selected_format, shared
+     with S24 Theme), never color alone (AGENTS.md). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/content_pad"
+        android:paddingEnd="@dimen/content_pad">
+
+        <TextView
+            android:id="@+id/advanced_swap_softkeys"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_label"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:textSize="@dimen/text_meta"
+            android:textColor="?attr/colorTextSecondary"
+            android:paddingStart="@dimen/content_pad"
+            android:paddingEnd="@dimen/content_pad"
+            android:paddingTop="2dp"
+            android:text="@string/advanced_swap_softkeys_sub" />
+    </LinearLayout>
+</ScrollView>

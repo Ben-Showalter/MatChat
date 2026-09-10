@@ -4,6 +4,8 @@
     <string name="settings_title">Settings</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_text_size">Text size</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_advanced">Advanced</string>
     <string name="settings_encryption">Encryption</string>
     <string name="settings_session">About this phone\'s session</string>
     <string name="settings_help">Help</string>
@@ -11,6 +13,37 @@
     <string name="settings_sign_out_confirm">Sign out? Messages on this phone will be removed.</string>
     <string name="settings_policy_managed">Policy — Managed by your organization</string>
     <string name="settings_policy_unmanaged">Policy — Not managed</string>
+
+    <!-- S24 Theme (reached from S13 Settings > Theme). -->
+    <string name="theme_title">Theme</string>
+    <string name="theme_appearance_header">Appearance</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_accent_header">Accent color</string>
+    <string name="theme_accent_green">Green</string>
+    <string name="theme_accent_amber">Amber</string>
+    <string name="theme_accent_blue">Blue</string>
+    <string name="theme_accent_plum">Plum</string>
+    <!-- A selected row's label, marked so it reads correctly without color
+         alone conveying the selection (AGENTS.md — never color-only state).
+         Shared beyond S24 (Advanced's toggle row below reuses it too). -->
+    <string name="theme_row_selected_format">%1$s ✓</string>
+
+    <!-- Advanced (reached from S13 Settings > Advanced; Phase 6, UI
+         improvement plan; docs/adr/0007). A narrow, explicit exception to
+         "LEFT=Options/RIGHT=Back, always" — for a device whose hardware
+         softkeys are physically reversed. -->
+    <string name="advanced_title">Advanced</string>
+    <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
+    <string name="advanced_swap_softkeys_sub">For a phone whose hardware Left and Right keys are reversed.</string>
+
+    <!-- S26 Notifications (reached from S13 Settings > Notifications). -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_enabled">Notifications</string>
+    <string name="notifications_enabled_sub">New messages alert with a status-bar notification.</string>
+    <string name="notifications_sound">Sound</string>
+    <string name="notifications_sound_default">Default</string>
+    <string name="notifications_sound_silent">Silent</string>
 
     <!-- S23 Policy. -->
     <string name="policy_title">Policy</string>

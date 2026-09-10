@@ -8,8 +8,8 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import org.matchat.core.ui.R
+import org.matchat.core.ui.theme.themeColor
 
 /**
  * The single text-entry construct (S12 room edits, message edit): a
@@ -29,14 +29,14 @@ object TextPromptSheet {
         val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(ContextCompat.getColor(context, R.color.surface_bright))
+            setBackgroundColor(context.themeColor(R.attr.colorSurfaceBright))
             setPadding(pad, pad, pad, pad)
         }
         container.addView(
             TextView(context).apply {
                 text = title
                 textSize = LABEL_SP
-                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                setTextColor(context.themeColor(R.attr.colorTextSecondary))
             },
         )
 
@@ -44,7 +44,7 @@ object TextPromptSheet {
             setText(initial)
             setSelection(text.length)
             textSize = BODY_SP
-            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+            setTextColor(context.themeColor(R.attr.colorTextPrimary))
             isSingleLine = singleLine
             imeOptions = EditorInfo.IME_ACTION_DONE
             isFocusableInTouchMode = true
@@ -64,7 +64,7 @@ object TextPromptSheet {
             TextView(context).apply {
                 text = context.getString(R.string.prompt_ok)
                 textSize = BODY_SP
-                setTextColor(ContextCompat.getColor(context, R.color.text_on_focus))
+                setTextColor(context.themeColor(R.attr.colorTextOnFocus))
                 minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(0, pad, 0, 0)
