@@ -181,6 +181,12 @@ class FakeTimeline(
 
     override suspend fun markRead(eventId: EventId) = Unit
 
+    val toggledReactions = mutableListOf<Pair<EventId, String>>()
+
+    override suspend fun toggleReaction(eventId: EventId, key: String) {
+        toggledReactions += eventId to key
+    }
+
     fun emit(items: List<TimelineItem>) { itemsFlow.value = items }
     fun emitTyping(users: List<UserId>) { typingFlow.value = users }
 }

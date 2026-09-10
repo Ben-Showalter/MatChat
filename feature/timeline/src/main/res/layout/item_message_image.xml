@@ -95,6 +95,16 @@
         tools:text="3:42 PM ✓✓" />
 
     <LinearLayout
+        android:id="@+id/image_reactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
         android:id="@+id/image_seen_by"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

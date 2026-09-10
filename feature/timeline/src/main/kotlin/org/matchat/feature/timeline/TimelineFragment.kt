@@ -62,6 +62,7 @@ class TimelineFragment : SoftkeyFragment() {
         onAttachmentActivated = { openAttachment(it) },
         onAvatarBind = { url, image -> loadAvatarInto(url, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
+        onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
 
     // A chooser (Documents UI + the device Gallery) returns a content Uri via
@@ -352,6 +353,7 @@ class TimelineFragment : SoftkeyFragment() {
         val items = buildList {
             add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
             if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
             add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
@@ -364,6 +366,7 @@ class TimelineFragment : SoftkeyFragment() {
                     singleLine = false,
                 ) { viewModel.editMessage(row.eventId, it) }
                     .setOnDismissListener { binding?.composeInput?.requestFocus() }
+                MSG_REACT -> openReactionPicker(row)
                 MSG_COPY -> copyText(row.body)
                 MSG_INFO -> navigator.toMessageInfo(
                     row.eventId,
@@ -434,6 +437,50 @@ class TimelineFragment : SoftkeyFragment() {
         }
     }
 
+    /** Reactions round: chips are display-only (see item_message.xml's header
+     *  comment — a D-pad row can't usefully offer several separately
+     *  focusable chips), each "<emoji> <count>", bolder/accent-colored when
+     *  we reacted with it. Reacting always goes through openReactionPicker,
+     *  reached from the message's Options menu. */
+    private fun bindReactions(
+        reactions: List<org.matchat.core.model.ReactionSummary>,
+        container: android.widget.LinearLayout,
+    ) {
+        container.removeAllViews()
+        reactions.forEach { r ->
+            container.addView(
+                android.widget.TextView(requireContext()).apply {
+                    text = "${r.key} ${r.count}"
+                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextColor(
+                        requireContext().themeColor(
+                            if (r.reactedByMe) org.matchat.core.ui.R.attr.colorFocusAccent
+                            else org.matchat.core.ui.R.attr.colorTextMetaOnFocus,
+                        ),
+                    )
+                    if (r.reactedByMe) setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    setPadding(0, 0, REACTION_CHIP_SPACING_PX, 0)
+                },
+            )
+        }
+    }
+
+    /** Opened from the message Options menu (MSG_REACT). Reuses MenuSheet —
+     *  the app's only menu construct — for a 10-choice list (now scrollable,
+     *  MenuSheet's own Reactions-round change) rather than a new dialog
+     *  type. Selecting an already-active reaction removes it (toggleReaction
+     *  is itself a toggle). */
+    private fun openReactionPicker(row: TimelineRow.Message) {
+        val reactedKeys = row.reactions.filter { it.reactedByMe }.map { it.key }.toSet()
+        val items = REACTION_CHOICES.map { (key, label) ->
+            val text = "$key $label"
+            MenuItem(key, if (key in reactedKeys) getString(R.string.timeline_row_selected_format, text) else text)
+        }
+        MenuSheet.show(requireContext(), items) { selected ->
+            viewModel.toggleReaction(row.eventId, selected.id)
+        }.setOnDismissListener { binding?.composeInput?.requestFocus() }
+    }
+
     private fun openAttachment(row: TimelineRow.Attachment) {
         viewLifecycleOwner.lifecycleScope.launch {
             val ctx = requireContext()
@@ -496,6 +543,7 @@ class TimelineFragment : SoftkeyFragment() {
         const val ARG_ROOM_ID = "roomId"
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"
+        const val MSG_REACT = "react"
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
@@ -503,5 +551,23 @@ class TimelineFragment : SoftkeyFragment() {
         const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
         const val SEEN_BY_SPACING_PX = 2
         const val SEEN_BY_OVERFLOW_SP = 11f
+        const val REACTION_CHIP_SPACING_PX = 10
+
+        // Thumbs up/down + 8 common smileys — ~10 total, per the user's own
+        // "simple thumbs up/down, and smileys" ask. The MenuItem id IS the
+        // emoji itself (the SDK's reaction key), so toggleReaction gets it
+        // straight from MenuSheet's selection, no lookup table needed there.
+        val REACTION_CHOICES = listOf(
+            "👍" to "Thumbs up",
+            "👎" to "Thumbs down",
+            "😀" to "Smile",
+            "😂" to "Laughing",
+            "❤️" to "Heart",
+            "😮" to "Surprised",
+            "😢" to "Sad",
+            "😡" to "Angry",
+            "🙏" to "Thanks",
+            "🎉" to "Celebrate",
+        )
     }
 }

@@ -4,9 +4,11 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import org.matchat.core.ui.R
 import org.matchat.core.ui.theme.themeColor
@@ -20,9 +22,15 @@ data class MenuItem(
 
 /**
  * The only menu construct in the app (ARCHITECTURE.md, UX-SPEC S11): a
- * bottom-anchored list of focusable rows, max ~5, dismissed with RIGHT/BACK.
- * The menu *is* the options list, so the caller leaves its own LEFT softkey blank
- * while it is open. No touch-only dismiss — BACK always closes it (AGENTS.md §9).
+ * bottom-anchored list of focusable rows, typically ~5, dismissed with
+ * RIGHT/BACK. The menu *is* the options list, so the caller leaves its own
+ * LEFT softkey blank while it is open. No touch-only dismiss — BACK always
+ * closes it (AGENTS.md §9).
+ *
+ * The row list is wrapped in a height-capped ScrollView (Reactions round —
+ * the 10-choice reaction picker doesn't fit a 320dp-tall screen at once);
+ * a short menu's natural height stays under the cap, so this is invisible
+ * for every existing ≤5-item menu — only a longer list actually scrolls.
  */
 object MenuSheet {
 
@@ -54,7 +62,8 @@ object MenuSheet {
                 dialog.dismiss()
             })
         }
-        dialog.setContentView(list)
+        val scroll = boundedScrollView(context).apply { addView(list) }
+        dialog.setContentView(scroll)
         dialog.window?.apply {
             setGravity(Gravity.BOTTOM)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -63,6 +72,17 @@ object MenuSheet {
         dialog.show()
         list.getChildAt(0)?.requestFocus()
         return dialog
+    }
+
+    /** A ScrollView that clamps its own measured height to a fraction of the
+     *  screen instead of growing unbounded — plain ScrollView has no
+     *  maxHeight attribute, so this overrides onMeasure to impose one. */
+    private fun boundedScrollView(context: Context): ScrollView = object : ScrollView(context) {
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val maxHeight = (context.resources.displayMetrics.heightPixels * MAX_HEIGHT_FRACTION).toInt()
+            val capped = View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.AT_MOST)
+            super.onMeasure(widthMeasureSpec, capped)
+        }
     }
 
     /** Best-effort: requires [context] to be (or wrap) the hosting Activity, which
@@ -92,4 +112,5 @@ object MenuSheet {
         }
 
     private const val MENU_ROW_TEXT_SP = 16f // body floor (PLAN.md G5)
+    private const val MAX_HEIGHT_FRACTION = 0.6 // leaves the title bar visible above it
 }

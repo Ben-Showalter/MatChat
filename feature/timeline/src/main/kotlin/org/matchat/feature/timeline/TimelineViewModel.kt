@@ -135,6 +135,12 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { timeline.editMessage(eventId, text) }
     }
 
+    /** Add or remove our own reaction (Reactions round) — toggleReaction is
+     *  itself a toggle, so this is the whole implementation. */
+    fun toggleReaction(eventId: EventId, key: String) {
+        viewModelScope.launch { timeline.toggleReaction(eventId, key) }
+    }
+
     private fun paginateBack() {
         if (loadingEarlier.value) return
         loadingEarlier.update { true }
@@ -174,6 +180,7 @@ class TimelineViewModel @Inject constructor(
                         timestampEpochMs = item.timestampEpochMs,
                         senderAvatarUrl = item.senderAvatarUrl,
                         seenBy = item.seenBy,
+                        reactions = item.reactions,
                     )
                 }
                 is TimelineItem.Media -> {
@@ -233,6 +240,7 @@ class TimelineViewModel @Inject constructor(
                 sendGlyph = glyph,
                 senderAvatarUrl = item.senderAvatarUrl,
                 seenBy = item.seenBy,
+                reactions = item.reactions,
             )
         }
         return TimelineRow.Attachment(

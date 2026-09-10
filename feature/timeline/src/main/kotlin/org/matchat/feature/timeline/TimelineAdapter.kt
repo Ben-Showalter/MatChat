@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
+import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.ui.R as UiR
 
@@ -45,6 +46,9 @@ internal class TimelineAdapter(
     private val onAvatarBind: (String?, ImageView) -> Unit,
     /** Populates the "seen by" row with one small avatar per entry. */
     private val onSeenByBind: (List<SeenBy>, LinearLayout) -> Unit,
+    /** Populates the reaction-chip row (display-only — see item_message.xml's
+     *  header comment on why chips aren't individually tappable). */
+    private val onReactionsBind: (List<ReactionSummary>, LinearLayout) -> Unit,
 ) : ListAdapter<TimelineRow, RecyclerView.ViewHolder>(DIFF) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -86,6 +90,7 @@ internal class TimelineAdapter(
         private val sender: TextView = view.findViewById(R.id.message_sender)
         private val body: TextView = view.findViewById(R.id.message_body)
         private val time: TextView = view.findViewById(R.id.message_time)
+        private val reactions: LinearLayout = view.findViewById(R.id.message_reactions)
         private val seenBy: LinearLayout = view.findViewById(R.id.message_seen_by)
 
         fun bind(row: TimelineRow.Message) {
@@ -95,6 +100,8 @@ internal class TimelineAdapter(
             body.text = row.body
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
             bindBubbleSide(bubble, time, row.isOwn)
+            reactions.isVisible = row.reactions.isNotEmpty()
+            if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
             seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
             if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
@@ -110,6 +117,7 @@ internal class TimelineAdapter(
         private val image: ImageView = view.findViewById(R.id.message_image)
         private val caption: TextView = view.findViewById(R.id.image_caption)
         private val time: TextView = view.findViewById(R.id.image_time)
+        private val reactions: LinearLayout = view.findViewById(R.id.image_reactions)
         private val seenBy: LinearLayout = view.findViewById(R.id.image_seen_by)
 
         fun bind(row: TimelineRow.Image) {
@@ -122,6 +130,8 @@ internal class TimelineAdapter(
             bindBubbleSide(bubble, time, row.isOwn)
             image.setImageDrawable(null)
             onImageBind(row.eventId, image)
+            reactions.isVisible = row.reactions.isNotEmpty()
+            if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
             seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
             if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnClickListener { onImageActivated(row.eventId) }

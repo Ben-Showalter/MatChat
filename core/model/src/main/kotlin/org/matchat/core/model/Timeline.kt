@@ -20,6 +20,9 @@ sealed interface TimelineItem {
         /** Who (besides the sender) has a read receipt on this message — the
          *  "seen by" avatar row, shown only for own messages (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
+        /** Emoji reactions on this message, each with a count and whether we
+         *  reacted (Reactions round). */
+        val reactions: List<ReactionSummary> = emptyList(),
     ) : TimelineItem
 
     /**
@@ -44,6 +47,7 @@ sealed interface TimelineItem {
         val isRead: Boolean = false,
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
+        val reactions: List<ReactionSummary> = emptyList(),
     ) : TimelineItem
 
     data class DaySeparator(val label: String) : TimelineItem
@@ -60,6 +64,11 @@ sealed interface TimelineItem {
 /** One member who has read a message, for the per-message "seen by" avatar
  *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set. */
 data class SeenBy(val userId: UserId, val avatarUrl: String?)
+
+/** One emoji reaction on a message, aggregated across everyone who sent it
+ *  (Reactions round — UX-SPEC S9/S11). [key] is the emoji itself (the SDK's
+ *  reaction key, e.g. "👍"). */
+data class ReactionSummary(val key: String, val count: Int, val reactedByMe: Boolean)
 
 enum class MediaKind { IMAGE, VIDEO, AUDIO, VOICE, FILE }
 

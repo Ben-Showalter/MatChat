@@ -151,7 +151,11 @@ fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
 beside the sender name (Avatars round), shown/hidden together — 12 sp
 coloured inside the bubble (shown only when the sender changes), body 16 sp,
 time 11 sp shown below the bubble on the same side, with a send-state glyph
-on own messages (`○` sending, `✓` sent, `!` failed). An own message that
+on own messages (`○` sending, `✓` sent, `!` failed). Reactions (Reactions
+round) show as a row of read-only "emoji count" chips below the time line
+— bolder/accent-colored for a reaction we sent — reached via the message
+menu's `React` item, never by tapping a chip (a D-pad row can't usefully
+offer several separately focusable chips). An own message that
 another member has read also shows a short "seen by" row of small avatars
 (up to 4, then "+N") under the time line. Every bubble carries a
 colored stripe (the user's chosen accent, Settings > Theme) on its leading
@@ -185,9 +189,16 @@ Options: Clear · Cancel.
 Sending an empty message is a no-op, not an error.
 
 ### S11 — Message menu
-Opened with CENTER on a message row. A bottom-anchored list, max 5 rows,
-each 26 dp, dismiss with RIGHT softkey.
-Items: `Reply` · `Copy text` · `Message info` · `Delete` (only when permitted).
+Opened with CENTER on a message row. A bottom-anchored list, typically ~5
+rows, each 26 dp, dismiss with RIGHT softkey.
+Items: `Reply` · `Edit` (own messages only) · `React` · `Copy text` ·
+`Message info`.
+`React` (Reactions round) opens a second MenuSheet list of 10 choices
+(thumbs up/down + 8 common smileys, each row "<emoji> <label>", a trailing
+✓ on one already reacted with) — this list doesn't fit one screen, so
+MenuSheet itself grew a height-capped, scrollable body for it (invisible to
+every shorter menu, whose natural height stays under the cap). Selecting a
+choice already reacted with removes that reaction.
 Focus starts on `Reply`.
 Softkeys: (blank) | Select | Back — the menu *is* the options list, so LEFT is
 blank here.

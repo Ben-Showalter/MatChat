@@ -13,12 +13,16 @@
      since it isn't itself focusable. CENTER opens the message menu (S11).
      minHeight so it grows at large-text scale.
 
-     Avatars round: sender_avatar_row pairs a small circle with the sender
+     Avatars round: message_sender_row pairs a small circle with the sender
      name (shown/hidden together, same "only when it changes" rule as the
-     name itself); seen_by_row is a short row of avatar circles under an own
-     message once another member has read it — TimelineAdapter populates it
-     directly (a handful of ImageViews, not a nested RecyclerView, matching
-     this app's flat-view convention for the reaction chips too). -->
+     name itself); message_seen_by is a short row of avatar circles under an
+     own message once another member has read it. Reactions round:
+     message_reactions is a row of read-only emoji-count chips (D-pad has no
+     way to focus one chip among several inside a single focusable row, so
+     reacting always goes through the message's Options menu, never a tap on
+     a chip). TimelineAdapter populates both directly (a handful of small
+     Views, not a nested RecyclerView, matching this app's flat-view
+     convention). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -96,6 +100,16 @@
         android:textSize="@dimen/text_meta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM ✓" />
+
+    <LinearLayout
+        android:id="@+id/message_reactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
     <LinearLayout
         android:id="@+id/message_seen_by"

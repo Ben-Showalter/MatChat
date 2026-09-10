@@ -144,4 +144,9 @@ interface RoomTimeline {
     suspend fun sendVoice(path: String, mimeType: String, durationMs: Long, waveform: List<Float>)
 
     suspend fun markRead(eventId: EventId)
+
+    /** Adds [key] (an emoji) as our reaction to [eventId], or removes it if we
+     *  already reacted with it — Timeline.toggleReaction is itself a toggle
+     *  (Reactions round). */
+    suspend fun toggleReaction(eventId: EventId, key: String)
 }

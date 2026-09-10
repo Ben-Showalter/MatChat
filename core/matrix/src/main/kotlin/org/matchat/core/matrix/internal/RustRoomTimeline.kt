@@ -212,6 +212,12 @@ internal class RustRoomTimeline(
         Unit
     }
 
+    override suspend fun toggleReaction(eventId: EventId, key: String) = withContext(Dispatchers.IO) {
+        val tl = timeline ?: return@withContext
+        runCatching { tl.toggleReaction(EventOrTransactionId.EventId(eventId.value), key) }
+        Unit
+    }
+
     private fun apply(diffs: List<TimelineDiff>) = synchronized(buffer) {
         diffs.forEach { diff ->
             when (diff) {
@@ -235,7 +241,7 @@ internal class RustRoomTimeline(
 
     private fun recompute() {
         val snapshot = synchronized(buffer) { buffer.toList() }
-        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, members) }
+        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, members, ownUserId) }
     }
 
     /** userId -> (displayName, avatarUrl) for every member with either set,

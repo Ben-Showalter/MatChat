@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MillisClock
+import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.SendState
 import org.matchat.core.model.SeenBy
@@ -92,6 +93,32 @@ class TimelineViewModelTest {
         }
     }
 
+    @Test
+    fun `reactions carry through to the row`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        fake.emit(
+            listOf(
+                message(
+                    "a", "@wayne:s", "Wayne", "hi",
+                    reactions = listOf(ReactionSummary("👍", 2, reactedByMe = true)),
+                ),
+            ),
+        )
+        subject().state.test {
+            val row = expectMostRecentItem().rows.filterIsInstance<TimelineRow.Message>().single()
+            assertEquals(listOf(ReactionSummary("👍", 2, reactedByMe = true)), row.reactions)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `toggling a reaction calls through to the timeline`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        subject().toggleReaction(EventId("a"), "👍")
+        testScheduler.advanceUntilIdle()
+        assertEquals(listOf(EventId("a") to "👍"), fake.toggledReactions)
+    }
+
     private fun message(
         id: String,
         sender: String,
@@ -99,9 +126,10 @@ class TimelineViewModelTest {
         body: String,
         senderAvatarUrl: String? = null,
         seenBy: List<SeenBy> = emptyList(),
+        reactions: List<ReactionSummary> = emptyList(),
     ) = TimelineItem.Message(
         eventId = EventId(id), sender = UserId(sender), senderName = name,
         body = body, timestampEpochMs = 0L, isOwn = false, sendState = SendState.SENT,
-        senderAvatarUrl = senderAvatarUrl, seenBy = seenBy,
+        senderAvatarUrl = senderAvatarUrl, seenBy = seenBy, reactions = reactions,
     )
 }

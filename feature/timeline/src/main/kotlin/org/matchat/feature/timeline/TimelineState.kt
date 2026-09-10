@@ -2,6 +2,7 @@ package org.matchat.feature.timeline
 
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.EventId
+import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.SendState
 
@@ -27,6 +28,9 @@ sealed interface TimelineRow {
          *  short avatar row under the bubble; always empty for a received
          *  message (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
+        /** Reaction chips shown below the bubble (Reactions round); empty
+         *  hides the row entirely. */
+        val reactions: List<ReactionSummary> = emptyList(),
     ) : TimelineRow {
         override val stableId: String get() = eventId.value
     }
@@ -41,6 +45,7 @@ sealed interface TimelineRow {
         val sendGlyph: String,
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
+        val reactions: List<ReactionSummary> = emptyList(),
     ) : TimelineRow {
         override val stableId: String get() = "img:${eventId.value}"
     }

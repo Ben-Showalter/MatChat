@@ -2,6 +2,7 @@ package org.matchat.core.matrix.internal
 
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
+import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SeenBy
@@ -55,8 +56,9 @@ internal object Mappers {
      * round trip) — resolveSenderName falls back to the raw Matrix ID for a
      * sender not yet in it (e.g. joined mid-conversation before the next
      * member-list refresh), never a blank name; a missing avatar is simply null.
+     * [ownUserId] resolves each reaction's reactedByMe (Reactions round).
      */
-    fun toTimelineItem(item: RustTimelineItem, members: Map<String, MemberInfo>): TimelineItem? {
+    fun toTimelineItem(item: RustTimelineItem, members: Map<String, MemberInfo>, ownUserId: String?): TimelineItem? {
         val event = item.asEvent() ?: return null
         val msgLike = event.content as? TimelineItemContent.MsgLike ?: return null
         val messageKind = msgLike.content.kind as? MsgLikeKind.Message ?: return null
@@ -73,8 +75,22 @@ internal object Mappers {
         }.getOrDefault(emptyList())
         val readByOther = seenBy.isNotEmpty()
         val senderAvatarUrl = members[event.sender]?.avatarUrl
+        // Reactions (Reactions round): already sitting on the same MsgLikeContent
+        // this function already destructures for .kind — Reaction(key, senders),
+        // so a count + "did I react" is a direct map, no extra SDK call.
+        val reactions = runCatching {
+            msgLike.content.reactions.map { r ->
+                ReactionSummary(
+                    key = r.key,
+                    count = r.senders.size,
+                    reactedByMe = ownUserId != null && r.senders.any { it.senderId == ownUserId },
+                )
+            }
+        }.getOrDefault(emptyList())
 
-        val media = mediaOf(messageKind.content.msgType, eventId, event, readByOther, members, senderAvatarUrl, seenBy)
+        val media = mediaOf(
+            messageKind.content.msgType, eventId, event, readByOther, members, senderAvatarUrl, seenBy, reactions,
+        )
         if (media != null) return media
 
         return TimelineItem.Message(
@@ -88,6 +104,7 @@ internal object Mappers {
             isRead = readByOther,
             senderAvatarUrl = senderAvatarUrl,
             seenBy = seenBy,
+            reactions = reactions,
         )
     }
 
@@ -107,6 +124,7 @@ internal object Mappers {
         members: Map<String, MemberInfo>,
         senderAvatarUrl: String?,
         seenBy: List<SeenBy>,
+        reactions: List<ReactionSummary>,
     ): TimelineItem.Media? {
         val (kind, source, filename, caption, mime, size, durationMs) = when (type) {
             is MessageType.Image -> Media6(
@@ -149,6 +167,7 @@ internal object Mappers {
             isRead = isRead,
             senderAvatarUrl = senderAvatarUrl,
             seenBy = seenBy,
+            reactions = reactions,
         )
     }
 
