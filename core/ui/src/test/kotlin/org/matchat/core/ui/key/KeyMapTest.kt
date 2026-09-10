@@ -41,16 +41,27 @@ class KeyMapTest {
     }
 
     @Test
-    fun `swapped, every LEFT-position and RIGHT-position code flips`() {
+    fun `swapped, the two positional codes flip`() {
         assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_SOFT_LEFT), swapped = true))
         assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_MENU), swapped = true))
         assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_SOFT_RIGHT), swapped = true))
-        assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_BACK), swapped = true))
+    }
+
+    @Test
+    fun `swapped, KEYCODE_BACK still means Back, never Options`() {
+        // The confirmed bug this guards: a dedicated hardware Back key (distinct
+        // from the two labeled positional softkeys) got swapped to Options along
+        // with them. It must always resolve to SOFT_RIGHT (Back's LogicalKey).
+        assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_BACK), swapped = true))
+        assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_BACK), swapped = false))
     }
 
     @Test
     fun `swap never touches a non-softkey code`() {
         // Table test across every other mapped key: swapped must equal unswapped.
+        // KEYCODE_BACK is deliberately not in this list — it's covered by its own
+        // test above, and it's the one code that's exempt for a different reason
+        // (always Back) than these (not a softkey at all).
         val codes = listOf(
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT,
             KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,

@@ -21,8 +21,19 @@ object KeyMap {
      *  end, after the normal per-device keycode table below — a device whose
      *  hardware softkeys are physically reversed still maps LEFT-position to
      *  Options semantically everywhere past this function, just via the
-     *  opposite raw keycode. */
+     *  opposite raw keycode.
+     *
+     *  KEYCODE_BACK is handled separately, first, and NEVER swapped: on
+     *  hardware with a dedicated Back key (distinct from the two labeled
+     *  positional softkeys), that key must always mean Back — it isn't one
+     *  of the two things the swap preference is about. A confirmed bug had
+     *  it swapping to Options along with the positional keys, since the
+     *  per-device table below originally folded BACK into the same
+     *  LogicalKey as the right softkey position (true before the swap
+     *  preference existed, since they meant the same thing; no longer true
+     *  once "the right position" and "always Back" can disagree). */
     fun map(event: KeyEvent, swapped: Boolean = false): LogicalKey? {
+        if (event.keyCode == KeyEvent.KEYCODE_BACK) return LogicalKey.SOFT_RIGHT
         val logical = mapRaw(event) ?: return null
         return if (swapped) swapSoftkeys(logical) else logical
     }
@@ -44,8 +55,9 @@ object KeyMap {
         // legacy SOFT_LEFT. Add a SKU's OEM code here, never in a feature module.
         KeyEvent.KEYCODE_SOFT_LEFT, KeyEvent.KEYCODE_MENU -> LogicalKey.SOFT_LEFT
 
-        // RIGHT softkey = Back. Delivered as BACK on most SKUs; SOFT_RIGHT on some.
-        KeyEvent.KEYCODE_SOFT_RIGHT, KeyEvent.KEYCODE_BACK -> LogicalKey.SOFT_RIGHT
+        // RIGHT softkey position. KEYCODE_BACK is NOT handled here — see map()'s
+        // doc comment: it's a separate, never-swapped, always-Back case.
+        KeyEvent.KEYCODE_SOFT_RIGHT -> LogicalKey.SOFT_RIGHT
 
         // Hardware call keys (docs/VOICE.md §6). Present on these feature phones;
         // only the call screens act on them, elsewhere they fall through.

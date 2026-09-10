@@ -31,6 +31,16 @@ Add one user preference, `Settings > Advanced > "Swap Left/Right keys"`
 - The on-screen labels mirror position (`mirroredLabels`,
   `SoftkeyFragment.kt`) so the visible text still matches which physical
   button does what; `SoftkeyBarView`'s tap fallback dispatches to match.
+- **`KEYCODE_BACK` is exempt, always.** Some hardware has a dedicated Back
+  key distinct from the two labeled positional softkeys — a universal "go
+  back" affordance, not one of the two things this preference is about.
+  `KeyMap.map` special-cases it before the swap step, unconditionally
+  returning `SOFT_RIGHT` regardless of `swapped`. (First shipped without
+  this exemption — `KEYCODE_BACK` and `KEYCODE_SOFT_RIGHT` originally shared
+  one `LogicalKey` in the per-device table, a fine simplification before
+  this preference existed, since they meant the same thing; swapping then
+  incorrectly carried the dedicated Back key along with the positional
+  right softkey. Fixed same day, on user report.)
 
 This is a **narrow, explicit exception** to the "no screen reassigns a key"
 rule, not a repeal of it: the rule is about screens giving LEFT/RIGHT
