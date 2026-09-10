@@ -336,7 +336,15 @@ class TimelineFragment : SoftkeyFragment() {
         }
     }
 
-    /** S11 message menu, opened with CENTER on a message row. */
+    /** S11 message menu, opened with CENTER on a message row. Both this menu and
+     *  the edit prompt it can open are plain Dialogs over the still-alive Fragment
+     *  view (S9 stays the visible screen underneath), so nothing restores focus to
+     *  compose_input on dismiss unless we do it here — one general hook on each
+     *  dialog, not per-branch logic (Phase 9, UI improvement plan; also correctly
+     *  covers the still-TODO MSG_REPLY branch once it lands, since it'll open a
+     *  dialog off this same menu). Navigation-based destinations (toImageViewer,
+     *  toMessageInfo, toRoomInfo) are untouched — those already restore focus
+     *  correctly via Fragment view recreation. */
     private fun openMessageMenu(row: TimelineRow.Message) {
         val items = buildList {
             add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
@@ -344,7 +352,7 @@ class TimelineFragment : SoftkeyFragment() {
             add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
-        MenuSheet.show(requireContext(), items) { selected ->
+        val menu = MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
                 MSG_EDIT -> org.matchat.core.ui.menu.TextPromptSheet.show(
                     requireContext(),
@@ -352,6 +360,7 @@ class TimelineFragment : SoftkeyFragment() {
                     row.body,
                     singleLine = false,
                 ) { viewModel.editMessage(row.eventId, it) }
+                    .setOnDismissListener { binding?.composeInput?.requestFocus() }
                 MSG_COPY -> copyText(row.body)
                 MSG_INFO -> navigator.toMessageInfo(
                     row.eventId,
@@ -361,6 +370,7 @@ class TimelineFragment : SoftkeyFragment() {
                 else -> Unit // reply lands in a later milestone
             }
         }
+        menu.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
 
     private fun copyText(text: String) {
