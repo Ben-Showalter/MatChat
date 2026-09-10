@@ -405,6 +405,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
                 MSG_PIN -> viewModel.setPinned(row.eventId, !row.isPinned)
                 MSG_COPY -> copyText(row.body)
                 MSG_INFO -> navigator.toMessageInfo(
+                    roomId(),
                     row.eventId,
                     org.matchat.core.model.UserId(row.senderId),
                     row.timestampEpochMs,
@@ -505,12 +506,16 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  the app's only menu construct — for a 10-choice list (now scrollable,
      *  MenuSheet's own Reactions-round change) rather than a new dialog
      *  type. Selecting an already-active reaction removes it (toggleReaction
-     *  is itself a toggle). */
+     *  is itself a toggle). Each choice's toggle key is resolved against the
+     *  message's own existing reactions first (resolveReactionKey) — bug
+     *  fix: reacting with an emoji visually already on the message must
+     *  bump that chip's count, not create a byte-different duplicate. */
     private fun openReactionPicker(row: TimelineRow.Message) {
-        val reactedKeys = row.reactions.filter { it.reactedByMe }.map { it.key }.toSet()
         val items = REACTION_CHOICES.map { (key, label) ->
+            val toggleKey = resolveReactionKey(row.reactions, key)
+            val reacted = row.reactions.any { it.key == toggleKey && it.reactedByMe }
             val text = "$key $label"
-            MenuItem(key, if (key in reactedKeys) getString(R.string.timeline_row_selected_format, text) else text)
+            MenuItem(toggleKey, if (reacted) getString(R.string.timeline_row_selected_format, text) else text)
         }
         MenuSheet.show(requireContext(), items) { selected ->
             viewModel.toggleReaction(row.eventId, selected.id)

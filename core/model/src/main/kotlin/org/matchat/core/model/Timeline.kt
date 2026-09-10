@@ -71,8 +71,15 @@ data class SeenBy(val userId: UserId, val avatarUrl: String?)
 
 /** One emoji reaction on a message, aggregated across everyone who sent it
  *  (Reactions round — UX-SPEC S9/S11). [key] is the emoji itself (the SDK's
- *  reaction key, e.g. "👍"). */
-data class ReactionSummary(val key: String, val count: Int, val reactedByMe: Boolean)
+ *  reaction key, e.g. "👍"). [senderNames] lists who reacted, resolved the
+ *  same way [TimelineItem.Message.senderName] is — for Message info's
+ *  "who reacted" list (a follow-up to the Reactions round). */
+data class ReactionSummary(
+    val key: String,
+    val count: Int,
+    val reactedByMe: Boolean,
+    val senderNames: List<String> = emptyList(),
+)
 
 enum class MediaKind { IMAGE, VIDEO, AUDIO, VOICE, FILE }
 

@@ -307,3 +307,22 @@ class TimelineViewModel @Inject constructor(
         const val READ_GLYPH = "✓✓" // own message read by another member
     }
 }
+
+/**
+ * Bug fix (Reactions round): the reaction picker's own hardcoded emoji
+ * literal (e.g. "❤️") can differ byte-for-byte from whatever key is
+ * already on the message — a Unicode variation-selector mismatch (with vs.
+ * without U+FE0F) is the common case, visually identical but a different
+ * SDK-level reaction key — so toggling with the literal creates a second,
+ * parallel chip instead of bumping the existing one's count. Resolving
+ * against the message's own [existing] reactions first (normalized) and
+ * reusing whichever key is already there guarantees a toggle always lands
+ * on the same reaction group. A top-level, ViewModel-free function so it's
+ * directly testable and reusable from the Fragment's picker-building code.
+ */
+fun resolveReactionKey(existing: List<org.matchat.core.model.ReactionSummary>, chosenKey: String): String =
+    existing.firstOrNull { normalizeReactionKey(it.key) == normalizeReactionKey(chosenKey) }?.key ?: chosenKey
+
+/** Strips variation selectors (U+FE0F "emoji presentation", U+FE0E "text
+ *  presentation") so two otherwise-identical emoji compare equal. */
+fun normalizeReactionKey(key: String): String = key.replace("\uFE0F", "").replace("\uFE0E", "")

@@ -92,6 +92,7 @@ internal object Mappers {
                     key = r.key,
                     count = r.senders.size,
                     reactedByMe = ownUserId != null && r.senders.any { it.senderId == ownUserId },
+                    senderNames = r.senders.map { resolveSenderName(it.senderId, members) },
                 )
             }
         }.getOrDefault(emptyList())

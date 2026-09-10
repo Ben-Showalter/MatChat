@@ -65,6 +65,7 @@
     <string name="msginfo_sent_by">Sent by</string>
     <string name="msginfo_sent">Sent</string>
     <string name="msginfo_event_id">Event ID</string>
+    <string name="msginfo_reactions">Reactions</string>
     <string name="msginfo_view_profile">View profile</string>
     <string name="profile_title">Profile</string>
     <string name="profile_message_failed">Couldn\'t start a chat with them.</string>

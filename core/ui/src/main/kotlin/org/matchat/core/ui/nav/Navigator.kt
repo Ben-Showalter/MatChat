@@ -22,8 +22,10 @@ interface Navigator {
     fun toRoomInfo(roomId: RoomId)
     /** Room info > Pinned messages (Pinned messages round). */
     fun toPinnedMessages(roomId: RoomId)
-    /** Message info (S11): metadata for one event, with a link to the sender. */
-    fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long)
+    /** Message info (S11): metadata for one event, with a link to the sender.
+     *  [roomId] lets the screen look up this event's live reactions (who
+     *  reacted, by name — a follow-up to the Reactions round). */
+    fun toMessageInfo(roomId: RoomId, eventId: EventId, senderId: UserId, timestampEpochMs: Long)
     /** A sender's profile, reached from message info. */
     fun toProfile(userId: UserId)
     /** Voice call screen (docs/VOICE.md). [incoming] true rings; false dials out. */
