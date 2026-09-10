@@ -33,7 +33,17 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
         onFieldActivated = { editField(it) },
         onMemberActivated = { memberMenu(it) },
         onActionActivated = { onAction(it) },
+        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
     )
+
+    /** Avatars round: same shared AvatarBinder/AvatarCache path (core/ui)
+     *  the room list and timeline use — this Fragment only supplies the
+     *  byte fetch. */
+    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+        }
+    }
 
     override fun onContentViewCreated(content: View) {
         val rv = content.findViewById<RecyclerView>(R.id.roominfo_list)
@@ -110,5 +120,6 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
 
     private companion object {
         const val MEMBER_REMOVE = "remove"
+        const val AVATAR_MAX_PX = 32 // ~2x avatar_size_sender
     }
 }

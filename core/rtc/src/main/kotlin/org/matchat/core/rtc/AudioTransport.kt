@@ -25,7 +25,6 @@ interface AudioTransport {
     fun disconnect()
 
     fun setMicMuted(muted: Boolean)
-
     /** Route to the loudspeaker (true) or the earpiece (false) — earpiece is the
      *  default on these phones; `*` toggles speaker (docs/VOICE.md §6). */
     fun setSpeakerOn(on: Boolean)

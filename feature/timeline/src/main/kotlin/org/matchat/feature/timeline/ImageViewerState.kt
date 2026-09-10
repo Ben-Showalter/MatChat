@@ -9,12 +9,14 @@ data class ImageViewerState(
 ) {
     // Array field forces explicit equals/hashCode (identity is fine here: the
     // bytes reference changes exactly once, on load).
-    override fun equals(other: Any?): Boolean = this === other || (
-        other is ImageViewerState &&
-            isLoading == other.isLoading &&
-            failed == other.failed &&
-            bytes === other.bytes
-        )
+    override fun equals(other: Any?): Boolean =
+        this === other || (
+            other is ImageViewerState &&
+                isLoading == other.isLoading &&
+                failed == other.failed &&
+                bytes === other.bytes
+            )
 
-    override fun hashCode(): Int = (isLoading.hashCode() * 31 + failed.hashCode()) * 31 + (bytes?.size ?: 0)
+    override fun hashCode(): Int =
+        (isLoading.hashCode() * 31 + failed.hashCode()) * 31 + (bytes?.size ?: 0)
 }

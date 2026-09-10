@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="15sp"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             tools:text="Not managed" />
 
         <TextView
@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorTextSecondary"
             tools:text="This phone is not managed by an organization." />
 
         <TextView
@@ -34,14 +34,14 @@
             android:layout_marginTop="8dp"
             android:text="@string/policy_homeserver"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary" />
+            android:textColor="?attr/colorTextSecondary" />
 
         <TextView
             android:id="@+id/policy_homeserver"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             tools:text="chats.carpathianserver.org" />
 
         <TextView
@@ -50,14 +50,14 @@
             android:layout_marginTop="6dp"
             android:text="@string/policy_allowed"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary" />
+            android:textColor="?attr/colorTextSecondary" />
 
         <TextView
             android:id="@+id/policy_allowed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             tools:text="All servers allowed" />
 
         <TextView
@@ -66,14 +66,14 @@
             android:layout_marginTop="6dp"
             android:text="@string/policy_direct"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary" />
+            android:textColor="?attr/colorTextSecondary" />
 
         <TextView
             android:id="@+id/policy_direct"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             tools:text="Allowed" />
     </LinearLayout>
 </ScrollView>

@@ -3,5 +3,5 @@
      text stays dark in every state and is always legible. Kept as a state list
      so callers/roles are unchanged. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/text_primary" />
+    <item android:color="?attr/colorTextPrimary" />
 </selector>

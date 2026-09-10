@@ -21,25 +21,17 @@ class FakeSessionVerification(
         _state.value = SasState.Requested
     }
 
-    override suspend fun approve() {
-        approved = true
-    }
+    override suspend fun approve() { approved = true }
 
     override suspend fun decline() {
         declined = true
         _state.value = SasState.Cancelled
     }
 
-    override suspend fun cancel() {
-        _state.value = SasState.Idle
-    }
+    override suspend fun cancel() { _state.value = SasState.Idle }
 
-    override fun reset() {
-        _state.value = SasState.Idle
-    }
+    override fun reset() { _state.value = SasState.Idle }
 
     /** Push a state as if the SDK delegate reported it. */
-    fun emit(state: SasState) {
-        _state.value = state
-    }
+    fun emit(state: SasState) { _state.value = state }
 }

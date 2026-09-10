@@ -12,8 +12,9 @@ import org.matchat.feature.roomlist.databinding.ItemRoomBinding
 
 /**
  * Screenshot coverage for the room row at the reference viewport (PLAN.md §8.2).
- * Rendered at 240x320 mdpi, normal and largest font scale — the two the whole
- * suite pins. A diff is a review conversation; an unreviewed diff blocks.
+ * Rendered at 240x320 mdpi portrait and 320x240 landscape (UX-SPEC S17), each
+ * at normal and largest font scale. A diff is a review conversation; an
+ * unreviewed diff blocks.
  */
 class RoomRowScreenshotTest {
 
@@ -22,6 +23,12 @@ class RoomRowScreenshotTest {
         screenHeight = 320,
         density = Density.MEDIUM,
         orientation = ScreenOrientation.PORTRAIT,
+    )
+
+    private val landscapeConfig = config.copy(
+        screenWidth = 320,
+        screenHeight = 240,
+        orientation = ScreenOrientation.LANDSCAPE,
     )
 
     @get:Rule
@@ -45,6 +52,18 @@ class RoomRowScreenshotTest {
     @Test
     fun roomRow_largestFont() {
         paparazzi.unsafeUpdateConfig(deviceConfig = config.copy(fontScale = 1.5f))
+        paparazzi.snapshot(row())
+    }
+
+    @Test
+    fun roomRow_landscape() {
+        paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig)
+        paparazzi.snapshot(row())
+    }
+
+    @Test
+    fun roomRow_landscape_largestFont() {
+        paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig.copy(fontScale = 1.5f))
         paparazzi.snapshot(row())
     }
 }

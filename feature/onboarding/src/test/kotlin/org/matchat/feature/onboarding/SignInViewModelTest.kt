@@ -20,7 +20,6 @@ import org.matchat.core.testing.FakePolicyProvider
 class SignInViewModelTest {
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
-
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test

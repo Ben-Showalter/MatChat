@@ -29,11 +29,8 @@ class ImageViewerViewModel @Inject constructor(
         viewModelScope.launch {
             val bytes = session.loadMedia(eventId)
             _state.update {
-                if (bytes == null) {
-                    it.copy(isLoading = false, failed = true)
-                } else {
-                    it.copy(isLoading = false, bytes = bytes)
-                }
+                if (bytes == null) it.copy(isLoading = false, failed = true)
+                else it.copy(isLoading = false, bytes = bytes)
             }
         }
     }

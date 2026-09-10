@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:duplicateParentState="true"
             android:textSize="@dimen/text_sender"
-            android:textColor="@color/encrypted"
+            android:textColor="?attr/colorEncrypted"
             android:visibility="gone"
             tools:text="Wayne"
             tools:visibility="visible" />
@@ -49,7 +49,7 @@
             android:maxLines="1"
             android:ellipsize="middle"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_on_focus"
+            android:textColor="?attr/colorTextOnFocus"
             tools:text="Voice message" />
 
         <TextView
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:duplicateParentState="true"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_meta_on_focus"
+            android:textColor="?attr/colorTextMetaOnFocus"
             tools:text="0:12" />
     </LinearLayout>
 
@@ -69,6 +69,6 @@
         android:layout_marginStart="4dp"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_meta_on_focus"
+        android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM" />
 </LinearLayout>

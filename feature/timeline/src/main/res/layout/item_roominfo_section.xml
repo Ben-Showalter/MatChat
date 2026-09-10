@@ -7,7 +7,7 @@
     android:focusable="false"
     android:textStyle="bold"
     android:textSize="@dimen/text_meta"
-    android:textColor="@color/text_secondary"
+    android:textColor="?attr/colorTextSecondary"
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
     android:paddingTop="8dp"

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The focused/selected fill: a subtle full-row tint plus a colored accent
+     bar on the trailing edge — the TurboText-style focus cue (docs/UX-SPEC.md
+     §2). Referenced by focus_selector.xml for both the focused and selected
+     states, so there is exactly one definition to change. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurfaceFocused" />
+        </shape>
+    </item>
+    <item
+        android:width="@dimen/focus_bar_width"
+        android:gravity="end">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorFocusAccent" />
+        </shape>
+    </item>
+</layer-list>

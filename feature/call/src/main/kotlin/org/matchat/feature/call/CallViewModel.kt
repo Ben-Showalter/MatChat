@@ -35,7 +35,5 @@ class CallViewModel @Inject constructor(
     fun toggleMute() = calls.toggleMute()
     fun toggleSpeaker() = calls.toggleSpeaker()
 
-    private companion object {
-        const val STOP_MS = 5_000L
-    }
+    private companion object { const val STOP_MS = 5_000L }
 }

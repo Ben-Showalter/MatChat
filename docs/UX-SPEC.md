@@ -19,10 +19,14 @@ Every screen has three fixed bands:
 └────────────────────────────┘
 ```
 
-- Title bar: 14 sp, single line, ellipsized at the end. Right side shows sync
-  state (`⟳` syncing, `!` offline) — nothing else.
-- Softkey bar: three cells, left-aligned / centre / right-aligned, 11 sp, on the
-  inverse surface so it is never confused with content.
+- Title bar: 14 sp, single line, ellipsized at the end, on the accent surface
+  (`?attr/colorFocusAccent` — the user's chosen accent, Settings > Theme, not
+  the inverse/near-black surface used elsewhere). Right side shows sync state
+  (`⟳` syncing, `!` offline) — nothing else.
+- Softkey bar: three cells, left-aligned / centre / right-aligned, 13 sp (its
+  own dedicated size, `text_softkey_label` — not the shared 11 sp metadata
+  floor), on the same accent surface as the title bar so it is never confused
+  with content.
 - Content never scrolls by pixel drag. It scrolls because focus moved.
 
 ## 2. Key map (global, unchangeable)
@@ -40,13 +44,30 @@ Every screen has three fixed bands:
 | `#` (hold) | Next unread room. |
 | `*` (hold) | Toggle large-text mode. |
 
+"Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
+different meaning (AGENTS.md §4) — Options and Back are always exactly one
+softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
+is a separate, global, opt-in exception for hardware whose physical softkeys
+are reversed: it flips which *physical* key produces which *logical* one,
+for every screen at once, not a per-screen reassignment.
+
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`): body 16 sp ·
 interactive labels 14 sp · secondary metadata — timestamps, day separators,
-sender names, field captions, softkey labels — 11 sp. Nothing below 11 sp.
+sender names, field captions — 11 sp; softkey labels 13 sp, their own
+dedicated size (§1). Nothing below 11 sp.
 
-Focus highlight: full-width inverse block, 2 dp border, no rounded corners.
-It must be identifiable at a glance in direct sunlight — high contrast wins over
-subtlety.
+Focus highlight: a subtle full-row tint (`?attr/colorSurfaceFocused`) plus a
+solid accent bar on the trailing edge (`?attr/colorFocusAccent`,
+`@dimen/focus_bar_width`), no rounded corners — replaces the earlier full-width
+bordered block. The accent bar is now the primary at-a-glance cue; this
+trades some of the old block's raw contrast for a lighter-weight look, so
+re-check sunlight legibility (PLAN.md G5) once this ships. `colorSurfaceFocused`
+is a translucent wash of the user's chosen accent (`colors.xml`'s
+`accent_<name>_tint`, ~20% alpha, assigned per leaf in `themes.xml`) — it
+used to be a fixed green in every theme regardless of accent, which was a
+bug (found via screenshot: the room-list selection highlight stayed green
+under the Blue/Amber/Plum accents). The same tint drives S9's
+`colorBubbleOwn` (below) for the same reason.
 
 ## 3. Screen inventory
 
@@ -102,15 +123,17 @@ Options: Verify with another device instead · Paste from clipboard.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
-Rows (44 dp each): room name 16 sp bold · last message 13 sp grey, one line
+Rows (44 dp each): a 32 dp room avatar (a plain filled circle placeholder
+until the real image decodes, or when none is set — Avatars round) at the
+start · room name 16 sp bold · last message 13 sp grey, one line
 ellipsized · relative time 11 sp top-right · unread badge (inverse pill, count)
 right of the name.
-Sorted by most recent activity. Focus = whole row inverse.
+Sorted by most recent activity. Focus = the standard focus highlight (§2).
 **Pending invitations** appear as an 18 dp band directly under the title bar —
-"1 invitation" / "3 invitations", with a 2 dp border and the count in an inverse
-pill. It is the *first* focus stop and opens S18; when focused it inverts like
-any other row (inverse means focus, everywhere, and nothing else). No band when
-there are none.
+"1 invitation" / "3 invitations", with the count in an inverse pill. It is
+the *first* focus stop and opens S18; when focused it uses the
+standard focus highlight like any other row (§2, everywhere, and nothing
+else). No band when there are none.
 Focus order: invitation band (if any) → row 1 → row *n*. Initial focus:
 invitation band, else first unread, else row 1.
 Softkeys: Options | Open | Exit.
@@ -121,10 +144,27 @@ Offline: title bar `!` plus a 16 dp banner "No connection — showing saved
 messages."
 
 ### S9 — Timeline
-Content: day separator rows (centred, 11 sp, grey rule); message rows —
-sender name 12 sp coloured (shown only when the sender changes), body 16 sp,
-time 11 sp right-aligned on the last line; own messages right-aligned with a
-send-state glyph (`○` sending, `✓` sent, `!` failed).
+Content: day separator rows (centred, 11 sp, grey rule); message rows shown
+as bubbles reaching nearly the full row width (matching the reference
+device's own SMS app) — own messages trail (right, a light accent-tinted
+fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
+beside the sender name (Avatars round), shown/hidden together — 12 sp
+coloured inside the bubble (shown only when the sender changes), body 16 sp,
+time 11 sp shown below the bubble on the same side, with a send-state glyph
+on own messages (`○` sending, `✓` sent, `!` failed). Reactions (Reactions
+round) show as a row of read-only "emoji count" chips below the time line
+— bolder/accent-colored for a reaction we sent — reached via the message
+menu's `React` item, never by tapping a chip (a D-pad row can't usefully
+offer several separately focusable chips). An own message that
+another member has read also shows a short "seen by" row of small avatars
+(up to 4, then "+N") under the time line. Every bubble carries a
+colored stripe (the user's chosen accent, Settings > Theme) on its leading
+edge for received messages, trailing edge for own — the bubble is rounded
+only on the side away from its stripe (square where the stripe sits, so it
+sits flush, not a full rounded rect). A focused bubble's border recolors to
+the accent and thickens, in place of the app's usual flat-fill-plus-bar
+focus style (AGENTS.md §4's named exception) — the row itself has no
+background.
 If the room is **not encrypted**, a persistent 14 dp band sits directly under the
 title bar: "This group is not encrypted." (G4). Encrypted rooms show nothing —
 encryption is the norm, not a decoration.
@@ -142,23 +182,31 @@ Special rows:
 Empty: "No messages yet. Say hello."
 
 ### S10 — Compose (input focused)
-The input strip expands to 3 lines max as text grows; the timeline shrinks.
+The input strip expands to 5 lines max as text grows; the timeline shrinks.
 System IME (T9 / multi-tap) provides text entry — we never draw a keyboard.
 Softkeys while the input is focused: Options | **Send** | Back.
 Options: Clear · Cancel.
 Sending an empty message is a no-op, not an error.
 
 ### S11 — Message menu
-Opened with CENTER on a message row. A bottom-anchored list, max 5 rows,
-each 26 dp, dismiss with RIGHT softkey.
-Items: `Reply` · `Copy text` · `Message info` · `Delete` (only when permitted).
+Opened with CENTER on a message row. A bottom-anchored list, typically ~5
+rows, each 26 dp, dismiss with RIGHT softkey.
+Items: `Reply` · `Edit` (own messages only) · `React` · `Copy text` ·
+`Message info`.
+`React` (Reactions round) opens a second MenuSheet list of 10 choices
+(thumbs up/down + 8 common smileys, each row "<emoji> <label>", a trailing
+✓ on one already reacted with) — this list doesn't fit one screen, so
+MenuSheet itself grew a height-capped, scrollable body for it (invisible to
+every shorter menu, whose natural height stays under the cap). Selecting a
+choice already reacted with removes that reaction.
 Focus starts on `Reply`.
 Softkeys: (blank) | Select | Back — the menu *is* the options list, so LEFT is
 blank here.
 
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
-members can read this"), member list (name + power label).
+members can read this"), member list (a 16 dp avatar beside each name — same
+placeholder-until-decoded treatment as S8/S9 — plus a power label).
 Focus order: member rows.
 Softkeys: Options | Select | Back.
 Options: Mute this group · Leave group (confirm) · Help.
@@ -166,8 +214,10 @@ There is **no** "add member" here in v1 — group membership is administered on
 the server. (Direct chats are different: those the user starts themselves, S20.)
 
 ### S13 — Settings
-Rows: `Notifications` · `Text size` · `Encryption` (verification status) ·
-`About this phone's session` · `Policy` · `Help` · `Sign out`.
+Rows: `Notifications` (opens S26) · `Text size` · `Theme` (opens S24) ·
+`Advanced` (opens S25) · `Encryption` (verification status) ·
+`About this phone's session` ·
+`Policy` · `Help` · `Sign out`.
 The `Policy` row reads "Managed by your organization" or "Not managed" and opens
 a read-only screen listing the homeserver, the allowed servers (or "All servers
 allowed"), and whether direct chat is on. A user who cannot message someone must
@@ -184,10 +234,13 @@ Softkeys: (blank) | Select | Back.
 ### S15 — Notification
 *Not a screen we draw — this is the system notification surface; the entries
 below are what we put into it.*
-Heads-up collapsed notification: room name + count ("Barn Crew · 3 new").
-Selecting deep-links to S9 for that room, with the back stack rooted at S8.
+Heads-up collapsed notification: room name + count ("Barn Crew · 3 new"), a
+message-bubble small icon. Selecting deep-links to S9 for that room, with the
+back stack rooted at S8. Whether it fires at all, and what sound it plays,
+are user-configurable — Settings → Notifications (S26).
 Persistent low-priority notification while the sync service runs:
-"MatChat is running."
+"MatChat is running." — always on, its own circular-arrows icon, not
+user-configurable (docs/adr/0004).
 
 ### S16 — Large-text mode
 Toggled by holding `*` (and from Settings → Text size). Every row grows: room
@@ -272,6 +325,42 @@ messages (Allowed / Not allowed).
 Focus: none (nothing is actionable). Softkeys: (blank) | (blank) | Back.
 This screen exists so a user who has just been blocked can find out why without
 phoning anyone. It never offers a way around the policy.
+
+### S24 — Theme
+Reached from Settings → Theme. Two focusable lists, in fixed order:
+**Appearance** (`Light` · `Dark`) then **Accent color** (`Green` · `Amber` ·
+`Blue` · `Plum`). CENTER on a row selects it immediately — no separate
+confirm — and the change takes effect right away (the app recreates itself
+once, keeping the same screen). The selected row in each list carries a
+trailing checkmark; selection is never conveyed by color alone.
+The accent color governs only the focus-highlight bar (§2) and the system
+accent tint. It never changes the "encrypted" green or the link color —
+those stay fixed so they keep meaning what they mean regardless of the
+user's taste.
+Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus:
+Light. Softkeys: (blank) | Select | Back.
+
+### S25 — Advanced
+Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
+Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
+phone whose hardware Left and Right keys are reversed."). CENTER toggles it
+immediately, same as S24's rows — no separate confirm. The row carries a
+trailing checkmark when on; selection is never conveyed by color alone.
+Takes effect on the very next key press — no recreate, unlike S24 (there's
+no chrome to rebuild, just future key events reading the new preference).
+Focus: the one row. Softkeys: (blank) | Select | Back.
+
+### S26 — Notifications
+Reached from Settings → Notifications. Two focusable rows, in fixed order:
+"Notifications" (a toggle, CENTER flips it immediately, trailing checkmark
+when on — same convention as S24/S25) then "Sound" (CENTER launches the
+system ringtone picker; its 11 sp subtitle shows the current choice —
+"Default", "Silent", or the picked ringtone's name). Turning notifications
+off silences only the incoming-message notification (S15); the persistent
+sync notification is unaffected. Per-room/per-thread sound is not offered
+here — every room shares the one chosen sound (future work).
+Focus order: Notifications → Sound. Initial focus: Notifications.
+Softkeys: (blank) | Select | Back.
 
 ## 4. Content voice
 

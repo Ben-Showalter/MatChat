@@ -1,11 +1,13 @@
 package org.matchat.feature.roomlist
 
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -27,7 +29,6 @@ class RoomListFragment : SoftkeyFragment() {
     override val contentLayoutId: Int = R.layout.fragment_room_list
     override val leftLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_options)
     override val centerLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_open)
-
     // Room list is top level: RIGHT is Exit, not Back (UX-SPEC S8).
     override val rightLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_exit)
 
@@ -38,13 +39,32 @@ class RoomListFragment : SoftkeyFragment() {
     private val adapter = RoomListAdapter(
         onOpen = { viewModel.onAction(RoomListAction.OpenRoom(it.id)) },
         onFocused = { viewModel.onAction(RoomListAction.RoomFocused(it)) },
+        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
     )
+
+    /** Avatars round: same shared AvatarBinder/AvatarCache path (core/ui)
+     *  the timeline and Room Info use — this Fragment only supplies the
+     *  byte fetch. */
+    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+        }
+    }
 
     override fun onContentViewCreated(content: View) {
         val b = FragmentRoomListBinding.bind(content)
         binding = b
         b.roomList.layoutManager = LinearLayoutManager(requireContext())
         b.roomList.adapter = adapter
+        // Hairline between rows (TurboText reference): rows read as distinct
+        // list entries even when none is focused, not only via the highlight.
+        b.roomList.addItemDecoration(
+            DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL).apply {
+                setDrawable(
+                    ContextCompat.getDrawable(requireContext(), org.matchat.core.ui.R.drawable.divider_row)!!,
+                )
+            },
+        )
         b.inviteBand.setOnClickListener { viewModel.onAction(RoomListAction.OpenInvites) }
 
         setTitle(getString(R.string.roomlist_title))
@@ -65,9 +85,7 @@ class RoomListFragment : SoftkeyFragment() {
         b.inviteBand.isVisible = state.inviteBand != null
         state.inviteBand?.let {
             b.inviteBand.text = resources.getQuantityString(
-                R.plurals.roomlist_invitations,
-                it.count,
-                it.count,
+                R.plurals.roomlist_invitations, it.count, it.count,
             )
         }
 
@@ -129,5 +147,6 @@ class RoomListFragment : SoftkeyFragment() {
         const val OPT_SETTINGS = "settings"
         const val OPT_HELP = "help"
         const val OPT_SIGNOUT = "signout"
+        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_list
     }
 }

@@ -1,47 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A message row (S9). Focus lands on the message; CENTER opens the message
-     menu (S11). minHeight so it grows at large-text scale. -->
+<!-- A message row (S9): a chat bubble, aligned to the sender's side (own
+     messages trailing/right, others' leading/left). Alignment and the
+     bubble background (bubble_own.xml vs bubble_received.xml) are bound in
+     TimelineAdapter.MessageVH per row.isOwn — this layout only declares the
+     default (received) look.
+
+     Exception to the usual row treatment (AGENTS.md §4 note): the row's own
+     background is left transparent here, not focus_selector — the bubble
+     itself carries focus, as a border that recolors/thickens on focus
+     (bubble_received.xml/bubble_own.xml), matching the reference device's
+     own SMS app. message_bubble picks this up via duplicateParentState,
+     since it isn't itself focusable. CENTER opens the message menu (S11).
+     minHeight so it grows at large-text scale.
+
+     Avatars round: message_sender_row pairs a small circle with the sender
+     name (shown/hidden together, same "only when it changes" rule as the
+     name itself); message_seen_by is a short row of avatar circles under an
+     own message once another member has read it. Reactions round:
+     message_reactions is a row of read-only emoji-count chips (D-pad has no
+     way to focus one chip among several inside a single focusable row, so
+     reacting always goes through the message's Options menu, never a tap on
+     a chip). TimelineAdapter populates both directly (a handful of small
+     Views, not a nested RecyclerView, matching this app's flat-view
+     convention). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/focus_selector"
     android:focusable="true"
     android:focusableInTouchMode="false"
     android:minHeight="@dimen/row_min_height_compact"
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
-    android:paddingTop="2dp"
-    android:paddingBottom="2dp">
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp">
 
-    <TextView
-        android:id="@+id/message_sender"
+    <LinearLayout
+        android:id="@+id/message_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:orientation="vertical"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_sender"
-        android:textColor="@color/encrypted"
-        android:visibility="gone"
-        tools:text="Wayne"
-        tools:visibility="visible" />
+        android:background="@drawable/bubble_received"
+        android:paddingStart="@dimen/bubble_pad_h"
+        android:paddingEnd="@dimen/bubble_pad_h"
+        android:paddingTop="@dimen/bubble_pad_v"
+        android:paddingBottom="@dimen/bubble_pad_v">
 
-    <TextView
-        android:id="@+id/message_body"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:duplicateParentState="true"
-        android:textSize="@dimen/text_body"
-        android:textColor="@color/text_on_focus"
-        tools:text="See you at six by the north gate." />
+        <LinearLayout
+            android:id="@+id/message_sender_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="1dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:duplicateParentState="true"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/message_sender_avatar"
+                android:layout_width="@dimen/avatar_size_sender"
+                android:layout_height="@dimen/avatar_size_sender"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/avatar_placeholder"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/message_sender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:maxWidth="@dimen/bubble_max_width"
+                android:textSize="@dimen/text_sender"
+                android:textColor="?attr/colorEncrypted"
+                tools:text="Wayne" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/message_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:duplicateParentState="true"
+            android:maxWidth="@dimen/bubble_max_width"
+            android:textSize="@dimen/text_body"
+            android:textColor="?attr/colorTextOnFocus"
+            tools:text="See you at six by the north gate." />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/message_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
+        android:layout_gravity="start"
+        android:layout_marginTop="1dp"
         android:duplicateParentState="true"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_meta_on_focus"
+        android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM ✓" />
+
+    <LinearLayout
+        android:id="@+id/message_reactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/message_seen_by"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
 </LinearLayout>

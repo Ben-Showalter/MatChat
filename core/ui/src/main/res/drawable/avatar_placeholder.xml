@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown for an avatar row until the real image finishes decoding (or when
+     no avatar is set) — a plain filled circle, theme-driven like every other
+     surface here (Avatars round). Shared across room list, timeline, and
+     Room Info member rows. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="?attr/colorDivider" />
+</shape>

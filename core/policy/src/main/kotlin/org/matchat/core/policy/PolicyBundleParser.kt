@@ -1,8 +1,8 @@
 package org.matchat.core.policy
 
-import org.json.JSONArray
 import org.matchat.core.model.Contact
 import org.matchat.core.model.UserId
+import org.json.JSONArray
 
 /**
  * Pure mapping from the raw managed-configuration values to a [Policy]. Kept
@@ -39,15 +39,17 @@ internal object PolicyBundleParser {
         )
     }
 
-    private fun parseDomains(raw: String?): List<String>? = raw?.split(',')
-        ?.map { it.trim() }
-        ?.filter { it.isNotEmpty() }
-        ?.takeIf { it.isNotEmpty() }
+    private fun parseDomains(raw: String?): List<String>? =
+        raw?.split(',')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }
 
-    private fun parseInvitePolicy(raw: String?): InvitePolicy = when (raw?.trim()) {
-        "autoAllowed" -> InvitePolicy.AUTO_ALLOWED
-        else -> InvitePolicy.ASK
-    }
+    private fun parseInvitePolicy(raw: String?): InvitePolicy =
+        when (raw?.trim()) {
+            "autoAllowed" -> InvitePolicy.AUTO_ALLOWED
+            else -> InvitePolicy.ASK
+        }
 
     /**
      * `contacts` is a JSON *string* (not bundle_array, which needs API 26 while

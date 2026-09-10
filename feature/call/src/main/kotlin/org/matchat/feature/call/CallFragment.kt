@@ -1,6 +1,7 @@
 package org.matchat.feature.call
 
 import android.view.View
+import android.widget.TextView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -86,10 +87,7 @@ class CallFragment : SoftkeyFragment() {
             if (viewModel.session.value.phase == CallPhase.RINGING) viewModel.answer()
             true
         }
-        LogicalKey.END -> {
-            viewModel.hangup()
-            true
-        }
+        LogicalKey.END -> { viewModel.hangup(); true }
         else -> false
     }
 

@@ -29,7 +29,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class RoomListViewModel @Inject constructor(
-    session: MatrixSession,
+    private val session: MatrixSession,
     policyProvider: PolicyProvider,
     private val clock: MillisClock,
 ) : ViewModel() {
@@ -88,9 +88,14 @@ class RoomListViewModel @Inject constructor(
         preview = lastMessage.orEmpty(),
         time = lastActivityEpochMs?.let { RelativeTime.roomListLabel(it, clock.now()) }.orEmpty(),
         unreadCount = unreadCount,
+        avatarUrl = avatarUrl,
     )
 
-    private fun List<InviteSummary>.toBand(): InviteBand? = if (isEmpty()) null else InviteBand(size)
+    /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
+    suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
+
+    private fun List<InviteSummary>.toBand(): InviteBand? =
+        if (isEmpty()) null else InviteBand(size)
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

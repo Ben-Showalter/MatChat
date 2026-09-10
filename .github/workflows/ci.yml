@@ -5,9 +5,7 @@ name: CI
 
 on:
   push:
-    # Run on pushes to the default branch so it stays checked between PRs.
-    # (The default branch is currently claude/chat-client-build-jh58hg, not main.)
-    branches: [ main, claude/chat-client-build-jh58hg ]
+    branches: [ main ]
   pull_request:
 
 concurrency:

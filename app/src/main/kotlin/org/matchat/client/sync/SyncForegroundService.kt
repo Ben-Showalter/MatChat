@@ -16,6 +16,7 @@ import org.matchat.client.R
 import org.matchat.client.notify.MessageNotifier
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.RoomSummary
+import org.matchat.core.ui.prefs.UserPreferences
 import javax.inject.Inject
 
 /**
@@ -33,6 +34,7 @@ import javax.inject.Inject
 class SyncForegroundService : LifecycleService() {
 
     @Inject lateinit var session: MatrixSession
+    @Inject lateinit var userPreferences: UserPreferences
 
     private val lastUnread = HashMap<String, Int>()
     private var seeded = false
@@ -66,8 +68,16 @@ class SyncForegroundService : LifecycleService() {
             val prev = lastUnread[room.id.value] ?: 0
             val now = room.unreadCount
             when {
-                now > prev && now > 0 ->
-                    MessageNotifier.show(this, room.id, room.name.ifBlank { room.id.value }, now)
+                now > prev && now > 0 -> if (userPreferences.notificationsEnabled.value) {
+                    MessageNotifier.show(
+                        this,
+                        room.id,
+                        room.name.ifBlank { room.id.value },
+                        now,
+                        channelVersion = userPreferences.notificationChannelVersion.value,
+                        soundUri = userPreferences.notificationSoundUri.value,
+                    )
+                }
                 now == 0 && prev > 0 -> MessageNotifier.cancel(this, room.id)
             }
             lastUnread[room.id.value] = now

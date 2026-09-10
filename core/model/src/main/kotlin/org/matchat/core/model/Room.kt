@@ -15,6 +15,10 @@ data class RoomSummary(
     val lastActivityEpochMs: Long?,
     val unreadCount: Int,
     val isEncrypted: Boolean,
+    /** An `mxc://` URI, or null for no room avatar set. The UI downloads and
+     *  decodes it by id (MatrixSession.loadAvatar) — no SDK type crosses this
+     *  line, same rule as everything else in :core:model. */
+    val avatarUrl: String? = null,
 )
 
 /** An invitation (a room whose membership state is Invited). See S18/S19. */

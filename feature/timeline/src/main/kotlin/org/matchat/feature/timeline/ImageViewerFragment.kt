@@ -52,26 +52,11 @@ class ImageViewerFragment : SoftkeyFragment() {
     override fun onOtherKey(key: org.matchat.core.ui.key.LogicalKey): Boolean {
         val img = image ?: return false
         return when (key) {
-            org.matchat.core.ui.key.LogicalKey.DIGIT_2 -> {
-                img.panUp()
-                true
-            }
-            org.matchat.core.ui.key.LogicalKey.DIGIT_8 -> {
-                img.panDown()
-                true
-            }
-            org.matchat.core.ui.key.LogicalKey.DIGIT_4 -> {
-                img.panLeft()
-                true
-            }
-            org.matchat.core.ui.key.LogicalKey.DIGIT_6 -> {
-                img.panRight()
-                true
-            }
-            org.matchat.core.ui.key.LogicalKey.DIGIT_0 -> {
-                img.resetView()
-                true
-            }
+            org.matchat.core.ui.key.LogicalKey.DIGIT_2 -> { img.panUp(); true }
+            org.matchat.core.ui.key.LogicalKey.DIGIT_8 -> { img.panDown(); true }
+            org.matchat.core.ui.key.LogicalKey.DIGIT_4 -> { img.panLeft(); true }
+            org.matchat.core.ui.key.LogicalKey.DIGIT_6 -> { img.panRight(); true }
+            org.matchat.core.ui.key.LogicalKey.DIGIT_0 -> { img.resetView(); true }
             else -> false
         }
     }

@@ -5,7 +5,6 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -17,6 +16,7 @@ import org.matchat.core.model.SasEmoji
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.verification.databinding.FragmentVerificationBinding
 import org.matchat.core.ui.R as UiR
 
@@ -102,28 +102,29 @@ class VerificationFragment : SoftkeyFragment() {
         }
     }
 
-    private fun emojiCell(emoji: SasEmoji): View = LinearLayout(requireContext()).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
-        setPadding(pad, pad, pad, pad)
-        addView(
-            TextView(requireContext()).apply {
-                text = emoji.symbol
-                textSize = EMOJI_SP
-                gravity = Gravity.CENTER
-            },
-        )
-        addView(
-            TextView(requireContext()).apply {
-                text = emoji.name
-                textSize = LABEL_SP
-                gravity = Gravity.CENTER
-                setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
-            },
-        )
-    }
+    private fun emojiCell(emoji: SasEmoji): View =
+        LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
+            setPadding(pad, pad, pad, pad)
+            addView(
+                TextView(requireContext()).apply {
+                    text = emoji.symbol
+                    textSize = EMOJI_SP
+                    gravity = Gravity.CENTER
+                },
+            )
+            addView(
+                TextView(requireContext()).apply {
+                    text = emoji.name
+                    textSize = LABEL_SP
+                    gravity = Gravity.CENTER
+                    setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
+                },
+            )
+        }
 
     override fun onDestroyView() {
         binding = null

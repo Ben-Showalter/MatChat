@@ -55,12 +55,32 @@
     .sep { display: flex; align-items: center; gap: 6px; padding: 3px 6px; }
     .sep i { flex: 1 1 auto; height: 1px; background: #C9C4B8; }
     .sep span { font-size: 11px; color: #55524A; letter-spacing: .06em; text-transform: uppercase; }
-    .msg { padding: 3px 6px; }
-    .who { font-size: 12px; font-weight: 700; color: #1F5C4A; }
+    /* S9 message bubble, reaching nearly the full row width, matching the
+       reference device's own SMS app (not a copied TurboText style). Every
+       bubble carries a colored accent stripe on its leading (received) or
+       trailing (own) edge, and is rounded only on the side AWAY from that
+       stripe — square on the stripe side, so the stripe sits flush, not
+       interrupted by a curve. A thin border frames the rest (grey by
+       default, accent + thicker when focused — see .msg.focused). .body is
+       already a flex column (below), so each bubble just aligns itself
+       within it — no extra row wrapper needed. */
+    .msg { align-self: flex-start; max-width: 220px; margin: 2px 6px; padding: 4px 8px 4px 11px;
+      border-radius: 0 8px 8px 0; background: #EDE9DE; border: 1px solid #C9C4B8;
+      border-left: 3px solid #2E7D5B; }
+    /* #CEDCD1: colors.xml's accent_green_tint (#332E7D5B, ~20% alpha)
+       composited over the paper surface (#F6F4EE) — own-bubble fill tracks
+       the user's chosen accent in the real app (colorBubbleOwn), it isn't
+       a fixed color; this is what that formula renders as for the Green
+       default specifically, not a value to copy for another accent. */
+    .msg.own { align-self: flex-end; background: #CEDCD1; padding: 4px 11px 4px 8px;
+      border-radius: 8px 0 0 8px; border-left: 1px solid #C9C4B8; border-right: 3px solid #2E7D5B; }
+    .msg.focused { border-color: #2E7D5B; border-width: 2px; }
+    .who { font-size: 12px; font-weight: 700; color: #1F5C4A; margin-bottom: 1px; }
     .txt { font-size: 16px; line-height: 19px; }
-    .meta { font-size: 11px; color: #55524A; text-align: right; }
-    .own { text-align: right; }
-    .own .txt { display: inline-block; text-align: left; }
+    .meta { font-size: 11px; color: #55524A; align-self: flex-start; margin: 0 6px; }
+    .meta.own { align-self: flex-end; }
+    .utd { align-self: flex-start; max-width: 220px; margin: 2px 6px; padding: 4px 8px;
+      border-radius: 8px; background: #EDE9DE; }
     .input { flex: 0 0 auto; border-top: 1px solid #C9C4B8; padding: 2px 6px; font-size: 14px;
       color: #55524A; background: #FFFDF7; }
     .banner { flex: 0 0 auto; background: #8A1E15; color: #F6F4EE; font-size: 11px;
@@ -77,15 +97,14 @@
 <div class="body">
   <div class="sep"><i></i><span>Yesterday</span><i></i></div>
   <div class="msg"><div class="who">Wayne Z.</div>
-    <div class="txt">Are we still meeting at the barn at six?</div>
-    <div class="meta">3:30p</div></div>
-  <div class="msg own"><div class="txt">Yes &mdash; I'll bring the trailer.</div>
-    <div class="meta">3:34p &#10003;</div></div>
-  <div class="msg focus" style="border-left: 3px solid #14130E;">
-    <div class="who" style="color: #9ED2BF;">Ray M.</div>
-    <div class="txt">Bring the long chains too, we will need them.</div>
-    <div class="meta" style="color: #CFCBBF;">3:40p</div></div>
-  <div class="msg" style="background: #EDE9DE;">
+    <div class="txt">Are we still meeting at the barn at six?</div></div>
+  <div class="meta">3:30p</div>
+  <div class="msg own"><div class="txt">Yes &mdash; I'll bring the trailer.</div></div>
+  <div class="meta own">3:34p &#10003;</div>
+  <div class="msg focused"><div class="who">Ray M.</div>
+    <div class="txt">Bring the long chains too, we will need them.</div></div>
+  <div class="meta">3:40p</div>
+  <div class="utd">
     <div class="txt" style="font-size: 13px; font-style: italic; color: #55524A;">
       This message can't be read on this phone yet.</div>
     <div style="font-size: 13px; font-weight: 700; text-decoration: underline;">Fix encryption</div>

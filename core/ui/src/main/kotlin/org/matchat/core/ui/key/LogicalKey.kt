@@ -8,23 +8,14 @@ package org.matchat.core.ui.key
 enum class LogicalKey {
     UP,
     DOWN,
-
     /** Declared only where a screen opts into horizontal focus. No v1 screen does. */
     LEFT,
     RIGHT,
     CENTER, // activate focused item — identical to the centre softkey label
     SOFT_LEFT, // Options
     SOFT_RIGHT, // Back (Exit at top level)
-    DIGIT_0,
-    DIGIT_1,
-    DIGIT_2,
-    DIGIT_3,
-    DIGIT_4,
-    DIGIT_5,
-    DIGIT_6,
-    DIGIT_7,
-    DIGIT_8,
-    DIGIT_9,
+    DIGIT_0, DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4,
+    DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9,
     HASH_HOLD, // next unread room
     STAR_HOLD, // toggle large-text mode
 

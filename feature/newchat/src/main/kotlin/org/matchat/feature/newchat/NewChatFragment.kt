@@ -4,7 +4,6 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.newchat.databinding.FragmentNewChatBinding
 import org.matchat.core.ui.R as UiR
 
@@ -74,14 +74,15 @@ class NewChatFragment : SoftkeyFragment() {
         }
     }
 
-    private fun header(text: String): TextView = TextView(requireContext()).apply {
-        this.text = text.uppercase()
-        textSize = HEADER_SP
-        setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
-        isFocusable = false
-        val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
-        setPadding(0, pad, 0, 2)
-    }
+    private fun header(text: String): TextView =
+        TextView(requireContext()).apply {
+            this.text = text.uppercase()
+            textSize = HEADER_SP
+            setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
+            isFocusable = false
+            val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
+            setPadding(0, pad, 0, 2)
+        }
 
     private fun contactRow(row: ContactRow): View =
         actionRow(row.primary, row.secondary) { viewModel.onAction(NewChatAction.Select(row.address)) }
@@ -101,7 +102,7 @@ class NewChatFragment : SoftkeyFragment() {
                 text = primary
                 textSize = BODY_SP
                 isDuplicateParentStateEnabled = true // inherit row focus → text flips
-                setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_on_focus))
+                setTextColor(requireContext().themeColor(UiR.attr.colorTextOnFocus))
             },
         )
         if (secondary.isNotEmpty()) {
@@ -110,7 +111,7 @@ class NewChatFragment : SoftkeyFragment() {
                     text = secondary
                     textSize = META_SP
                     isDuplicateParentStateEnabled = true
-                    setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_meta_on_focus))
+                    setTextColor(requireContext().themeColor(UiR.attr.colorTextMetaOnFocus))
                 },
             )
         }

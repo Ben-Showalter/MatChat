@@ -1,9 +1,9 @@
 package org.matchat.core.matrix
 
 import kotlinx.coroutines.flow.Flow
-import org.matchat.core.model.CallState
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
+import org.matchat.core.model.CallState
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
@@ -52,7 +52,6 @@ interface MatrixSession {
     suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit>
     suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit>
     suspend fun inviteMember(roomId: RoomId, address: UserId): Result<Unit>
-
     /** Remove (kick) a member from the room. */
     suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit>
     suspend fun leaveRoom(roomId: RoomId): Result<Unit>
@@ -102,6 +101,13 @@ interface MatrixSession {
      *  decrypting if needed. Returns null when the source is unknown or fails. */
     suspend fun loadMedia(eventId: EventId): ByteArray?
 
+    /** Download an avatar's bytes by its `mxc://` URI (room, member, or
+     *  message-sender avatar — all the same underlying media). Returns null
+     *  when the URI is invalid or the download fails; callers cache by URI
+     *  (core/ui's AvatarCache) since the same avatar repeats across many
+     *  rows. */
+    suspend fun loadAvatar(mxcUrl: String): ByteArray?
+
     suspend fun logout()
 }
 
@@ -138,4 +144,9 @@ interface RoomTimeline {
     suspend fun sendVoice(path: String, mimeType: String, durationMs: Long, waveform: List<Float>)
 
     suspend fun markRead(eventId: EventId)
+
+    /** Adds [key] (an emoji) as our reaction to [eventId], or removes it if we
+     *  already reacted with it — Timeline.toggleReaction is itself a toggle
+     *  (Reactions round). */
+    suspend fun toggleReaction(eventId: EventId, key: String)
 }
