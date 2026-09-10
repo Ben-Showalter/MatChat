@@ -355,18 +355,24 @@ This screen exists so a user who has just been blocked can find out why without
 phoning anyone. It never offers a way around the policy.
 
 ### S24 — Theme
-Reached from Settings → Theme. Two focusable lists, in fixed order:
-**Appearance** (`Light` · `Dark`) then **Accent color** (`Green` · `Amber` ·
-`Blue` · `Plum`). CENTER on a row selects it immediately — no separate
-confirm — and the change takes effect right away (the app recreates itself
-once, keeping the same screen). The selected row in each list carries a
-trailing checkmark; selection is never conveyed by color alone.
+Reached from Settings → Theme. **Appearance** (`Light` · `Dark`) is two
+inline focusable rows, in fixed order. CENTER on a row selects it
+immediately — no separate confirm — and the change takes effect right away
+(the app recreates itself once, keeping the same screen). The selected row
+carries a trailing checkmark; selection is never conveyed by color alone.
+**Accent color** is a single row below Appearance, labeled with the current
+choice ("Accent color: Green ›"). CENTER opens a scrollable picker (16
+choices: `Green` · `Amber` · `Blue` · `Plum` · `Teal` · `Cyan` · `Indigo` ·
+`Violet` · `Orchid` · `Rose` · `Rust` · `Ochre` · `Olive` · `Forest` ·
+`Slate` · `Wine`) — the same shape as the reaction picker — with the
+current accent carrying the trailing checkmark; selecting one closes the
+picker and recreates the app the same way an Appearance row does.
 The accent color governs only the focus-highlight bar (§2) and the system
 accent tint. It never changes the "encrypted" green or the link color —
 those stay fixed so they keep meaning what they mean regardless of the
 user's taste.
-Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus:
-Light. Softkeys: (blank) | Select | Back.
+Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
+(blank) | Select | Back.
 
 ### S25 — Advanced
 Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap

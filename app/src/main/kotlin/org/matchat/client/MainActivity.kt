@@ -60,7 +60,8 @@ class MainActivity : AppCompatActivity(), Navigator {
             applicationContext,
             UserPreferencesEntryPoint::class.java,
         ).userPreferences()
-        setTheme(themeStyleFor(userPreferences.themeMode.value, userPreferences.accentColor.value))
+        setTheme(baseStyleFor(userPreferences.themeMode.value))
+        theme.applyStyle(accentStyleFor(userPreferences.accentColor.value), true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val host = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
@@ -85,20 +86,36 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
     }
 
-    private fun themeStyleFor(mode: ThemeMode, accent: AccentColor): Int = when (mode) {
-        ThemeMode.LIGHT -> when (accent) {
-            AccentColor.GREEN -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Green
-            AccentColor.AMBER -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Amber
-            AccentColor.BLUE -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Blue
-            AccentColor.PLUM -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Plum
-        }
-        ThemeMode.DARK -> when (accent) {
-            AccentColor.GREEN -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Green
-            AccentColor.AMBER -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Amber
-            AccentColor.BLUE -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Blue
-            AccentColor.PLUM -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Plum
-        }
+    /** The base carries every role that doesn't depend on accent (or, once
+     *  Text size lands, size) — see themes.xml's file header. */
+    private fun baseStyleFor(mode: ThemeMode): Int = when (mode) {
+        ThemeMode.LIGHT -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Light
+        ThemeMode.DARK -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Dark
     }
+
+    /** Layered onto the base via theme.applyStyle(_, force = true) — a flat
+     *  lookup, one entry per accent, rather than a nested when (the old
+     *  8-branch mode x accent shape this replaced). */
+    private fun accentStyleFor(accent: AccentColor): Int = ACCENT_STYLES.getValue(accent)
+
+    private val ACCENT_STYLES: Map<AccentColor, Int> = mapOf(
+        AccentColor.GREEN to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Green,
+        AccentColor.AMBER to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Amber,
+        AccentColor.BLUE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Blue,
+        AccentColor.PLUM to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Plum,
+        AccentColor.TEAL to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Teal,
+        AccentColor.CYAN to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Cyan,
+        AccentColor.INDIGO to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Indigo,
+        AccentColor.VIOLET to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Violet,
+        AccentColor.ORCHID to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Orchid,
+        AccentColor.ROSE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Rose,
+        AccentColor.RUST to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Rust,
+        AccentColor.OCHRE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Ochre,
+        AccentColor.OLIVE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Olive,
+        AccentColor.FOREST to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Forest,
+        AccentColor.SLATE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Slate,
+        AccentColor.WINE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Wine,
+    )
 
     private val notificationPermission =
         registerForActivityResult(

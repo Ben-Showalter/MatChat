@@ -48,6 +48,25 @@
     <color name="accent_amber">@color/palette_amber</color>
     <color name="accent_blue">#2E6DA4</color>
     <color name="accent_plum">#6B4A80</color>
+    <!-- 12 more accent choices (4 -> 16 round). Same muted mid-saturation
+         family as the original 4; each checked against text_on_inverse
+         (#FFFDF7, the chrome-bar text color every accent sits under) with a
+         WCAG contrast calculation — all 12 land in 4.87-9.91:1, matching
+         the original 4's own 4.91-7.08:1 range. That's a comfortable
+         margin against the file's own 7:1 "body/controls" bar, which is for
+         text roles — these are decorative chrome/focus-bar swatches. -->
+    <color name="accent_teal">#1F7A72</color>
+    <color name="accent_cyan">#206B8C</color>
+    <color name="accent_indigo">#4A4F9E</color>
+    <color name="accent_violet">#5B4A9E</color>
+    <color name="accent_orchid">#8C3B72</color>
+    <color name="accent_rose">#8C3B54</color>
+    <color name="accent_rust">#A1502E</color>
+    <color name="accent_ochre">#8C6B1F</color>
+    <color name="accent_olive">#5C6B1F</color>
+    <color name="accent_forest">#3D7A3D</color>
+    <color name="accent_slate">#3D5C6B</color>
+    <color name="accent_wine">#6B2E3D</color>
 
     <!-- Every accent's translucent form (~20% alpha over whatever surface it
          sits on) — the ONE tinted value each accent needs for every "light
@@ -64,6 +83,18 @@
     <color name="accent_amber_tint">#33A15C00</color>
     <color name="accent_blue_tint">#332E6DA4</color>
     <color name="accent_plum_tint">#336B4A80</color>
+    <color name="accent_teal_tint">#331F7A72</color>
+    <color name="accent_cyan_tint">#33206B8C</color>
+    <color name="accent_indigo_tint">#334A4F9E</color>
+    <color name="accent_violet_tint">#335B4A9E</color>
+    <color name="accent_orchid_tint">#338C3B72</color>
+    <color name="accent_rose_tint">#338C3B54</color>
+    <color name="accent_rust_tint">#33A1502E</color>
+    <color name="accent_ochre_tint">#338C6B1F</color>
+    <color name="accent_olive_tint">#335C6B1F</color>
+    <color name="accent_forest_tint">#333D7A3D</color>
+    <color name="accent_slate_tint">#333D5C6B</color>
+    <color name="accent_wine_tint">#336B2E3D</color>
 
     <!-- Roles that do not change between light and dark, mode or accent: the
          media-viewer scrim and the warning/error fills are always paired
