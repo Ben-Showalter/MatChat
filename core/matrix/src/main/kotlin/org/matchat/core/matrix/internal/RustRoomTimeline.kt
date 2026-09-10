@@ -250,11 +250,23 @@ internal class RustRoomTimeline(
     override suspend fun setPinned(eventId: EventId, pinned: Boolean): Boolean = withContext(Dispatchers.IO) {
         val r = room ?: return@withContext false
         val result = runCatching {
-            // Re-read the current list right before writing, rather than
-            // trusting the in-memory [pinnedIds], to minimize (not eliminate
-            // — the SDK exposes no compare-and-swap for a state event) the
-            // window for clobbering a concurrent pin/unpin from elsewhere.
-            val current = fetchPinnedIds(r).toList()
+            // Bug fix: this used to always re-read the baseline from a cold
+            // room.roomInfo() SDK read, never the cache. That's stale by
+            // construction for two pins issued close together (the SDK's
+            // local room state only catches up once the server echoes the
+            // *previous* write back down the sync loop) — pin A, then pin B
+            // before that echo lands, and this cold read comes back missing
+            // A, so the write below replaces the pinned list with [B] alone
+            // ("2nd pin replaces the first", on-device report). Prefer the
+            // cache — PinnedEventsCache.put() below runs synchronously right
+            // after every successful local write, so it already reflects our
+            // own just-completed pin with no round trip needed — falling
+            // back to the cold read only when the cache has nothing for this
+            // room yet. This doesn't fully close the window for a genuinely
+            // concurrent pin/unpin from a *different* client (the SDK still
+            // exposes no compare-and-swap for a state event), only for this
+            // (same-client, sequential) case.
+            val current = (PinnedEventsCache.get(r.id()) ?: fetchPinnedIds(r)).toList()
             val next = PinnedEventsContent.withEvent(current, eventId.value, pinned)
             r.sendStateEventRaw("m.room.pinned_events", "", PinnedEventsContent.toJson(next))
             pinnedIds = next.toSet()

@@ -47,4 +47,34 @@ class PinnedEventsCacheTest {
             assertEquals(setOf("y"), awaitItem())
         }
     }
+
+    /** Regression test for the "2nd pin replaces the first" bug:
+     *  [RustRoomTimeline.setPinned] used to build its write baseline from a
+     *  cold SDK read alone, which lags the server's echo of the *previous*
+     *  write — pin A, then pin B before that echo lands, and the cold read
+     *  comes back missing A, so the write replaces the pinned list with [B]
+     *  alone. The fix prefers [PinnedEventsCache.get] (put synchronously
+     *  right after every successful write, no round trip needed) over that
+     *  cold read. This reproduces the fix's exact expression —
+     *  `(PinnedEventsCache.get(roomId) ?: staleColdRead).toList()` — against
+     *  [PinnedEventsContent.withEvent], the same two already-unit-tested
+     *  pieces [RustRoomTimeline.setPinned] combines; a `Room`/`RoomInfo`
+     *  mock would be needed to exercise setPinned itself, which this module
+     *  deliberately doesn't do (see this file's own class doc). */
+    @Test
+    fun `write baseline prefers the cache over a colder value, so two pins issued close together both stick`() {
+        val roomId = "!room-f:example.org"
+        // Pin "a" completes; its cache entry lands (PinnedEventsCache.put,
+        // exactly as setPinned does after every successful write).
+        PinnedEventsCache.put(roomId, setOf("a"))
+
+        // A cold SDK read that hasn't caught up with that write yet — the
+        // race this fixes. Deliberately empty, standing in for
+        // fetchPinnedIds(r) returning stale room state.
+        val staleColdRead = emptySet<String>()
+        val current = (PinnedEventsCache.get(roomId) ?: staleColdRead).toList()
+        val next = PinnedEventsContent.withEvent(current, "b", pinned = true)
+
+        assertEquals(listOf("a", "b"), next)
+    }
 }

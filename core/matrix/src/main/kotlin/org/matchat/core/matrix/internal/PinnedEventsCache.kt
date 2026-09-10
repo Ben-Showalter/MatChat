@@ -19,6 +19,12 @@ import kotlinx.coroutines.flow.map
  * This is a small, process-lifetime, in-memory cache internal to :core:matrix
  * (same "stateful singleton, no DI" shape as [MediaRegistry]) so every
  * [RustRoomTimeline] for a given room shares one truth, live.
+ *
+ * [RustRoomTimeline.setPinned] also reads [get] as its write baseline
+ * (preferred over a cold SDK read, which lags the server's echo of a just-
+ * completed write) — a second reason this exists, beyond keeping sibling
+ * screens in sync: it's what makes two pins issued close together both
+ * stick, instead of the second silently replacing the first.
  */
 internal object PinnedEventsCache {
     private val state = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
