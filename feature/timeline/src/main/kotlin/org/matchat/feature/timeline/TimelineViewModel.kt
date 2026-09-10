@@ -60,6 +60,9 @@ class TimelineViewModel @Inject constructor(
                 isComposeFocused = composing,
                 isLoadingEarlier = loading,
                 typingText = typingLine(typing),
+                pinnedCount = items.count {
+                    (it is TimelineItem.Message && it.isPinned) || (it is TimelineItem.Media && it.isPinned)
+                },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimelineState())
 
@@ -141,6 +144,17 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { timeline.toggleReaction(eventId, key) }
     }
 
+    /** Pin or unpin a message (Pinned messages round). m.room.pinned_events
+     *  needs state_default power level (moderator+ by default) to send — a
+     *  plain member's write is rejected by the server; surface that instead
+     *  of letting it look like nothing happened (the bug this fixes). */
+    fun setPinned(eventId: EventId, pinned: Boolean) {
+        viewModelScope.launch {
+            val ok = timeline.setPinned(eventId, pinned)
+            if (!ok) emit(TimelineNav.Toast(TimelineToastKey.PIN_FAILED))
+        }
+    }
+
     private fun paginateBack() {
         if (loadingEarlier.value) return
         loadingEarlier.update { true }
@@ -181,6 +195,7 @@ class TimelineViewModel @Inject constructor(
                         senderAvatarUrl = item.senderAvatarUrl,
                         seenBy = item.seenBy,
                         reactions = item.reactions,
+                        isPinned = item.isPinned,
                     )
                 }
                 is TimelineItem.Media -> {
@@ -238,9 +253,11 @@ class TimelineViewModel @Inject constructor(
                 time = time,
                 isOwn = item.isOwn,
                 sendGlyph = glyph,
+                senderId = item.sender.value,
                 senderAvatarUrl = item.senderAvatarUrl,
                 seenBy = item.seenBy,
                 reactions = item.reactions,
+                isPinned = item.isPinned,
             )
         }
         return TimelineRow.Attachment(
@@ -253,6 +270,7 @@ class TimelineViewModel @Inject constructor(
             isOwn = item.isOwn,
             mimeType = item.mimeType,
             play = item.kind == MediaKind.AUDIO || item.kind == MediaKind.VOICE,
+            isPinned = item.isPinned,
         )
     }
 
@@ -290,3 +308,22 @@ class TimelineViewModel @Inject constructor(
         const val READ_GLYPH = "✓✓" // own message read by another member
     }
 }
+
+/**
+ * Bug fix (Reactions round): the reaction picker's own hardcoded emoji
+ * literal (e.g. "❤️") can differ byte-for-byte from whatever key is
+ * already on the message — a Unicode variation-selector mismatch (with vs.
+ * without U+FE0F) is the common case, visually identical but a different
+ * SDK-level reaction key — so toggling with the literal creates a second,
+ * parallel chip instead of bumping the existing one's count. Resolving
+ * against the message's own [existing] reactions first (normalized) and
+ * reusing whichever key is already there guarantees a toggle always lands
+ * on the same reaction group. A top-level, ViewModel-free function so it's
+ * directly testable and reusable from the Fragment's picker-building code.
+ */
+fun resolveReactionKey(existing: List<org.matchat.core.model.ReactionSummary>, chosenKey: String): String =
+    existing.firstOrNull { normalizeReactionKey(it.key) == normalizeReactionKey(chosenKey) }?.key ?: chosenKey
+
+/** Strips variation selectors (U+FE0F "emoji presentation", U+FE0E "text
+ *  presentation") so two otherwise-identical emoji compare equal. */
+fun normalizeReactionKey(key: String): String = key.replace("\uFE0F", "").replace("\uFE0E", "")

@@ -11,7 +11,10 @@ enum class ThemeMode { LIGHT, DARK }
  * "encrypted" green or the link color, which stay theme-driven (light/dark),
  * not user-driven, so they keep meaning what they mean regardless of taste.
  */
-enum class AccentColor { GREEN, AMBER, BLUE, PLUM }
+enum class AccentColor {
+    GREEN, AMBER, BLUE, PLUM,
+    TEAL, CYAN, INDIGO, VIOLET, ORCHID, ROSE, RUST, OCHRE, OLIVE, FOREST, SLATE, WINE,
+}
 
 /**
  * How the app renders itself. A [StateFlow], not a value read once, so a

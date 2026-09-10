@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- S24 Theme. Two focusable lists in fixed order: Appearance (Light/Dark),
-     then Accent color (four swatches). CENTER on a row selects it; the
-     selected row in each list carries a trailing checkmark (never color
-     alone, per AGENTS.md). -->
+<!-- S24 Theme. Appearance (Light/Dark) stays two inline focusable rows;
+     Accent color is one row ("Accent color: <current> ›") that opens a
+     16-item MenuSheet picker on CENTER — the 4-inline-row shape doesn't
+     scale to 16. CENTER on an Appearance row selects it; the selected row
+     carries a trailing checkmark (never color alone, per AGENTS.md), same
+     as the picker's own selected item. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -42,42 +44,7 @@
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="false"
-            android:textStyle="bold"
-            android:textSize="@dimen/text_meta"
-            android:textColor="?attr/colorTextSecondary"
-            android:paddingTop="8dp"
-            android:paddingBottom="2dp"
-            android:text="@string/theme_accent_header" />
-
-        <TextView
-            android:id="@+id/theme_accent_green"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/theme_accent_amber"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/theme_accent_blue"
-            style="@style/Widget.MatChat.Row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_label"
-            android:textColor="?attr/colorTextOnFocus" />
-
-        <TextView
-            android:id="@+id/theme_accent_plum"
+            android:id="@+id/theme_accent"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

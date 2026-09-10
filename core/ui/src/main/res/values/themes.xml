@@ -3,19 +3,28 @@
      (docs/adr/0002). No ripples, no elevation, no animation over 150 ms.
 
      Theme.MatChat.Base.{Light,Dark} carry every role attr (attrs.xml) that
-     does NOT depend on the user's chosen accent. Theme.MatChat.{Light,
-     Dark}.{Green,Amber,Blue,Plum} are the 8 concrete leaves Settings > Theme
-     switches between (MainActivity resolves the stored preference to one of
-     these); each adds the three accent-driven roles on top of a base:
-     colorFocusAccent (the trailing-edge focus bar and the chrome bars),
-     colorAccent (AppCompat's own tint), and colorSurfaceFocused +
-     colorBubbleOwn (both a translucent wash of the SAME accent,
-     colors.xml's accent_<name>_tint — every "light shade of the accent"
-     role in the app must be one of these two attrs, not a fixed hex, or it
-     silently stops tracking the user's theme choice; that was a real bug
-     here twice, on both of these, before this fix). Theme.MatChat itself is
-     the manifest/default fallback, aliased to Light.Green, for any context
-     built before the stored preference is read. -->
+     does NOT depend on the user's chosen accent or size. Accent is layered
+     on top at runtime via Resources.Theme.applyStyle(resId, force = true)
+     (MainActivity.onCreate()) — the same "ThemeOverlay" pattern Android
+     itself uses — rather than as part of a combined leaf: Theme.MatChat.
+     Accent.<Name> below are 16 standalone (parent="") overlays, one per
+     Settings > Theme > Accent color choice, each carrying only the roles
+     that vary by accent: colorFocusAccent (the trailing-edge focus bar and
+     the chrome bars), colorAccent (AppCompat's own tint), and
+     colorSurfaceFocused + colorBubbleOwn (both a translucent wash of the
+     SAME accent, colors.xml's accent_<name>_tint — every "light shade of
+     the accent" role in the app must be one of these two attrs, not a
+     fixed hex, or it silently stops tracking the user's theme choice; that
+     was a real bug here twice, on both of these, before this fix). Kept
+     flat (16) rather than combined with the base (which would be 32, and
+     64 once text size — also layered this way, see Theme.MatChat.Size.*
+     below — is folded in) so this list doesn't grow with the number of
+     bases or sizes. Theme.MatChat itself is the manifest/default fallback
+     for any context built before the stored preference is read
+     (MainActivity always calls setTheme() + applyStyle() with the resolved
+     layers first, so this is a safety net, not the normal path) — fully
+     baked (Base.Light + Green), not a bare alias to an overlay, since an
+     overlay's parent="" means it resolves nothing on its own. -->
 <resources>
     <style name="Theme.MatChat.Base.Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorSurface">@color/palette_paper</item>
@@ -70,65 +79,114 @@
         <item name="android:windowIsTranslucent">false</item>
     </style>
 
-    <!-- Accent leaves: three roles differ between these, all driven by the
-         same accent per leaf — colorFocusAccent (the trailing-edge focus
-         bar and the chrome bars), colorAccent (AppCompat's own tint, e.g.
-         the text-field cursor), and colorSurfaceFocused + colorBubbleOwn
-         (a translucent wash of that same accent — accent_<name>_tint,
-         colors.xml). -->
-    <style name="Theme.MatChat.Light.Green" parent="Theme.MatChat.Base.Light">
+    <!-- Accent overlays (parent="" — standalone, not inheriting any base;
+         layered onto whichever base is already set via applyStyle(), see
+         the file header). Each carries the same 4 roles the old combined
+         leaves did, driven by one accent. -->
+    <style name="Theme.MatChat.Accent.Green" parent="">
         <item name="colorFocusAccent">@color/accent_green</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
         <item name="colorSurfaceFocused">@color/accent_green_tint</item>
         <item name="colorBubbleOwn">@color/accent_green_tint</item>
     </style>
-    <style name="Theme.MatChat.Light.Amber" parent="Theme.MatChat.Base.Light">
+    <style name="Theme.MatChat.Accent.Amber" parent="">
         <item name="colorFocusAccent">@color/accent_amber</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
         <item name="colorSurfaceFocused">@color/accent_amber_tint</item>
         <item name="colorBubbleOwn">@color/accent_amber_tint</item>
     </style>
-    <style name="Theme.MatChat.Light.Blue" parent="Theme.MatChat.Base.Light">
+    <style name="Theme.MatChat.Accent.Blue" parent="">
         <item name="colorFocusAccent">@color/accent_blue</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
         <item name="colorSurfaceFocused">@color/accent_blue_tint</item>
         <item name="colorBubbleOwn">@color/accent_blue_tint</item>
     </style>
-    <style name="Theme.MatChat.Light.Plum" parent="Theme.MatChat.Base.Light">
+    <style name="Theme.MatChat.Accent.Plum" parent="">
         <item name="colorFocusAccent">@color/accent_plum</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
         <item name="colorSurfaceFocused">@color/accent_plum_tint</item>
         <item name="colorBubbleOwn">@color/accent_plum_tint</item>
     </style>
-    <style name="Theme.MatChat.Dark.Green" parent="Theme.MatChat.Base.Dark">
-        <item name="colorFocusAccent">@color/accent_green</item>
+    <style name="Theme.MatChat.Accent.Teal" parent="">
+        <item name="colorFocusAccent">@color/accent_teal</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
-        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_teal_tint</item>
+        <item name="colorBubbleOwn">@color/accent_teal_tint</item>
     </style>
-    <style name="Theme.MatChat.Dark.Amber" parent="Theme.MatChat.Base.Dark">
-        <item name="colorFocusAccent">@color/accent_amber</item>
+    <style name="Theme.MatChat.Accent.Cyan" parent="">
+        <item name="colorFocusAccent">@color/accent_cyan</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_amber_tint</item>
-        <item name="colorBubbleOwn">@color/accent_amber_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_cyan_tint</item>
+        <item name="colorBubbleOwn">@color/accent_cyan_tint</item>
     </style>
-    <style name="Theme.MatChat.Dark.Blue" parent="Theme.MatChat.Base.Dark">
-        <item name="colorFocusAccent">@color/accent_blue</item>
+    <style name="Theme.MatChat.Accent.Indigo" parent="">
+        <item name="colorFocusAccent">@color/accent_indigo</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_blue_tint</item>
-        <item name="colorBubbleOwn">@color/accent_blue_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_indigo_tint</item>
+        <item name="colorBubbleOwn">@color/accent_indigo_tint</item>
     </style>
-    <style name="Theme.MatChat.Dark.Plum" parent="Theme.MatChat.Base.Dark">
-        <item name="colorFocusAccent">@color/accent_plum</item>
+    <style name="Theme.MatChat.Accent.Violet" parent="">
+        <item name="colorFocusAccent">@color/accent_violet</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_plum_tint</item>
-        <item name="colorBubbleOwn">@color/accent_plum_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_violet_tint</item>
+        <item name="colorBubbleOwn">@color/accent_violet_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Orchid" parent="">
+        <item name="colorFocusAccent">@color/accent_orchid</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_orchid_tint</item>
+        <item name="colorBubbleOwn">@color/accent_orchid_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Rose" parent="">
+        <item name="colorFocusAccent">@color/accent_rose</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_rose_tint</item>
+        <item name="colorBubbleOwn">@color/accent_rose_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Rust" parent="">
+        <item name="colorFocusAccent">@color/accent_rust</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_rust_tint</item>
+        <item name="colorBubbleOwn">@color/accent_rust_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Ochre" parent="">
+        <item name="colorFocusAccent">@color/accent_ochre</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_ochre_tint</item>
+        <item name="colorBubbleOwn">@color/accent_ochre_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Olive" parent="">
+        <item name="colorFocusAccent">@color/accent_olive</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_olive_tint</item>
+        <item name="colorBubbleOwn">@color/accent_olive_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Forest" parent="">
+        <item name="colorFocusAccent">@color/accent_forest</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_forest_tint</item>
+        <item name="colorBubbleOwn">@color/accent_forest_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Slate" parent="">
+        <item name="colorFocusAccent">@color/accent_slate</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_slate_tint</item>
+        <item name="colorBubbleOwn">@color/accent_slate_tint</item>
+    </style>
+    <style name="Theme.MatChat.Accent.Wine" parent="">
+        <item name="colorFocusAccent">@color/accent_wine</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_wine_tint</item>
+        <item name="colorBubbleOwn">@color/accent_wine_tint</item>
     </style>
 
-    <!-- Manifest default / fallback for any context built before the stored
-         preference is read (MainActivity always calls setTheme() with the
-         resolved leaf first, so this is a safety net, not the normal path). -->
-    <style name="Theme.MatChat" parent="Theme.MatChat.Light.Green" />
+    <!-- Manifest default / fallback — see the file header. -->
+    <style name="Theme.MatChat" parent="Theme.MatChat.Base.Light">
+        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorAccent">?attr/colorFocusAccent</item>
+        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
+        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+    </style>
 
     <!-- A focusable row: full-width inverse focus block, no touch feedback.
          parent="" so the dotted name is not read as inheriting from a

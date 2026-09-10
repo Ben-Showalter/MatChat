@@ -19,11 +19,26 @@
     <string name="theme_appearance_header">Appearance</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="theme_accent_header">Accent color</string>
+    <!-- The Accent color row's own label doubles as its section header
+         ("Accent color: Green ›") — CENTER opens a picker of all 16
+         (MenuSheet, the same shape as the reaction picker). -->
+    <string name="theme_accent_row_format">Accent color: %1$s ›</string>
     <string name="theme_accent_green">Green</string>
     <string name="theme_accent_amber">Amber</string>
     <string name="theme_accent_blue">Blue</string>
     <string name="theme_accent_plum">Plum</string>
+    <string name="theme_accent_teal">Teal</string>
+    <string name="theme_accent_cyan">Cyan</string>
+    <string name="theme_accent_indigo">Indigo</string>
+    <string name="theme_accent_violet">Violet</string>
+    <string name="theme_accent_orchid">Orchid</string>
+    <string name="theme_accent_rose">Rose</string>
+    <string name="theme_accent_rust">Rust</string>
+    <string name="theme_accent_ochre">Ochre</string>
+    <string name="theme_accent_olive">Olive</string>
+    <string name="theme_accent_forest">Forest</string>
+    <string name="theme_accent_slate">Slate</string>
+    <string name="theme_accent_wine">Wine</string>
     <!-- A selected row's label, marked so it reads correctly without color
          alone conveying the selection (AGENTS.md — never color-only state).
          Shared beyond S24 (Advanced's toggle row below reuses it too). -->

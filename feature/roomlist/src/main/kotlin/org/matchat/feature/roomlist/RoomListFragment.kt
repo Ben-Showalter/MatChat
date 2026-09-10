@@ -39,15 +39,15 @@ class RoomListFragment : SoftkeyFragment() {
     private val adapter = RoomListAdapter(
         onOpen = { viewModel.onAction(RoomListAction.OpenRoom(it.id)) },
         onFocused = { viewModel.onAction(RoomListAction.RoomFocused(it)) },
-        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
+        onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
     )
 
     /** Avatars round: same shared AvatarBinder/AvatarCache path (core/ui)
      *  the timeline and Room Info use — this Fragment only supplies the
      *  byte fetch. */
-    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+    private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
         }
     }
 

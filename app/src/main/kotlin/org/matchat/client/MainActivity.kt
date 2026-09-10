@@ -28,6 +28,7 @@ import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.prefs.AccentColor
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
+import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.LogicalKeyReceiver
 import javax.inject.Inject
 
@@ -59,7 +60,8 @@ class MainActivity : AppCompatActivity(), Navigator {
             applicationContext,
             UserPreferencesEntryPoint::class.java,
         ).userPreferences()
-        setTheme(themeStyleFor(userPreferences.themeMode.value, userPreferences.accentColor.value))
+        setTheme(baseStyleFor(userPreferences.themeMode.value))
+        theme.applyStyle(accentStyleFor(userPreferences.accentColor.value), true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val host = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
@@ -84,20 +86,36 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
     }
 
-    private fun themeStyleFor(mode: ThemeMode, accent: AccentColor): Int = when (mode) {
-        ThemeMode.LIGHT -> when (accent) {
-            AccentColor.GREEN -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Green
-            AccentColor.AMBER -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Amber
-            AccentColor.BLUE -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Blue
-            AccentColor.PLUM -> org.matchat.core.ui.R.style.Theme_MatChat_Light_Plum
-        }
-        ThemeMode.DARK -> when (accent) {
-            AccentColor.GREEN -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Green
-            AccentColor.AMBER -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Amber
-            AccentColor.BLUE -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Blue
-            AccentColor.PLUM -> org.matchat.core.ui.R.style.Theme_MatChat_Dark_Plum
-        }
+    /** The base carries every role that doesn't depend on accent (or, once
+     *  Text size lands, size) — see themes.xml's file header. */
+    private fun baseStyleFor(mode: ThemeMode): Int = when (mode) {
+        ThemeMode.LIGHT -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Light
+        ThemeMode.DARK -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Dark
     }
+
+    /** Layered onto the base via theme.applyStyle(_, force = true) — a flat
+     *  lookup, one entry per accent, rather than a nested when (the old
+     *  8-branch mode x accent shape this replaced). */
+    private fun accentStyleFor(accent: AccentColor): Int = ACCENT_STYLES.getValue(accent)
+
+    private val ACCENT_STYLES: Map<AccentColor, Int> = mapOf(
+        AccentColor.GREEN to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Green,
+        AccentColor.AMBER to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Amber,
+        AccentColor.BLUE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Blue,
+        AccentColor.PLUM to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Plum,
+        AccentColor.TEAL to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Teal,
+        AccentColor.CYAN to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Cyan,
+        AccentColor.INDIGO to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Indigo,
+        AccentColor.VIOLET to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Violet,
+        AccentColor.ORCHID to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Orchid,
+        AccentColor.ROSE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Rose,
+        AccentColor.RUST to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Rust,
+        AccentColor.OCHRE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Ochre,
+        AccentColor.OLIVE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Olive,
+        AccentColor.FOREST to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Forest,
+        AccentColor.SLATE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Slate,
+        AccentColor.WINE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Wine,
+    )
 
     private val notificationPermission =
         registerForActivityResult(
@@ -162,6 +180,15 @@ class MainActivity : AppCompatActivity(), Navigator {
             ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
         // the softkeys, CENTER and digits are offered to the screen first.
+        // Narrow, explicit exception (Pinned messages quick-access round, mirrors
+        // docs/adr/0007's softkey-swap exception): RIGHT specifically is offered
+        // to the current screen first, ONLY if it opts in via
+        // DirectionalKeyReceiver — every screen that doesn't implement it (i.e.
+        // everything except TimelineFragment today) behaves exactly as before.
+        if (logical == LogicalKey.RIGHT) {
+            val consumed = (receiver() as? DirectionalKeyReceiver)?.onDirectionalKey(logical) ?: false
+            if (consumed) return true
+        }
         if (logical == LogicalKey.UP || logical == LogicalKey.DOWN ||
             logical == LogicalKey.LEFT || logical == LogicalKey.RIGHT
         ) {
@@ -211,10 +238,14 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toRoomInfo(roomId: RoomId) =
         navController.navigate(R.id.roomInfoFragment, bundleOf(ARG_ROOM_ID to roomId.value))
 
-    override fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long) =
+    override fun toPinnedMessages(roomId: RoomId) =
+        navController.navigate(R.id.pinnedMessagesFragment, bundleOf(ARG_ROOM_ID to roomId.value))
+
+    override fun toMessageInfo(roomId: RoomId, eventId: EventId, senderId: UserId, timestampEpochMs: Long) =
         navController.navigate(
             R.id.messageInfoFragment,
             bundleOf(
+                ARG_ROOM_ID to roomId.value,
                 ARG_EVENT_ID to eventId.value,
                 ARG_SENDER_ID to senderId.value,
                 ARG_TIMESTAMP to timestampEpochMs,

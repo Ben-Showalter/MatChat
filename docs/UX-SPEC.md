@@ -148,16 +148,21 @@ Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
 fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
-beside the sender name (Avatars round), shown/hidden together — 12 sp
+beside the sender name (Avatars round), shown/hidden together. A member
+with no avatar set shows a colored circle with their initial instead of a
+flat placeholder (AvatarFallback round) — a deterministic color per user
+id, from a small fixed palette that stays constant across the app's
+Light/Dark/accent theme; the sender name text is colored to match. 12 sp
 coloured inside the bubble (shown only when the sender changes), body 16 sp,
 time 11 sp shown below the bubble on the same side, with a send-state glyph
 on own messages (`○` sending, `✓` sent, `!` failed). Reactions (Reactions
 round) show as a row of read-only "emoji count" chips below the time line
 — bolder/accent-colored for a reaction we sent — reached via the message
 menu's `React` item, never by tapping a chip (a D-pad row can't usefully
-offer several separately focusable chips). An own message that
-another member has read also shows a short "seen by" row of small avatars
-(up to 4, then "+N") under the time line. Every bubble carries a
+offer several separately focusable chips). A message another member (besides the sender and the current user) has
+read also shows a short "seen by" row of small avatars (up to 4, then
+"+N", each overlapping the previous one) under the time line — shown for
+both own and received messages. Every bubble carries a
 colored stripe (the user's chosen accent, Settings > Theme) on its leading
 edge for received messages, trailing edge for own — the bubble is rounded
 only on the side away from its stripe (square where the stripe sits, so it
@@ -165,12 +170,24 @@ sits flush, not a full rounded rect). A focused bubble's border recolors to
 the accent and thickens, in place of the app's usual flat-fill-plus-bar
 focus style (AGENTS.md §4's named exception) — the row itself has no
 background.
+**Pinned-messages band** (Pinned messages quick-access round): when the room
+has ≥1 pinned message, a band reading "📌 N pinned message(s) ›" sits at the
+very top of the content, above the unencrypted-warning band — same row
+shape as the room list's invitation band. It's the first focus stop, CENTER
+opens Pinned messages, but walking UP from the newest message to reach it
+is impractical in a long room, so D-pad **RIGHT** also jumps straight there
+from anywhere in the message list — except while the compose box is
+focused, where RIGHT stays with the text cursor as normal (a narrow,
+documented exception to "directional keys are never reassigned per
+screen," scoped to this one shortcut — see `DirectionalKeyReceiver`).
+Hidden entirely when nothing is pinned.
 If the room is **not encrypted**, a persistent 14 dp band sits directly under the
-title bar: "This group is not encrypted." (G4). Encrypted rooms show nothing —
-encryption is the norm, not a decoration.
+title bar (below the pinned band, if both show): "This group is not encrypted."
+(G4). Encrypted rooms show nothing — encryption is the norm, not a decoration.
 Bottom: a one-line message input strip (18 dp) that is the **last** focus stop.
-Focus order: oldest-loaded message → … → newest → input strip. Initial focus:
-input strip (people come here to reply), ↑ walks back through history.
+Focus order: pinned band (if any) → oldest-loaded message → … → newest →
+input strip. Initial focus: input strip (people come here to reply), ↑ walks
+back through history.
 Reaching the top item triggers `paginateBack(20)`; a 16 dp "Loading earlier
 messages…" row appears while it runs.
 Softkeys: Options | Select | Back.
@@ -191,14 +208,18 @@ Sending an empty message is a no-op, not an error.
 ### S11 — Message menu
 Opened with CENTER on a message row. A bottom-anchored list, typically ~5
 rows, each 26 dp, dismiss with RIGHT softkey.
-Items: `Reply` · `Edit` (own messages only) · `React` · `Copy text` ·
-`Message info`.
+Items: `Reply` · `Edit` (own messages only) · `React` · `Pin message` /
+`Unpin message` · `Copy text` · `Message info`.
 `React` (Reactions round) opens a second MenuSheet list of 10 choices
 (thumbs up/down + 8 common smileys, each row "<emoji> <label>", a trailing
 ✓ on one already reacted with) — this list doesn't fit one screen, so
 MenuSheet itself grew a height-capped, scrollable body for it (invisible to
 every shorter menu, whose natural height stays under the cap). Selecting a
 choice already reacted with removes that reaction.
+`Pin message` / `Unpin message` (Pinned messages round) toggles the row's
+label with the message's current state and shows a 📌 prefix on the pinned
+message's time line — the same compact "prefix the time text" idiom the
+send-state glyph already uses.
 Focus starts on `Reply`.
 Softkeys: (blank) | Select | Back — the menu *is* the options list, so LEFT is
 blank here.
@@ -206,12 +227,19 @@ blank here.
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
 members can read this"), member list (a 16 dp avatar beside each name — same
-placeholder-until-decoded treatment as S8/S9 — plus a power label).
-Focus order: member rows.
+placeholder-until-decoded treatment as S8/S9 — plus a power label), then two
+action rows: `Pinned messages` (Pinned messages round, below) and `Add
+member`/`Leave room`.
+Focus order: member rows, then the action rows.
 Softkeys: Options | Select | Back.
 Options: Mute this group · Leave group (confirm) · Help.
-There is **no** "add member" here in v1 — group membership is administered on
-the server. (Direct chats are different: those the user starts themselves, S20.)
+
+**Pinned messages** (reached from Room info > Pinned messages): a read-only
+list of this room's pinned messages, reusing S12's own field-row look
+(sender + time as the caption, the message text as the primary line).
+CENTER opens the room — no screen in this app can jump to a specific
+message yet, so this is a deliberate scope cut, not a broken link. Empty:
+"No pinned messages in this room."
 
 ### S13 — Settings
 Rows: `Notifications` (opens S26) · `Text size` · `Theme` (opens S24) ·
@@ -327,18 +355,24 @@ This screen exists so a user who has just been blocked can find out why without
 phoning anyone. It never offers a way around the policy.
 
 ### S24 — Theme
-Reached from Settings → Theme. Two focusable lists, in fixed order:
-**Appearance** (`Light` · `Dark`) then **Accent color** (`Green` · `Amber` ·
-`Blue` · `Plum`). CENTER on a row selects it immediately — no separate
-confirm — and the change takes effect right away (the app recreates itself
-once, keeping the same screen). The selected row in each list carries a
-trailing checkmark; selection is never conveyed by color alone.
+Reached from Settings → Theme. **Appearance** (`Light` · `Dark`) is two
+inline focusable rows, in fixed order. CENTER on a row selects it
+immediately — no separate confirm — and the change takes effect right away
+(the app recreates itself once, keeping the same screen). The selected row
+carries a trailing checkmark; selection is never conveyed by color alone.
+**Accent color** is a single row below Appearance, labeled with the current
+choice ("Accent color: Green ›"). CENTER opens a scrollable picker (16
+choices: `Green` · `Amber` · `Blue` · `Plum` · `Teal` · `Cyan` · `Indigo` ·
+`Violet` · `Orchid` · `Rose` · `Rust` · `Ochre` · `Olive` · `Forest` ·
+`Slate` · `Wine`) — the same shape as the reaction picker — with the
+current accent carrying the trailing checkmark; selecting one closes the
+picker and recreates the app the same way an Appearance row does.
 The accent color governs only the focus-highlight bar (§2) and the system
 accent tint. It never changes the "encrypted" green or the link color —
 those stay fixed so they keep meaning what they mean regardless of the
 user's taste.
-Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus:
-Light. Softkeys: (blank) | Select | Back.
+Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
+(blank) | Select | Back.
 
 ### S25 — Advanced
 Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap

@@ -82,6 +82,8 @@ class RoomInfoViewModel @Inject constructor(
     /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
     suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
 
+    fun roomId(): RoomId = roomId
+
     private fun rows(details: RoomDetails?, members: List<RoomMemberSummary>): List<RoomInfoRow> {
         val rows = mutableListOf<RoomInfoRow>()
         rows += RoomInfoRow.Field(KEY_NAME, "Name", details?.name.orEmpty())
@@ -98,6 +100,7 @@ class RoomInfoViewModel @Inject constructor(
                 }
                 rows += RoomInfoRow.Member(m.userId, m.label, sub, m.isSelf, m.avatarUrl)
             }
+        rows += RoomInfoRow.Action(KEY_PINNED, "Pinned messages")
         rows += RoomInfoRow.Action(KEY_ADD, "Add member")
         rows += RoomInfoRow.Action(KEY_LEAVE, "Leave room")
         return rows
@@ -106,6 +109,7 @@ class RoomInfoViewModel @Inject constructor(
     companion object {
         const val KEY_NAME = "name"
         const val KEY_TOPIC = "topic"
+        const val KEY_PINNED = "pinned"
         const val KEY_ADD = "add"
         const val KEY_LEAVE = "leave"
     }

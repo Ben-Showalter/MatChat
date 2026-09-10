@@ -2,6 +2,10 @@ package org.matchat.core.ui.media
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.LruCache
 
 /**
@@ -42,5 +46,34 @@ object AvatarCache {
         return bitmap
     }
 
+    /** The no-avatar fallback (colored circle + initial letter, AvatarFallback
+     *  round) for [userId]/[name] — drawn once per user id, then cached, since
+     *  the same user's fallback repeats across many rows just like a real
+     *  decoded avatar does. Always drawn at one fixed size; every call site's
+     *  ImageView scales it like any other bitmap, so there's no need to cache
+     *  per-requested-size copies. */
+    fun fallback(userId: String, name: String): Bitmap {
+        cache.get(fallbackKey(userId))?.let { return it }
+        val bitmap = Bitmap.createBitmap(FALLBACK_SIZE_PX, FALLBACK_SIZE_PX, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = AvatarFallback.colorFor(userId) }
+        val radius = FALLBACK_SIZE_PX / 2f
+        canvas.drawCircle(radius, radius, radius, circlePaint)
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = FALLBACK_SIZE_PX * 0.5f
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val text = AvatarFallback.initial(name)
+        val textY = radius - (textPaint.descent() + textPaint.ascent()) / 2f
+        canvas.drawText(text, radius, textY, textPaint)
+        cache.put(fallbackKey(userId), bitmap)
+        return bitmap
+    }
+
+    private fun fallbackKey(userId: String) = "initial:$userId"
+
     private const val MAX_ENTRIES = 200
+    private const val FALLBACK_SIZE_PX = 96
 }
