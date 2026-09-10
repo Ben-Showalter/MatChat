@@ -79,6 +79,9 @@ class RoomInfoViewModel @Inject constructor(
 
     private fun emit(nav: RoomInfoNav) { viewModelScope.launch { navChannel.send(nav) } }
 
+    /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
+    suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
+
     private fun rows(details: RoomDetails?, members: List<RoomMemberSummary>): List<RoomInfoRow> {
         val rows = mutableListOf<RoomInfoRow>()
         rows += RoomInfoRow.Field(KEY_NAME, "Name", details?.name.orEmpty())
@@ -93,7 +96,7 @@ class RoomInfoViewModel @Inject constructor(
                     m.membership == Membership.INVITED -> "Invited"
                     else -> m.userId.value
                 }
-                rows += RoomInfoRow.Member(m.userId, m.label, sub, m.isSelf)
+                rows += RoomInfoRow.Member(m.userId, m.label, sub, m.isSelf, m.avatarUrl)
             }
         rows += RoomInfoRow.Action(KEY_ADD, "Add member")
         rows += RoomInfoRow.Action(KEY_LEAVE, "Leave room")

@@ -105,6 +105,21 @@
         android:label="Settings" />
 
     <fragment
+        android:id="@+id/themeFragment"
+        android:name="org.matchat.feature.settings.ThemeFragment"
+        android:label="Theme" />
+
+    <fragment
+        android:id="@+id/advancedFragment"
+        android:name="org.matchat.feature.settings.AdvancedFragment"
+        android:label="Advanced" />
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="org.matchat.feature.settings.NotificationsFragment"
+        android:label="Notifications" />
+
+    <fragment
         android:id="@+id/policyFragment"
         android:name="org.matchat.feature.settings.PolicyFragment"
         android:label="Policy" />

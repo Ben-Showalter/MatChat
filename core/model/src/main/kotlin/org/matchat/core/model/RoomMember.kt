@@ -6,6 +6,8 @@ data class RoomMemberSummary(
     val displayName: String?,
     val membership: Membership,
     val isSelf: Boolean,
+    /** An `mxc://` URI, or null for no avatar set. */
+    val avatarUrl: String? = null,
 ) {
     /** Best display label: the name if the server has one, else the address. */
     val label: String get() = displayName?.takeIf { it.isNotBlank() } ?: userId.value

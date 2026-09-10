@@ -1,15 +1,34 @@
 package org.matchat.feature.timeline
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
+import org.matchat.core.model.ReactionSummary
+import org.matchat.core.model.SeenBy
+import org.matchat.core.ui.R as UiR
+
+/** S9 bubble alignment: own messages trail (right), others lead (left) — the
+ *  bubble's background (accent stripe on the matching edge) and the
+ *  timestamp row below it both flip together. A top-level function (not a
+ *  private adapter method) so MessageRowScreenshotTest can exercise the same
+ *  binding logic the real adapter uses, not a re-typed copy of it. Shared by
+ *  MessageVH and ImageVH; item_utd.xml/item_attachment.xml keep their
+ *  existing plain row look (out of scope for this pass). */
+internal fun bindBubbleSide(bubble: LinearLayout, time: TextView, isOwn: Boolean) {
+    bubble.setBackgroundResource(if (isOwn) UiR.drawable.bubble_own else UiR.drawable.bubble_received)
+    val gravity = if (isOwn) Gravity.END else Gravity.START
+    (bubble.layoutParams as LinearLayout.LayoutParams).gravity = gravity
+    (time.layoutParams as LinearLayout.LayoutParams).gravity = gravity
+}
 
 /**
  * Timeline rows: text messages, images, attachments, day/state separators.
@@ -23,6 +42,13 @@ internal class TimelineAdapter(
     private val onImageBind: (EventId, ImageView) -> Unit,
     private val onImageActivated: (EventId) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
+    /** Binds a sender avatar (Avatars round) — null clears to the placeholder. */
+    private val onAvatarBind: (String?, ImageView) -> Unit,
+    /** Populates the "seen by" row with one small avatar per entry. */
+    private val onSeenByBind: (List<SeenBy>, LinearLayout) -> Unit,
+    /** Populates the reaction-chip row (display-only — see item_message.xml's
+     *  header comment on why chips aren't individually tappable). */
+    private val onReactionsBind: (List<ReactionSummary>, LinearLayout) -> Unit,
 ) : ListAdapter<TimelineRow, RecyclerView.ViewHolder>(DIFF) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -58,34 +84,56 @@ internal class TimelineAdapter(
     }
 
     inner class MessageVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val bubble: LinearLayout = view.findViewById(R.id.message_bubble)
+        private val senderRow: View = view.findViewById(R.id.message_sender_row)
+        private val senderAvatar: ImageView = view.findViewById(R.id.message_sender_avatar)
         private val sender: TextView = view.findViewById(R.id.message_sender)
         private val body: TextView = view.findViewById(R.id.message_body)
         private val time: TextView = view.findViewById(R.id.message_time)
+        private val reactions: LinearLayout = view.findViewById(R.id.message_reactions)
+        private val seenBy: LinearLayout = view.findViewById(R.id.message_seen_by)
 
         fun bind(row: TimelineRow.Message) {
-            sender.isVisible = row.senderName != null
+            senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
+            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             body.text = row.body
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            bindBubbleSide(bubble, time, row.isOwn)
+            reactions.isVisible = row.reactions.isNotEmpty()
+            if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
+            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
             itemView.setOnClickListener { onMessageActivated(row) }
         }
     }
 
     inner class ImageVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val bubble: LinearLayout = view.findViewById(R.id.image_bubble)
+        private val senderRow: View = view.findViewById(R.id.image_sender_row)
+        private val senderAvatar: ImageView = view.findViewById(R.id.image_sender_avatar)
         private val sender: TextView = view.findViewById(R.id.image_sender)
         private val image: ImageView = view.findViewById(R.id.message_image)
         private val caption: TextView = view.findViewById(R.id.image_caption)
         private val time: TextView = view.findViewById(R.id.image_time)
+        private val reactions: LinearLayout = view.findViewById(R.id.image_reactions)
+        private val seenBy: LinearLayout = view.findViewById(R.id.image_seen_by)
 
         fun bind(row: TimelineRow.Image) {
-            sender.isVisible = row.senderName != null
+            senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
+            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             caption.isVisible = !row.caption.isNullOrEmpty()
             caption.text = row.caption.orEmpty()
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            bindBubbleSide(bubble, time, row.isOwn)
             image.setImageDrawable(null)
             onImageBind(row.eventId, image)
+            reactions.isVisible = row.reactions.isNotEmpty()
+            if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
+            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnClickListener { onImageActivated(row.eventId) }
         }
     }

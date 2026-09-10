@@ -3,6 +3,7 @@ package org.matchat.feature.timeline
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
@@ -17,6 +18,10 @@ internal class RoomInfoAdapter(
     private val onFieldActivated: (RoomInfoRow.Field) -> Unit,
     private val onMemberActivated: (RoomInfoRow.Member) -> Unit,
     private val onActionActivated: (RoomInfoRow.Action) -> Unit,
+    /** Binds a member avatar (Avatars round) — never called for Field/Info
+     *  rows, so screens that reuse this adapter but never show a Member row
+     *  (MessageInfoFragment, ProfileFragment) can just take the default. */
+    private val onAvatarBind: (String?, ImageView) -> Unit = { _, _ -> },
 ) : ListAdapter<RoomInfoRow, RecyclerView.ViewHolder>(DIFF) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -51,7 +56,7 @@ internal class RoomInfoAdapter(
                 is RoomInfoRow.Info -> two(row.value, row.label) {
                     itemView.setOnClickListener(null)
                 }
-                is RoomInfoRow.Member -> two(row.name, row.sub) {
+                is RoomInfoRow.Member -> two(row.name, row.sub, showAvatar = true, avatarUrl = row.avatarUrl) {
                     itemView.setOnClickListener { onMemberActivated(row) }
                 }
                 is RoomInfoRow.Section -> single(row.text)
@@ -61,12 +66,27 @@ internal class RoomInfoAdapter(
             }
         }
 
-        private fun two(primary: String, secondary: String, wire: () -> Unit) {
+        private fun two(
+            primary: String,
+            secondary: String,
+            showAvatar: Boolean = false,
+            avatarUrl: String? = null,
+            wire: () -> Unit,
+        ) {
             val primaryView = itemView.findViewById<TextView>(R.id.roominfo_primary)
             val secondaryView = itemView.findViewById<TextView>(R.id.roominfo_secondary)
             primaryView?.text = primary
             secondaryView?.isVisible = secondary.isNotBlank()
             secondaryView?.text = secondary
+            // showAvatar=false (Field/Info rows) hides the ImageView entirely,
+            // rather than binding a "no avatar" placeholder these row types
+            // have no data for; a Member row shows it even when avatarUrl is
+            // null (a real member with no avatar set — the placeholder is
+            // correct there).
+            itemView.findViewById<ImageView>(R.id.roominfo_avatar)?.let { avatar ->
+                avatar.isVisible = showAvatar
+                if (showAvatar) onAvatarBind(avatarUrl, avatar)
+            }
             wire()
         }
 

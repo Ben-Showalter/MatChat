@@ -145,6 +145,7 @@ internal class RustMatrixSession @Inject constructor(
                             displayName = m.displayName,
                             membership = membershipOf(m.membership),
                             isSelf = m.userId == own,
+                            avatarUrl = m.avatarUrl,
                         )
                     }
                 }
@@ -232,6 +233,21 @@ internal class RustMatrixSession @Inject constructor(
     override suspend fun loadMedia(eventId: EventId): ByteArray? = withContext(Dispatchers.IO) {
         val source = MediaRegistry.get(eventId.value) ?: return@withContext null
         runCatching { holder.requireClient().getMediaContent(source) }.getOrNull()
+    }
+
+    // Avatars (Avatars round): an avatarUrl from RoomMember/RoomInfo/Room
+    // arrives as a bare `mxc://` string, not a pre-wrapped MediaSource like
+    // message attachments get in Mappers.mediaOf — MediaSource.fromUrl bridges
+    // it. Deliberately getMediaContent, not getMediaThumbnail: the thumbnail
+    // API's exact signature couldn't be verified against the pinned SDK build
+    // in this sandbox (no local copy — see the plan's SDK-research caveat),
+    // while getMediaContent is already proven by loadMedia above; AvatarCache
+    // (core:ui) downsamples client-side instead.
+    override suspend fun loadAvatar(mxcUrl: String): ByteArray? = withContext(Dispatchers.IO) {
+        runCatching {
+            val source = org.matrix.rustcomponents.sdk.MediaSource.fromUrl(mxcUrl)
+            holder.requireClient().getMediaContent(source)
+        }.getOrNull()
     }
 
     override suspend fun logout() = holder.logout()

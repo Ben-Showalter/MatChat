@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Palette from the design canvas (design/*.dc.html). Layouts use the named
-     roles below, never a raw hex (AGENTS.md §5). Contrast: body/controls ≥ 7:1,
-     metadata ≥ 4.5:1 (PLAN.md G5), verified against surface #F6F4EE. -->
+<!-- Palette from the design canvas (design/*.dc.html), plus a parallel dark set
+     and a small selectable accent set (Settings > Theme). Layouts use theme
+     attrs (?attr/color<Role>, attrs.xml), never a raw hex or a bare @color/
+     role (AGENTS.md §5) — the values here are what themes.xml points those
+     attrs at, per theme. Contrast: body/controls ≥ 7:1, metadata ≥ 4.5:1
+     (PLAN.md G5), verified against each mode's own surface. -->
 <resources>
-    <!-- Raw palette (do not reference from layouts; use the roles below). -->
+    <!-- Raw palette — light mode (do not reference from layouts). -->
     <color name="palette_ink">#14130E</color>
     <color name="palette_paper">#F6F4EE</color>
     <color name="palette_paper_bright">#FFFDF7</color>
@@ -13,26 +16,62 @@
     <color name="palette_green">#1F5C4A</color>
     <color name="palette_amber">#A15C00</color>
     <color name="palette_red">#8A1E15</color>
-    <color name="palette_green_light">#9ED2BF</color>
 
-    <!-- Semantic roles -->
-    <color name="surface">@color/palette_paper</color>
-    <color name="surface_bright">@color/palette_paper_bright</color>
-    <color name="surface_inverse">@color/palette_ink</color>
-    <!-- Focus highlight fill is LIGHT with a 2 dp ink border, so text stays dark
-         and always legible (no color-flip dependency). High contrast for sunlight
-         (PLAN.md G5). Title bar / softkey bar keep surface_inverse (dark). -->
-    <color name="surface_focused">@color/palette_green_light</color>
+    <!-- Received message-bubble fill (S9): reuses the same warm off-white
+         the design canvas already uses for a message-shaped background
+         (design/Timeline.dc.html .msg). Deliberately neutral, not
+         accent-tinted — the accent identifies YOUR messages (colorBubbleOwn
+         below); received ones stay plain regardless of theme. -->
+    <color name="palette_bubble_received_light">#EDE9DE</color>
 
-    <color name="text_primary">@color/palette_ink</color>
-    <color name="text_secondary">@color/palette_stone</color>
+    <!-- Raw palette — dark mode. Mirrors the light set above: a near-black
+         surface, a lighter-still panel tone for chrome/dialogs (raised, not
+         sunken — the usual dark-theme convention), and brighter variants of
+         the green/amber roles where the light-mode value would fail contrast
+         against a dark surface (a plain lightness flip, not a re-hue). -->
+    <color name="palette_night">#1B1A15</color>
+    <color name="palette_night_bright">#252319</color>
+    <color name="palette_mist_dim">#B7B2A5</color>
+    <color name="palette_line_dark">#38362D</color>
+    <color name="palette_green_bright">#4FAE84</color>
+    <color name="palette_amber_bright">#D9A24B</color>
+
+    <!-- Accent swatches (Settings > Theme > Accent color). One opaque value
+         per accent, shared by both light and dark mode: these are
+         decorative (the focus bar, the chrome bars, the system accent
+         tint), never rendered as body text, so they don't need the
+         light/dark contrast split above. Green is deliberately a different,
+         brighter green than palette_green above, so the user's accent
+         choice and the fixed "encrypted" green read as two distinct
+         things. -->
+    <color name="accent_green">#2E7D5B</color>
+    <color name="accent_amber">@color/palette_amber</color>
+    <color name="accent_blue">#2E6DA4</color>
+    <color name="accent_plum">#6B4A80</color>
+
+    <!-- Every accent's translucent form (~20% alpha over whatever surface it
+         sits on) — the ONE tinted value each accent needs for every "light
+         wash of the current accent" role: colorSurfaceFocused (the focus
+         fill, formerly a fixed green in every theme — the bug this fixes)
+         and colorBubbleOwn (formerly a fixed blue in every theme — same
+         bug). Because it's alpha, not a flat hex, one value per accent
+         serves BOTH light and dark mode: composited over the light paper
+         surface it reads as a pale wash; over the near-black night surface
+         it reads as a dark muted wash. themes.xml assigns these per leaf
+         (Theme.MatChat.{Light,Dark}.{Green,Amber,Blue,Plum}), the same way
+         it already does colorFocusAccent. -->
+    <color name="accent_green_tint">#332E7D5B</color>
+    <color name="accent_amber_tint">#33A15C00</color>
+    <color name="accent_blue_tint">#332E6DA4</color>
+    <color name="accent_plum_tint">#336B4A80</color>
+
+    <!-- Roles that do not change between light and dark, mode or accent: the
+         media-viewer scrim and the warning/error fills are always paired
+         with light text on top regardless of theme, and chrome text
+         (title/softkey bars, now accent-colored — see themes.xml) stays
+         light against all four accents. -->
     <color name="text_on_inverse">@color/palette_paper_bright</color>
-    <color name="text_link">@color/palette_amber</color>
-
-    <color name="divider">@color/palette_line</color>
-    <color name="focus_border">@color/palette_ink</color>
-
-    <color name="encrypted">@color/palette_green</color>
     <color name="warning">@color/palette_red</color>
     <color name="error">@color/palette_red</color>
+    <color name="scrim">#99000000</color>
 </resources>

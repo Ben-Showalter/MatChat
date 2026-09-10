@@ -148,6 +148,15 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   may change the wording of the centre label (`Open`, `Send`, `Select`), leave
   LEFT blank when it has no options, and choose what Options contains. RIGHT is
   Back on every screen without exception (top level: `Exit`).
+  - **Named exception: Settings > Advanced > "Swap Left/Right keys"**
+    (docs/adr/0007), for hardware whose physical softkeys are reversed. It
+    flips which *physical* key produces `SOFT_LEFT`/`SOFT_RIGHT` (in
+    `KeyMap.map`, the one file that reads a keycode, per the rule below) —
+    globally, for every screen at once. It is not a per-screen reassignment:
+    `SoftkeyFragment.onLogicalKey`'s `SOFT_LEFT -> onOptions()` mapping never
+    changes, and Options/Back stay exactly one softkey each. Do not add a
+    second, independent key-remapping preference without the same kind of
+    explicit direction the ADR records.
 - Raw key codes are handled in **one** place: `:core:ui`'s key map. Softkey
   codes vary by device — `KEYCODE_SOFT_LEFT`/`SOFT_RIGHT` are often not
   dispatched at all, and the keys arrive as `KEYCODE_MENU`/`KEYCODE_BACK` or an
@@ -157,6 +166,15 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   `android:focusableInTouchMode="false"`, and uses
   `@drawable/focus_selector` from `:core:ui`. Never write a per-screen focus
   highlight.
+  - **Named exception: S9 message bubbles** (`item_message.xml`,
+    `item_message_image.xml`). Per explicit user direction against the
+    reference device's own SMS app, a focused message bubble gets a
+    recolored/thickened *border on the bubble itself*
+    (`bubble_received.xml`/`bubble_own.xml`, both `?attr/colorFocusAccent`
+    on `state_focused`) instead of the row's usual flat fill + trailing
+    bar; the row's own background is left transparent. This is the only
+    screen that does this — do not extend the pattern elsewhere without
+    the same kind of explicit direction, and update it here again if so.
 - Focus order follows XML order. If you need `nextFocusDown`/`nextFocusUp`, add a
   comment on the same line explaining why the visual order differs.
 - Every screen sets deterministic initial focus in `onViewCreated` and restores
@@ -169,7 +187,10 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
 
 - Type floor, no exceptions: **body 16 sp · interactive labels 14 sp · secondary
   metadata (timestamps, day separators, sender names, field captions) 11 sp**.
-  Nothing a user reads goes below 11 sp.
+  Softkey labels are their own dedicated size, `text_softkey_label` (13 sp) —
+  not part of the metadata floor above, since they don't share a dimen with
+  timestamps/day-separators/sender-names (UX-SPEC.md §1). Nothing a user
+  reads goes below 11 sp.
 - Design for 240 dp width **and** 320×240 landscape devices. Rows have a
   `minHeight`, never a fixed `height` — content must be free to grow at the
   largest font scale, which the screenshot suite checks.

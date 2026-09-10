@@ -2,6 +2,7 @@ package org.matchat.feature.roomlist
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +15,8 @@ import org.matchat.feature.roomlist.databinding.ItemRoomBinding
 internal class RoomListAdapter(
     private val onOpen: (RoomRow) -> Unit,
     private val onFocused: (Int) -> Unit,
+    /** Binds a room avatar (Avatars round) — null clears to the placeholder. */
+    private val onAvatarBind: (String?, ImageView) -> Unit,
 ) : ListAdapter<RoomRow, RoomListAdapter.RoomViewHolder>(DIFF) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomViewHolder {
@@ -35,6 +38,7 @@ internal class RoomListAdapter(
             binding.roomUnread.text = if (row.unreadCount > 0) row.unreadCount.toString() else ""
             binding.roomUnread.visibility =
                 if (row.isUnread) android.view.View.VISIBLE else android.view.View.GONE
+            onAvatarBind(row.avatarUrl, binding.roomAvatar)
             binding.root.setOnClickListener { onOpen(row) }
             binding.root.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) onFocused(bindingAdapterPosition)

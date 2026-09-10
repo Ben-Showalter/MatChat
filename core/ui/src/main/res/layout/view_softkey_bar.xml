@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The softkey bar (UX-SPEC §1): three cells on the inverse surface, 11 sp.
+<!-- The softkey bar (UX-SPEC §1): three cells on the accent surface
+     (SoftkeyBarView sets the background to ?attr/colorFocusAccent —
+     Phase 4 of the UI improvement plan), 13 sp (text_softkey_label, its own
+     dedicated size — not the shared 11sp text_meta).
      LEFT = Options, CENTRE = activate, RIGHT = Back — always (AGENTS.md §4).
-     Not focusable: it is a label strip driven by the hardware keys, never tapped. -->
+     Not focusable: it is a label strip driven by the hardware keys, never
+     D-pad-focused, only (optionally) tapped. android:focusable="false" is
+     REQUIRED here, explicitly, on each cell, not just on the container
+     (SoftkeyBarView sets isFocusable=false on itself, which does not cascade
+     to its children) — a confirmed bug: SoftkeyBarView.render() sets
+     isClickable=true on a non-blank cell, and since API 26 a clickable View
+     with no explicit focusable value becomes focusable automatically. That
+     let a softkey cell (typically CENTER, "Select") win D-pad focus-search
+     over compose_input from the last timeline row, instead of being skipped
+     as chrome. -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="android.widget.LinearLayout">
@@ -14,10 +26,12 @@
         android:gravity="center_vertical|start"
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="4dp"
-        android:textColor="@color/text_on_inverse"
-        android:textSize="@dimen/text_meta"
+        android:textColor="?attr/colorTextOnInverse"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Options" />
 
     <TextView
@@ -26,11 +40,13 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center"
-        android:textColor="@color/text_on_inverse"
+        android:textColor="?attr/colorTextOnInverse"
         android:textStyle="bold"
-        android:textSize="@dimen/text_meta"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Select" />
 
     <TextView
@@ -41,9 +57,11 @@
         android:gravity="center_vertical|end"
         android:paddingStart="4dp"
         android:paddingEnd="@dimen/content_pad"
-        android:textColor="@color/text_on_inverse"
-        android:textSize="@dimen/text_meta"
+        android:textColor="?attr/colorTextOnInverse"
+        android:textSize="@dimen/text_softkey_label"
         android:maxLines="1"
         android:ellipsize="end"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:text="Back" />
 </merge>

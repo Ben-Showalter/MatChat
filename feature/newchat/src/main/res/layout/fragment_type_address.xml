@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:text="@string/type_address_label"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary" />
+            android:textColor="?attr/colorTextSecondary" />
 
         <EditText
             android:id="@+id/address_field"
@@ -30,21 +30,21 @@
             android:inputType="textEmailAddress"
             android:importantForAutofill="no"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary" />
+            android:textColor="?attr/colorTextPrimary" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/type_address_hint"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/text_secondary" />
+            android:textColor="?attr/colorTextSecondary" />
 
         <TextView
             android:id="@+id/type_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/error"
+            android:textColor="?attr/colorError"
             android:visibility="gone"
             tools:text="That does not look like an address." />
 
@@ -53,7 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            android:textColor="@color/warning"
+            android:textColor="?attr/colorWarning"
             android:visibility="gone"
             tools:text="Your organization does not allow messages to example.org." />
 
@@ -65,7 +65,7 @@
             android:layout_marginTop="8dp"
             android:text="@string/type_address_continue"
             android:textSize="@dimen/text_label"
-            android:textColor="@color/text_on_focus" />
+            android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 
     <!-- Confirmation group (S21 step 4) -->
@@ -81,7 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_body"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             tools:text="Send to Wayne Zimmerman?" />
 
         <TextView
@@ -89,7 +89,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorTextSecondary"
             tools:text="@wayne:example.org" />
 
         <TextView
@@ -97,7 +97,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_meta"
-            android:textColor="@color/encrypted"
+            android:textColor="?attr/colorEncrypted"
             android:text="@string/type_address_encrypted" />
 
         <TextView
@@ -108,7 +108,7 @@
             android:layout_marginTop="8dp"
             android:text="@string/type_address_start"
             android:textSize="@dimen/text_label"
-            android:textColor="@color/text_on_focus" />
+            android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
             android:id="@+id/confirm_change"
@@ -117,6 +117,6 @@
             android:layout_height="wrap_content"
             android:text="@string/type_address_change"
             android:textSize="@dimen/text_label"
-            android:textColor="@color/text_on_focus" />
+            android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 </LinearLayout>

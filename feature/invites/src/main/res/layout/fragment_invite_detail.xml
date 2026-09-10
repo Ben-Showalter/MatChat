@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textSize="@dimen/text_heading"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorTextPrimary"
         tools:text="Barn Crew" />
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorTextSecondary"
         tools:text="Invited by Wayne Zimmerman" />
 
     <TextView
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:textSize="13sp"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorTextPrimary"
         tools:text="@wayne:example.org" />
 
     <TextView
@@ -39,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/encrypted"
+        android:textColor="?attr/colorEncrypted"
         tools:text="Encrypted — only members can read this" />
 
     <TextView
@@ -48,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:textSize="13sp"
-        android:textColor="@color/warning"
+        android:textColor="?attr/colorWarning"
         android:visibility="gone"
         tools:text="Your organization does not allow messages from example.org."
         tools:visibility="visible" />
@@ -58,7 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_meta"
-        android:textColor="@color/error"
+        android:textColor="?attr/colorError"
         android:visibility="gone" />
 
     <TextView
@@ -69,7 +69,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/invite_accept"
         android:textSize="@dimen/text_label"
-        android:textColor="@color/text_on_focus" />
+        android:textColor="?attr/colorTextOnFocus" />
 
     <TextView
         android:id="@+id/detail_decline"
@@ -78,5 +78,5 @@
         android:layout_height="wrap_content"
         android:text="@string/invite_decline"
         android:textSize="@dimen/text_label"
-        android:textColor="@color/text_on_focus" />
+        android:textColor="?attr/colorTextOnFocus" />
 </LinearLayout>

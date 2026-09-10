@@ -26,6 +26,7 @@ sealed interface RoomInfoRow {
         val name: String,
         val sub: String,
         val isSelf: Boolean,
+        val avatarUrl: String? = null,
     ) : RoomInfoRow {
         override val stableId: String get() = "member:${userId.value}"
     }
