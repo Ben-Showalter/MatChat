@@ -46,7 +46,7 @@ internal class TimelineAdapter(
     private val onFixEncryption: (EventId) -> Unit,
     private val onMessageActivated: (TimelineRow.Message) -> Unit,
     private val onImageBind: (EventId, ImageView) -> Unit,
-    private val onImageActivated: (EventId) -> Unit,
+    private val onImageActivated: (TimelineRow.Image) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
     /** Binds a sender avatar (Avatars round): url, name, user id, target —
      *  the name/id are the no-avatar-fallback's color+initial source
@@ -150,7 +150,7 @@ internal class TimelineAdapter(
             if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
             seenBy.isVisible = row.seenBy.isNotEmpty()
             if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
-            itemView.setOnClickListener { onImageActivated(row.eventId) }
+            itemView.setOnClickListener { onImageActivated(row) }
         }
     }
 

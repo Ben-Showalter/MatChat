@@ -78,10 +78,19 @@ object KeyMap {
         else -> null
     }
 
-    /** Codes that a long-press turns into a hold action. */
+    /** Codes that a long-press turns into a hold action. Unlike `#`/`*`
+     *  (absent from [mapRaw], so a short press of those does nothing
+     *  anywhere), CENTER/ENTER are also mapped in [mapRaw] to plain CENTER —
+     *  a long press therefore dispatches both, in order: the initial
+     *  (non-long) DOWN fires plain CENTER first, then this fires CENTER_HOLD
+     *  once the OS's long-press threshold passes. CENTER stays instant
+     *  everywhere by default; only a screen that specifically opts into
+     *  treating CENTER_HOLD as its real "confirm" (and CENTER itself as a
+     *  no-op in that context) sees hold-to-confirm behavior. */
     fun holdKey(keyCode: Int): LogicalKey? = when (keyCode) {
         KeyEvent.KEYCODE_POUND -> LogicalKey.HASH_HOLD
         KeyEvent.KEYCODE_STAR -> LogicalKey.STAR_HOLD
+        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> LogicalKey.CENTER_HOLD
         else -> null
     }
 }

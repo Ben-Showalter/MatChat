@@ -33,6 +33,9 @@
     <string name="timeline_opt_help">Help</string>
 
     <!-- Message menu (S11). -->
+    <!-- Media rows only (image/attachment) — reaches the same viewer/opener
+         a direct tap used to jump to before media rows got this menu too. -->
+    <string name="timeline_msg_open">Open</string>
     <string name="timeline_msg_reply">Reply</string>
     <string name="timeline_msg_edit">Edit</string>
     <string name="timeline_msg_react">React</string>

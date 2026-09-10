@@ -60,10 +60,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private val adapter = TimelineAdapter(
         onMessageFocused = { viewModel.onAction(TimelineAction.MessageFocused(it)) },
         onFixEncryption = { viewModel.onAction(TimelineAction.FixEncryption(it)) },
-        onMessageActivated = { openMessageMenu(it) },
+        onMessageActivated = { openMessageMenu(menuContextFor(it)) },
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
-        onImageActivated = { navigator.toImageViewer(it) },
-        onAttachmentActivated = { openAttachment(it) },
+        onImageActivated = { openMessageMenu(menuContextFor(it)) },
+        onAttachmentActivated = { openMessageMenu(menuContextFor(it)) },
         onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
@@ -186,13 +186,50 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             stopRecordingAndSend()
             return true
         }
-        val b = binding ?: return false
-        if (viewModel.state.value.isComposeFocused) {
-            viewModel.onAction(TimelineAction.Send(b.composeInput.text.toString()))
-            b.composeInput.text?.clear()
-            return true
-        }
+        // Bug fix: sending on a plain CENTER press was too easy to trigger by
+        // accident. A quick press while composing is now swallowed (does
+        // nothing) rather than sending — CENTER_HOLD (below, a genuine
+        // ~500ms hold) is the real "send" while composing. binding == null
+        // still means "swallow, nothing to activate" either way.
+        if (binding != null && viewModel.state.value.isComposeFocused) return true
         return super.onCenter()
+    }
+
+    /** CENTER_HOLD (a held CENTER/ENTER) and the hardware CALL key both send
+     *  while composing — CENTER_HOLD is the deliberate hold-to-confirm
+     *  replacement for the plain-CENTER send [onCenter] used to do; CALL is
+     *  the fast, no-hold alternative (repurposing the phone's physical green
+     *  call button, per explicit request — it still falls through to the
+     *  system dialer when compose isn't focused, unchanged). Neither key
+     *  does anything special on any other screen — CallFragment's own
+     *  onOtherKey handles CALL/END there independently. */
+    override fun onOtherKey(key: LogicalKey): Boolean = when (key) {
+        LogicalKey.CENTER_HOLD -> {
+            if (isRecording) {
+                stopRecordingAndSend()
+                true
+            } else if (viewModel.state.value.isComposeFocused) {
+                sendCompose()
+                true
+            } else {
+                false
+            }
+        }
+        LogicalKey.CALL -> {
+            if (viewModel.state.value.isComposeFocused) {
+                sendCompose()
+                true
+            } else {
+                false
+            }
+        }
+        else -> false
+    }
+
+    private fun sendCompose() {
+        val b = binding ?: return
+        viewModel.onAction(TimelineAction.Send(b.composeInput.text.toString()))
+        b.composeInput.text?.clear()
     }
 
     override fun onBack(): Boolean {
@@ -371,52 +408,114 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** S11 message menu, opened with CENTER on a message row. Both this menu and
-     *  the edit prompt it can open are plain Dialogs over the still-alive Fragment
-     *  view (S9 stays the visible screen underneath), so nothing restores focus to
-     *  compose_input on dismiss unless we do it here — one general hook on each
-     *  dialog, not per-branch logic (Phase 9, UI improvement plan; also correctly
-     *  covers the still-TODO MSG_REPLY branch once it lands, since it'll open a
-     *  dialog off this same menu). Navigation-based destinations (toImageViewer,
-     *  toMessageInfo, toRoomInfo) are untouched — those already restore focus
-     *  correctly via Fragment view recreation. */
-    private fun openMessageMenu(row: TimelineRow.Message) {
+    /** S11 message menu, opened with CENTER on a message, image, or attachment
+     *  row alike — media rows used to jump straight to the viewer/opener,
+     *  bypassing this entirely; they now get the same Reply/React/Pin/etc.
+     *  menu a text message does, with "Open" (reaching that same
+     *  viewer/opener) added at the top for media only. [menuContextFor]'s
+     *  three overloads adapt each row type's own fields into one shared
+     *  shape. Both this menu and the edit prompt it can open are plain
+     *  Dialogs over the still-alive Fragment view (S9 stays the visible
+     *  screen underneath), so nothing restores focus to compose_input on
+     *  dismiss unless we do it here — one general hook on each dialog, not
+     *  per-branch logic (Phase 9, UI improvement plan; also correctly
+     *  covers the still-TODO MSG_REPLY branch once it lands, since it'll
+     *  open a dialog off this same menu). Navigation-based destinations
+     *  (toImageViewer, toMessageInfo, toRoomInfo) are untouched — those
+     *  already restore focus correctly via Fragment view recreation. */
+    private fun openMessageMenu(ctx: MessageMenuContext) {
         val items = buildList {
-            add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
-            if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            if (ctx.openAction != null) add(MenuItem(MSG_OPEN, getString(R.string.timeline_msg_open)))
             add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
+            add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
             add(
                 MenuItem(
                     MSG_PIN,
-                    getString(if (row.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
+                    getString(if (ctx.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
                 ),
             )
-            add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
+            if (ctx.isOwn && ctx.editAction != null) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            if (ctx.copyText != null) add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
         val menu = MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
-                MSG_EDIT -> org.matchat.core.ui.menu.TextPromptSheet.show(
-                    requireContext(),
-                    getString(R.string.timeline_edit_title),
-                    row.body,
-                    singleLine = false,
-                ) { viewModel.editMessage(row.eventId, it) }
-                    .setOnDismissListener { binding?.composeInput?.requestFocus() }
-                MSG_REACT -> openReactionPicker(row)
-                MSG_PIN -> viewModel.setPinned(row.eventId, !row.isPinned)
-                MSG_COPY -> copyText(row.body)
+                MSG_OPEN -> ctx.openAction?.invoke()
+                MSG_REACT -> openReactionPicker(ctx.eventId, ctx.reactions)
+                MSG_EDIT -> ctx.editAction?.invoke()
+                MSG_PIN -> viewModel.setPinned(ctx.eventId, !ctx.isPinned)
+                MSG_COPY -> ctx.copyText?.let { copyText(it) }
                 MSG_INFO -> navigator.toMessageInfo(
                     roomId(),
-                    row.eventId,
-                    org.matchat.core.model.UserId(row.senderId),
-                    row.timestampEpochMs,
+                    ctx.eventId,
+                    org.matchat.core.model.UserId(ctx.senderId),
+                    ctx.timestampEpochMs,
                 )
                 else -> Unit // reply lands in a later milestone
             }
         }
         menu.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
+
+    /** What [openMessageMenu] needs, independent of which of the three
+     *  [TimelineRow] subtypes triggered it. [openAction]/[editAction] null
+     *  omits that menu item entirely (Open: text messages aren't "opened";
+     *  Edit: only a message's own text body is editable, never media). */
+    private data class MessageMenuContext(
+        val eventId: org.matchat.core.model.EventId,
+        val senderId: String,
+        val timestampEpochMs: Long,
+        val isOwn: Boolean,
+        val isPinned: Boolean,
+        val reactions: List<org.matchat.core.model.ReactionSummary>,
+        val copyText: String?,
+        val openAction: (() -> Unit)?,
+        val editAction: (() -> Unit)?,
+    )
+
+    private fun menuContextFor(row: TimelineRow.Message) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = row.body,
+        openAction = null,
+        editAction = {
+            org.matchat.core.ui.menu.TextPromptSheet.show(
+                requireContext(),
+                getString(R.string.timeline_edit_title),
+                row.body,
+                singleLine = false,
+            ) { viewModel.editMessage(row.eventId, it) }
+                .setOnDismissListener { binding?.composeInput?.requestFocus() }
+        },
+    )
+
+    private fun menuContextFor(row: TimelineRow.Image) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = row.caption?.takeIf { it.isNotBlank() },
+        openAction = { navigator.toImageViewer(row.eventId) },
+        editAction = null,
+    )
+
+    private fun menuContextFor(row: TimelineRow.Attachment) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = null,
+        openAction = { openAttachment(row) },
+        editAction = null,
+    )
 
     private fun copyText(text: String) {
         val clipboard = requireContext()
@@ -522,23 +621,29 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** Opened from the message Options menu (MSG_REACT). Reuses MenuSheet —
-     *  the app's only menu construct — for a 10-choice list (now scrollable,
+    /** Opened from the message Options menu (MSG_REACT), for any of the
+     *  three row types alike — takes just what it needs (eventId +
+     *  reactions) rather than a whole [TimelineRow.Message], since Image and
+     *  Attachment rows react the same way. Reuses MenuSheet — the app's
+     *  only menu construct — for a 10-choice list (now scrollable,
      *  MenuSheet's own Reactions-round change) rather than a new dialog
      *  type. Selecting an already-active reaction removes it (toggleReaction
      *  is itself a toggle). Each choice's toggle key is resolved against the
      *  message's own existing reactions first (resolveReactionKey) — bug
      *  fix: reacting with an emoji visually already on the message must
      *  bump that chip's count, not create a byte-different duplicate. */
-    private fun openReactionPicker(row: TimelineRow.Message) {
+    private fun openReactionPicker(
+        eventId: org.matchat.core.model.EventId,
+        reactions: List<org.matchat.core.model.ReactionSummary>,
+    ) {
         val items = REACTION_CHOICES.map { (key, label) ->
-            val toggleKey = resolveReactionKey(row.reactions, key)
-            val reacted = row.reactions.any { it.key == toggleKey && it.reactedByMe }
+            val toggleKey = resolveReactionKey(reactions, key)
+            val reacted = reactions.any { it.key == toggleKey && it.reactedByMe }
             val text = "$key $label"
             MenuItem(toggleKey, if (reacted) getString(R.string.timeline_row_selected_format, text) else text)
         }
         MenuSheet.show(requireContext(), items) { selected ->
-            viewModel.toggleReaction(row.eventId, selected.id)
+            viewModel.toggleReaction(eventId, selected.id)
         }.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
 
@@ -602,6 +707,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val RECORD_TICK_MS = 200L
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
         const val ARG_ROOM_ID = "roomId"
+        const val MSG_OPEN = "open"
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"
         const val MSG_REACT = "react"

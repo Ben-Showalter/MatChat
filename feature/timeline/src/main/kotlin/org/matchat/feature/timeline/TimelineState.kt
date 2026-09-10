@@ -54,6 +54,11 @@ sealed interface TimelineRow {
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
         val isPinned: Boolean = false,
+        /** Send time, carried for the Message info screen (S11) — the
+         *  options menu round gave Image/Attachment the same menu Message
+         *  rows get, which needs this the same way Message.timestampEpochMs
+         *  already does. */
+        val timestampEpochMs: Long = 0L,
     ) : TimelineRow {
         override val stableId: String get() = "img:${eventId.value}"
     }
@@ -70,6 +75,12 @@ sealed interface TimelineRow {
         val mimeType: String?,
         val play: Boolean, // true = audio/voice (play in-app), false = open externally
         val isPinned: Boolean = false,
+        /** Options-menu round: Attachment rows now open the same menu
+         *  Message/Image rows do (React/Pin/Message info etc.), which needs
+         *  all three of these the same way Message/Image already carry them. */
+        val reactions: List<ReactionSummary> = emptyList(),
+        val timestampEpochMs: Long = 0L,
+        val senderId: String = "",
     ) : TimelineRow {
         override val stableId: String get() = "att:${eventId.value}"
     }

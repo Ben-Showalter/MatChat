@@ -258,6 +258,7 @@ class TimelineViewModel @Inject constructor(
                 seenBy = item.seenBy,
                 reactions = item.reactions,
                 isPinned = item.isPinned,
+                timestampEpochMs = item.timestampEpochMs,
             )
         }
         return TimelineRow.Attachment(
@@ -271,6 +272,9 @@ class TimelineViewModel @Inject constructor(
             mimeType = item.mimeType,
             play = item.kind == MediaKind.AUDIO || item.kind == MediaKind.VOICE,
             isPinned = item.isPinned,
+            reactions = item.reactions,
+            timestampEpochMs = item.timestampEpochMs,
+            senderId = item.sender.value,
         )
     }
 
