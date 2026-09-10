@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
+import org.matchat.core.model.SeenBy
 import org.matchat.core.ui.R as UiR
 
 /** S9 bubble alignment: own messages trail (right), others lead (left) — the
@@ -40,6 +41,10 @@ internal class TimelineAdapter(
     private val onImageBind: (EventId, ImageView) -> Unit,
     private val onImageActivated: (EventId) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
+    /** Binds a sender avatar (Avatars round) — null clears to the placeholder. */
+    private val onAvatarBind: (String?, ImageView) -> Unit,
+    /** Populates the "seen by" row with one small avatar per entry. */
+    private val onSeenByBind: (List<SeenBy>, LinearLayout) -> Unit,
 ) : ListAdapter<TimelineRow, RecyclerView.ViewHolder>(DIFF) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -76,16 +81,22 @@ internal class TimelineAdapter(
 
     inner class MessageVH(view: View) : RecyclerView.ViewHolder(view) {
         private val bubble: LinearLayout = view.findViewById(R.id.message_bubble)
+        private val senderRow: View = view.findViewById(R.id.message_sender_row)
+        private val senderAvatar: ImageView = view.findViewById(R.id.message_sender_avatar)
         private val sender: TextView = view.findViewById(R.id.message_sender)
         private val body: TextView = view.findViewById(R.id.message_body)
         private val time: TextView = view.findViewById(R.id.message_time)
+        private val seenBy: LinearLayout = view.findViewById(R.id.message_seen_by)
 
         fun bind(row: TimelineRow.Message) {
-            sender.isVisible = row.senderName != null
+            senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
+            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             body.text = row.body
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
             bindBubbleSide(bubble, time, row.isOwn)
+            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
             itemView.setOnClickListener { onMessageActivated(row) }
         }
@@ -93,20 +104,26 @@ internal class TimelineAdapter(
 
     inner class ImageVH(view: View) : RecyclerView.ViewHolder(view) {
         private val bubble: LinearLayout = view.findViewById(R.id.image_bubble)
+        private val senderRow: View = view.findViewById(R.id.image_sender_row)
+        private val senderAvatar: ImageView = view.findViewById(R.id.image_sender_avatar)
         private val sender: TextView = view.findViewById(R.id.image_sender)
         private val image: ImageView = view.findViewById(R.id.message_image)
         private val caption: TextView = view.findViewById(R.id.image_caption)
         private val time: TextView = view.findViewById(R.id.image_time)
+        private val seenBy: LinearLayout = view.findViewById(R.id.image_seen_by)
 
         fun bind(row: TimelineRow.Image) {
-            sender.isVisible = row.senderName != null
+            senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
+            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             caption.isVisible = !row.caption.isNullOrEmpty()
             caption.text = row.caption.orEmpty()
             time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
             bindBubbleSide(bubble, time, row.isOwn)
             image.setImageDrawable(null)
             onImageBind(row.eventId, image)
+            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnClickListener { onImageActivated(row.eventId) }
         }
     }

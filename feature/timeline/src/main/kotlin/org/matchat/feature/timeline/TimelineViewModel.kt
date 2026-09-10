@@ -172,6 +172,8 @@ class TimelineViewModel @Inject constructor(
                         },
                         senderId = item.sender.value,
                         timestampEpochMs = item.timestampEpochMs,
+                        senderAvatarUrl = item.senderAvatarUrl,
+                        seenBy = item.seenBy,
                     )
                 }
                 is TimelineItem.Media -> {
@@ -197,6 +199,9 @@ class TimelineViewModel @Inject constructor(
 
     /** Download a media message's bytes for the UI to render/open/play. */
     suspend fun loadMedia(eventId: EventId): ByteArray? = session.loadMedia(eventId)
+
+    /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
+    suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
 
     /** Send a picked file as media (S9). Blocked if the policy forbids it — the UI
      *  hides the entry, but re-check here so a stale menu cannot slip through. */
@@ -226,6 +231,8 @@ class TimelineViewModel @Inject constructor(
                 time = time,
                 isOwn = item.isOwn,
                 sendGlyph = glyph,
+                senderAvatarUrl = item.senderAvatarUrl,
+                seenBy = item.seenBy,
             )
         }
         return TimelineRow.Attachment(

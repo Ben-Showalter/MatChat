@@ -10,6 +10,8 @@ data class RoomRow(
     val preview: String,
     val time: String,
     val unreadCount: Int,
+    /** An `mxc://` URI, or null for no room avatar set (Avatars round). */
+    val avatarUrl: String? = null,
 ) {
     val isUnread: Boolean get() = unreadCount > 0
 }

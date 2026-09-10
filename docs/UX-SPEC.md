@@ -123,7 +123,9 @@ Options: Verify with another device instead · Paste from clipboard.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
-Rows (44 dp each): room name 16 sp bold · last message 13 sp grey, one line
+Rows (44 dp each): a 32 dp room avatar (a plain filled circle placeholder
+until the real image decodes, or when none is set — Avatars round) at the
+start · room name 16 sp bold · last message 13 sp grey, one line
 ellipsized · relative time 11 sp top-right · unread badge (inverse pill, count)
 right of the name.
 Sorted by most recent activity. Focus = the standard focus highlight (§2).
@@ -145,10 +147,13 @@ messages."
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
-fill) and others lead (left, a neutral fill); sender name 12 sp coloured
-inside the bubble (shown only when the sender changes), body 16 sp, time
-11 sp shown below the bubble on the same side, with a send-state glyph on
-own messages (`○` sending, `✓` sent, `!` failed). Every bubble carries a
+fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
+beside the sender name (Avatars round), shown/hidden together — 12 sp
+coloured inside the bubble (shown only when the sender changes), body 16 sp,
+time 11 sp shown below the bubble on the same side, with a send-state glyph
+on own messages (`○` sending, `✓` sent, `!` failed). An own message that
+another member has read also shows a short "seen by" row of small avatars
+(up to 4, then "+N") under the time line. Every bubble carries a
 colored stripe (the user's chosen accent, Settings > Theme) on its leading
 edge for received messages, trailing edge for own — the bubble is rounded
 only on the side away from its stripe (square where the stripe sits, so it
@@ -189,7 +194,8 @@ blank here.
 
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
-members can read this"), member list (name + power label).
+members can read this"), member list (a 16 dp avatar beside each name — same
+placeholder-until-decoded treatment as S8/S9 — plus a power label).
 Focus order: member rows.
 Softkeys: Options | Select | Back.
 Options: Mute this group · Leave group (confirm) · Help.

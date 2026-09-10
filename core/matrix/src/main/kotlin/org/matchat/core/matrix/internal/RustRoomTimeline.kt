@@ -42,11 +42,11 @@ internal class RustRoomTimeline(
 ) : RoomTimeline {
 
     private val buffer = mutableListOf<RustTimelineItem>()
-    // Sender display names (Phase 7, UI improvement plan): fetched once
-    // below, not per event/recompute — @Volatile so the SDK's own listener
-    // thread (recompute) sees a fetch that completed on the init coroutine
-    // without needing a lock for a plain reference read/swap.
-    @Volatile private var memberNames: Map<String, String> = emptyMap()
+    // Sender display names + avatars (Phase 7, extended in the Avatars round):
+    // fetched once below, not per event/recompute — @Volatile so the SDK's
+    // own listener thread (recompute) sees a fetch that completed on the init
+    // coroutine without needing a lock for a plain reference read/swap.
+    @Volatile private var members: Map<String, MemberInfo> = emptyMap()
     private val itemsFlow = MutableStateFlow<List<TimelineItem>>(emptyList())
     private val typingFlow = MutableStateFlow<List<UserId>>(emptyList())
     private var timeline: Timeline? = null
@@ -72,15 +72,16 @@ internal class RustRoomTimeline(
             // triggers a diff.
             runCatching { tl.paginateBackwards(INITIAL_PAGE_COUNT.toUShort()) }
 
-            // Sender display names (Phase 7): a one-time fetch of the already-synced
-            // member list — no network round trip (member sync already happened for
-            // the app to be in this room), no per-event cost. Off Dispatchers.IO
-            // like every other blocking SDK call in this class (fetchMemberNames'
-            // own doc comment). Recompute once more so any items mapped (raw MXID
-            // senderName) before this finished pick up the real name; a sender who
-            // joins after this point keeps showing their MXID until the room is
-            // reopened — a deliberate scope cut, not a bug.
-            runCatching { memberNames = withContext(Dispatchers.IO) { fetchMemberNames(r) } }
+            // Sender display names + avatars (Phase 7, extended for avatars): a
+            // one-time fetch of the already-synced member list — no network round
+            // trip (member sync already happened for the app to be in this room),
+            // no per-event cost. Off Dispatchers.IO like every other blocking SDK
+            // call in this class (fetchMembers' own doc comment). Recompute once
+            // more so any items mapped (raw MXID senderName, no avatar) before
+            // this finished pick up the real name/avatar; a sender who joins
+            // after this point keeps showing their MXID/no avatar until the room
+            // is reopened — a deliberate scope cut, not a bug.
+            runCatching { members = withContext(Dispatchers.IO) { fetchMembers(r) } }
             recompute()
 
             typingHandle = runCatching {
@@ -234,24 +235,29 @@ internal class RustRoomTimeline(
 
     private fun recompute() {
         val snapshot = synchronized(buffer) { buffer.toList() }
-        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, memberNames) }
+        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, members) }
     }
 
-    /** userId -> displayName for every member with one set, paginated the same way
-     *  as RustMatrixSession.roomMembers (a member with no displayName is simply
-     *  omitted — Mappers.resolveSenderName's raw-ID fallback covers them).
-     *  room.members()/nextChunk() are themselves suspend functions (the actual
-     *  compile error a non-suspend version of this hit — "should be called only
-     *  from a coroutine" — not just "blocking FFI" as I'd assumed); must still be
-     *  called off the main thread regardless — see the one call site. */
-    private suspend fun fetchMemberNames(room: Room): Map<String, String> {
-        val out = mutableMapOf<String, String>()
+    /** userId -> (displayName, avatarUrl) for every member with either set,
+     *  paginated the same way as RustMatrixSession.roomMembers (a member with
+     *  neither is simply omitted — Mappers.resolveSenderName's raw-ID fallback,
+     *  and a null senderAvatarUrl, both cover them). room.members()/nextChunk()
+     *  are themselves suspend functions (the actual compile error a non-suspend
+     *  version of this hit — "should be called only from a coroutine" — not
+     *  just "blocking FFI" as I'd assumed); must still be called off the main
+     *  thread regardless — see the one call site. */
+    private suspend fun fetchMembers(room: Room): Map<String, MemberInfo> {
+        val out = mutableMapOf<String, MemberInfo>()
         runCatching {
             val iterator = room.members()
             while (true) {
                 val chunk = iterator.nextChunk(MEMBER_PAGE_SIZE) ?: break
                 if (chunk.isEmpty()) break
-                chunk.forEach { m -> m.displayName?.let { out[m.userId] = it } }
+                chunk.forEach { m ->
+                    if (m.displayName != null || m.avatarUrl != null) {
+                        out[m.userId] = MemberInfo(m.displayName, m.avatarUrl)
+                    }
+                }
             }
             iterator.close()
         }

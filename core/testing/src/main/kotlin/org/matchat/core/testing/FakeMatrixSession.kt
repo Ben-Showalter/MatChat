@@ -71,6 +71,14 @@ class FakeMatrixSession(
 
     override suspend fun loadMedia(eventId: EventId): ByteArray? = mediaBytes
 
+    var avatarBytes: ByteArray? = null
+    val avatarLoads = mutableListOf<String>()
+
+    override suspend fun loadAvatar(mxcUrl: String): ByteArray? {
+        avatarLoads += mxcUrl
+        return avatarBytes
+    }
+
     val sentMessages = mutableListOf<Pair<RoomId, String>>()
     val readRooms = mutableListOf<RoomId>()
     var lastPresenceOnline: Boolean? = null

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- One room row (S8). Focus lives on the row; the row is the click target
      (AGENTS.md §4). minHeight, never a fixed height, so it grows in large-text
-     mode (UX-SPEC S16). -->
+     mode (UX-SPEC S16). room_avatar (Avatars round) sits at the start; name/
+     preview shift to sit beside it rather than spanning the full row. -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Widget.MatChat.Row"
@@ -9,6 +10,16 @@
     android:layout_height="wrap_content"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
+
+    <ImageView
+        android:id="@+id/room_avatar"
+        android:layout_width="@dimen/avatar_size_list"
+        android:layout_height="@dimen/avatar_size_list"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/avatar_placeholder"
+        android:contentDescription="@null" />
 
     <TextView
         android:id="@+id/room_time"
@@ -45,6 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@id/room_time"
+        android:layout_toEndOf="@id/room_avatar"
         android:duplicateParentState="true"
         android:maxLines="1"
         android:ellipsize="end"
@@ -59,6 +71,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/room_name"
         android:layout_toStartOf="@id/room_unread"
+        android:layout_toEndOf="@id/room_avatar"
         android:duplicateParentState="true"
         android:maxLines="1"
         android:ellipsize="end"

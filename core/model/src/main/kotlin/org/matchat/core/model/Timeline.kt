@@ -15,6 +15,11 @@ sealed interface TimelineItem {
         val sendState: SendState,
         /** True when another member has a read receipt on this (own) message. */
         val isRead: Boolean = false,
+        /** An `mxc://` URI for the sender's avatar, or null for none set. */
+        val senderAvatarUrl: String? = null,
+        /** Who (besides the sender) has a read receipt on this message — the
+         *  "seen by" avatar row, shown only for own messages (UX-SPEC S9). */
+        val seenBy: List<SeenBy> = emptyList(),
     ) : TimelineItem
 
     /**
@@ -37,6 +42,8 @@ sealed interface TimelineItem {
         val sizeBytes: Long?,
         val durationMs: Long?,
         val isRead: Boolean = false,
+        val senderAvatarUrl: String? = null,
+        val seenBy: List<SeenBy> = emptyList(),
     ) : TimelineItem
 
     data class DaySeparator(val label: String) : TimelineItem
@@ -49,6 +56,10 @@ sealed interface TimelineItem {
 
     data class StateChange(val text: String) : TimelineItem
 }
+
+/** One member who has read a message, for the per-message "seen by" avatar
+ *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set. */
+data class SeenBy(val userId: UserId, val avatarUrl: String?)
 
 enum class MediaKind { IMAGE, VIDEO, AUDIO, VOICE, FILE }
 

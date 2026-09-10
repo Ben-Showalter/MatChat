@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- An inline image message (S9). Same bubble treatment as item_message.xml,
-     including its focus-via-border exception (see its header comment); the
-     image itself keeps its own 200dp cap (downsampled to the QVGA screen)
-     rather than bubble_max_width, so an image bubble can sit a little wider
-     than a text one. -->
+     including its focus-via-border exception (see its header comment) and
+     its Avatars-round sender_avatar/seen_by additions; the image itself
+     keeps its own 200dp cap (downsampled to the QVGA screen) rather than
+     bubble_max_width, so an image bubble can sit a little wider than a text
+     one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -30,18 +31,35 @@
         android:paddingTop="@dimen/bubble_pad_v"
         android:paddingBottom="@dimen/bubble_pad_v">
 
-        <TextView
-            android:id="@+id/image_sender"
+        <LinearLayout
+            android:id="@+id/image_sender_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="1dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:duplicateParentState="true"
-            android:maxWidth="@dimen/bubble_max_width"
-            android:textSize="@dimen/text_sender"
-            android:textColor="?attr/colorEncrypted"
             android:visibility="gone"
-            tools:text="Wayne"
-            tools:visibility="visible" />
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/image_sender_avatar"
+                android:layout_width="@dimen/avatar_size_sender"
+                android:layout_height="@dimen/avatar_size_sender"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/avatar_placeholder"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/image_sender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:maxWidth="@dimen/bubble_max_width"
+                android:textSize="@dimen/text_sender"
+                android:textColor="?attr/colorEncrypted"
+                tools:text="Wayne" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/message_image"
@@ -75,4 +93,14 @@
         android:textSize="@dimen/text_meta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM ✓✓" />
+
+    <LinearLayout
+        android:id="@+id/image_seen_by"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
 </LinearLayout>

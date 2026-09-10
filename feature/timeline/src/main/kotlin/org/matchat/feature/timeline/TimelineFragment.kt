@@ -18,6 +18,7 @@ import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.timeline.databinding.FragmentTimelineBinding
 
 /** S9 Timeline. Compose is the initial focus (people come here to reply). */
@@ -59,6 +60,8 @@ class TimelineFragment : SoftkeyFragment() {
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
         onImageActivated = { navigator.toImageViewer(it) },
         onAttachmentActivated = { openAttachment(it) },
+        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
+        onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
     )
 
     // A chooser (Documents UI + the device Gallery) returns a content Uri via
@@ -393,6 +396,44 @@ class TimelineFragment : SoftkeyFragment() {
         }
     }
 
+    /** Avatars round: loadAvatar/AvatarCache/AvatarBinder are the same shared
+     *  path room list and Room Info use (core/ui, since features can't
+     *  depend on each other) — this Fragment only supplies the byte fetch. */
+    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+        }
+    }
+
+    /** Populates the "seen by" row with up to [SEEN_BY_MAX] avatars plus a
+     *  "+N" overflow label — plain Views built here, not a nested
+     *  RecyclerView (this app's convention for a handful of small items;
+     *  the reaction-chip row uses the same shape). */
+    private fun bindSeenBy(seenBy: List<org.matchat.core.model.SeenBy>, container: android.widget.LinearLayout) {
+        container.removeAllViews()
+        val avatarPx = resources.getDimensionPixelSize(org.matchat.core.ui.R.dimen.avatar_size_seen_by)
+        seenBy.take(SEEN_BY_MAX).forEach { entry ->
+            val avatar = android.widget.ImageView(requireContext()).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(avatarPx, avatarPx).apply {
+                    marginEnd = SEEN_BY_SPACING_PX
+                }
+                contentDescription = null
+            }
+            container.addView(avatar)
+            loadAvatarInto(entry.avatarUrl, avatar)
+        }
+        val overflow = seenBy.size - SEEN_BY_MAX
+        if (overflow > 0) {
+            container.addView(
+                android.widget.TextView(requireContext()).apply {
+                    text = "+$overflow"
+                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextColor(requireContext().themeColor(org.matchat.core.ui.R.attr.colorTextMetaOnFocus))
+                },
+            )
+        }
+    }
+
     private fun openAttachment(row: TimelineRow.Attachment) {
         viewLifecycleOwner.lifecycleScope.launch {
             val ctx = requireContext()
@@ -458,5 +499,9 @@ class TimelineFragment : SoftkeyFragment() {
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
+        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_sender; small on purpose
+        const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
+        const val SEEN_BY_SPACING_PX = 2
+        const val SEEN_BY_OVERFLOW_SP = 11f
     }
 }

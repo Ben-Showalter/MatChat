@@ -11,7 +11,14 @@
      (bubble_received.xml/bubble_own.xml), matching the reference device's
      own SMS app. message_bubble picks this up via duplicateParentState,
      since it isn't itself focusable. CENTER opens the message menu (S11).
-     minHeight so it grows at large-text scale. -->
+     minHeight so it grows at large-text scale.
+
+     Avatars round: sender_avatar_row pairs a small circle with the sender
+     name (shown/hidden together, same "only when it changes" rule as the
+     name itself); seen_by_row is a short row of avatar circles under an own
+     message once another member has read it — TimelineAdapter populates it
+     directly (a handful of ImageViews, not a nested RecyclerView, matching
+     this app's flat-view convention for the reaction chips too). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -38,18 +45,35 @@
         android:paddingTop="@dimen/bubble_pad_v"
         android:paddingBottom="@dimen/bubble_pad_v">
 
-        <TextView
-            android:id="@+id/message_sender"
+        <LinearLayout
+            android:id="@+id/message_sender_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="1dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:duplicateParentState="true"
-            android:maxWidth="@dimen/bubble_max_width"
-            android:textSize="@dimen/text_sender"
-            android:textColor="?attr/colorEncrypted"
             android:visibility="gone"
-            tools:text="Wayne"
-            tools:visibility="visible" />
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/message_sender_avatar"
+                android:layout_width="@dimen/avatar_size_sender"
+                android:layout_height="@dimen/avatar_size_sender"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/avatar_placeholder"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/message_sender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:duplicateParentState="true"
+                android:maxWidth="@dimen/bubble_max_width"
+                android:textSize="@dimen/text_sender"
+                android:textColor="?attr/colorEncrypted"
+                tools:text="Wayne" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/message_body"
@@ -72,4 +96,14 @@
         android:textSize="@dimen/text_meta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM ✓" />
+
+    <LinearLayout
+        android:id="@+id/message_seen_by"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible" />
 </LinearLayout>

@@ -52,4 +52,13 @@
          bubbles specifically — AGENTS.md §4 exception, see its note). -->
     <dimen name="bubble_border_width">1dp</dimen>
     <dimen name="bubble_border_width_focused">2dp</dimen>
+
+    <!-- Avatars round: a placeholder/decoded circle next to a name. Three
+         sizes for three contexts — a room-list row (item_room.xml,
+         row_min_height), a message sender (item_message.xml/
+         item_message_image.xml, next to the 12sp text_sender line), and the
+         small "seen by" row underneath an own message. -->
+    <dimen name="avatar_size_list">32dp</dimen>
+    <dimen name="avatar_size_sender">16dp</dimen>
+    <dimen name="avatar_size_seen_by">14dp</dimen>
 </resources>

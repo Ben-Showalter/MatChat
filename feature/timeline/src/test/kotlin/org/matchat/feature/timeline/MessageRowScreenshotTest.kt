@@ -48,7 +48,10 @@ class MessageRowScreenshotTest {
         binding.messageTime.text = "3:42 PM ✓"
         if (showSender) {
             binding.messageSender.text = "Wayne"
-            binding.messageSender.visibility = View.VISIBLE
+            // Avatars round: the name (and its avatar) share one row,
+            // messageSenderRow, gone by default in the layout — the TextView
+            // itself no longer carries its own visibility.
+            binding.messageSenderRow.visibility = View.VISIBLE
         }
         bindBubbleSide(binding.messageBubble, binding.messageTime, isOwn)
         if (focused) {
