@@ -93,12 +93,21 @@ internal class RustRoomTimeline(
             // after this point keeps showing their MXID/no avatar until the room
             // is reopened — a deliberate scope cut, not a bug.
             runCatching { members = withContext(Dispatchers.IO) { fetchMembers(r) } }
+            // Bug fix: this used to short-circuit to PinnedEventsCache.get()
+            // whenever any RustRoomTimeline had ever populated it for this
+            // room, in this process's lifetime — meaning a pin made from
+            // another client (e.g. Element) never showed up here, even on
+            // reopening the room, until the whole app process restarted
+            // ("still not pulling pinned messages in that were pinned on
+            // Element", on-device report). Every new instance now always
+            // does a fresh cold read, and still seeds the cache from it —
+            // both setPinned()'s own cache-preferring write baseline and the
+            // updatesFor(roomId) subscription just below (for a sibling
+            // screen already open) depend on the cache staying populated.
             val roomId = r.id()
-            val cached = PinnedEventsCache.get(roomId)
-            pinnedIds = cached
-                ?: runCatching { withContext(Dispatchers.IO) { fetchPinnedIds(r) } }
-                    .getOrDefault(emptySet())
-                    .also { PinnedEventsCache.put(roomId, it) }
+            pinnedIds = runCatching { withContext(Dispatchers.IO) { fetchPinnedIds(r) } }
+                .getOrDefault(emptySet())
+                .also { PinnedEventsCache.put(roomId, it) }
             recompute()
             // The live fix: a pin/unpin made through a sibling RustRoomTimeline
             // for this same room shows here immediately, not just after this

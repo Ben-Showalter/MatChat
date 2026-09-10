@@ -25,6 +25,17 @@ import kotlinx.coroutines.flow.map
  * completed write) — a second reason this exists, beyond keeping sibling
  * screens in sync: it's what makes two pins issued close together both
  * stick, instead of the second silently replacing the first.
+ *
+ * Deliberately narrow scope (bug fix: a room's pins made from another client,
+ * e.g. Element, used to never appear here once this cache had ever been
+ * populated for that room in this process's life — see [RustRoomTimeline]'s
+ * `init` block): this cache is NOT a substitute for a fresh read when a new
+ * [RustRoomTimeline] is constructed for a room. Every new instance still does
+ * its own cold `fetchPinnedIds` read and treats it as authoritative, then
+ * seeds/refreshes this cache from that result — [get] exists only for (a)
+ * [updatesFor]'s live cross-screen propagation of a write made through one
+ * already-open screen to its siblings, and (b) [RustRoomTimeline.setPinned]'s
+ * write baseline above.
  */
 internal object PinnedEventsCache {
     private val state = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
