@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:MainActivity.kt$MainActivity$logical == LogicalKey.UP || logical == LogicalKey.DOWN || logical == LogicalKey.LEFT || logical == LogicalKey.RIGHT</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt$MainActivity$override fun dispatchKeyEvent(event: KeyEvent): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$override fun dispatchKeyEvent(event: KeyEvent): Boolean</ID>
+  </CurrentIssues>
+</SmellBaseline>

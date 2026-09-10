@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KeyMap.kt$KeyMap$private fun mapRaw(event: KeyEvent): LogicalKey?</ID>
+    <ID>LongMethod:TextPromptSheet.kt$TextPromptSheet$fun show( context: Context, title: CharSequence, initial: CharSequence = "", singleLine: Boolean = true, onConfirm: (String) -&gt; Unit, ): Dialog</ID>
+  </CurrentIssues>
+</SmellBaseline>

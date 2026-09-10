@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>SpreadOperator:FakeMatrixAuth.kt$FakeMatrixAuth$(*qrSteps.toTypedArray())</ID>
+  </CurrentIssues>
+</SmellBaseline>
