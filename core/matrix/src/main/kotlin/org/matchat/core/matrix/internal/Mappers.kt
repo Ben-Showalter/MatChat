@@ -42,8 +42,14 @@ internal object Mappers {
      *
      * EventTimelineItem is a uniffi Record, so its fields are properties. The body
      * path is content -> MsgLike.content.kind -> Message.content.body.
+     *
+     * [memberNames] is the room's already-synced member list (userId ->
+     * displayName; RustRoomTimeline fetches it once via roomMembers(), no
+     * per-event network round trip) — resolveSenderName falls back to the
+     * raw Matrix ID for a sender not yet in it (e.g. joined mid-conversation
+     * before the next member-list refresh), never a blank name.
      */
-    fun toTimelineItem(item: RustTimelineItem): TimelineItem? {
+    fun toTimelineItem(item: RustTimelineItem, memberNames: Map<String, String>): TimelineItem? {
         val event = item.asEvent() ?: return null
         val msgLike = event.content as? TimelineItemContent.MsgLike ?: return null
         val messageKind = msgLike.content.kind as? MsgLikeKind.Message ?: return null
@@ -54,14 +60,13 @@ internal object Mappers {
             event.readReceipts.keys.any { it != event.sender }
         }.getOrDefault(false)
 
-        val media = mediaOf(messageKind.content.msgType, eventId, event, readByOther)
+        val media = mediaOf(messageKind.content.msgType, eventId, event, readByOther, memberNames)
         if (media != null) return media
 
         return TimelineItem.Message(
             eventId = EventId(eventId),
             sender = UserId(event.sender),
-            // Sender display name resolution is a follow-up; the id is always safe.
-            senderName = event.sender,
+            senderName = resolveSenderName(event.sender, memberNames),
             body = messageKind.content.body,
             timestampEpochMs = event.timestamp.toLong(),
             isOwn = event.isOwn,
@@ -69,6 +74,11 @@ internal object Mappers {
             isRead = readByOther,
         )
     }
+
+    /** The raw Matrix ID (`@user:server`) is always a safe fallback — never blank,
+     *  never a network call — for a sender [memberNames] doesn't (yet) know. */
+    internal fun resolveSenderName(rawSenderId: String, memberNames: Map<String, String>): String =
+        memberNames[rawSenderId] ?: rawSenderId
 
     /** Media messages (image/video/audio/voice/file). Registers the MediaSource
      *  so the download-by-id path can reach it. Returns null for text-like types. */
@@ -78,6 +88,7 @@ internal object Mappers {
         eventId: String,
         event: org.matrix.rustcomponents.sdk.EventTimelineItem,
         isRead: Boolean,
+        memberNames: Map<String, String>,
     ): TimelineItem.Media? {
         val (kind, source, filename, caption, mime, size, durationMs) = when (type) {
             is MessageType.Image -> Media6(
@@ -106,7 +117,7 @@ internal object Mappers {
         return TimelineItem.Media(
             eventId = EventId(eventId),
             sender = UserId(event.sender),
-            senderName = event.sender,
+            senderName = resolveSenderName(event.sender, memberNames),
             body = caption ?: filename,
             timestampEpochMs = event.timestamp.toLong(),
             isOwn = event.isOwn,

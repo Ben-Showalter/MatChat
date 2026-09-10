@@ -42,6 +42,11 @@ internal class RustRoomTimeline(
 ) : RoomTimeline {
 
     private val buffer = mutableListOf<RustTimelineItem>()
+    // Sender display names (Phase 7, UI improvement plan): fetched once
+    // below, not per event/recompute — @Volatile so the SDK's own listener
+    // thread (recompute) sees a fetch that completed on the init coroutine
+    // without needing a lock for a plain reference read/swap.
+    @Volatile private var memberNames: Map<String, String> = emptyMap()
     private val itemsFlow = MutableStateFlow<List<TimelineItem>>(emptyList())
     private val typingFlow = MutableStateFlow<List<UserId>>(emptyList())
     private var timeline: Timeline? = null
@@ -66,6 +71,17 @@ internal class RustRoomTimeline(
             // timeline stays empty until some event (e.g. the user's own send)
             // triggers a diff.
             runCatching { tl.paginateBackwards(INITIAL_PAGE_COUNT.toUShort()) }
+
+            // Sender display names (Phase 7): a one-time fetch of the already-synced
+            // member list — no network round trip (member sync already happened for
+            // the app to be in this room), no per-event cost. Off Dispatchers.IO
+            // like every other blocking SDK call in this class (fetchMemberNames'
+            // own doc comment). Recompute once more so any items mapped (raw MXID
+            // senderName) before this finished pick up the real name; a sender who
+            // joins after this point keeps showing their MXID until the room is
+            // reopened — a deliberate scope cut, not a bug.
+            runCatching { memberNames = withContext(Dispatchers.IO) { fetchMemberNames(r) } }
+            recompute()
 
             typingHandle = runCatching {
                 r.subscribeToTypingNotifications(object : TypingNotificationsListener {
@@ -218,10 +234,29 @@ internal class RustRoomTimeline(
 
     private fun recompute() {
         val snapshot = synchronized(buffer) { buffer.toList() }
-        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it) }
+        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, memberNames) }
+    }
+
+    /** userId -> displayName for every member with one set, paginated the same way
+     *  as RustMatrixSession.roomMembers (a member with no displayName is simply
+     *  omitted — Mappers.resolveSenderName's raw-ID fallback covers them). Must be
+     *  called off the main thread (blocking FFI) — see the one call site. */
+    private fun fetchMemberNames(room: Room): Map<String, String> {
+        val out = mutableMapOf<String, String>()
+        runCatching {
+            val iterator = room.members()
+            while (true) {
+                val chunk = iterator.nextChunk(MEMBER_PAGE_SIZE) ?: break
+                if (chunk.isEmpty()) break
+                chunk.forEach { m -> m.displayName?.let { out[m.userId] = it } }
+            }
+            iterator.close()
+        }
+        return out
     }
 
     private companion object {
         const val INITIAL_PAGE_COUNT = 20
+        const val MEMBER_PAGE_SIZE: UInt = 50u
     }
 }
