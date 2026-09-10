@@ -195,10 +195,14 @@ class FakeTimeline(
         toggledReactions += eventId to key
     }
 
-    fun emit(items: List<TimelineItem>) {
-        itemsFlow.value = items
+    val pinnedChanges = mutableListOf<Pair<EventId, Boolean>>()
+    var pinnedResult: Boolean = true
+
+    override suspend fun setPinned(eventId: EventId, pinned: Boolean): Boolean {
+        pinnedChanges += eventId to pinned
+        return pinnedResult
     }
-    fun emitTyping(users: List<UserId>) {
-        typingFlow.value = users
-    }
+
+    fun emit(items: List<TimelineItem>) { itemsFlow.value = items }
+    fun emitTyping(users: List<UserId>) { typingFlow.value = users }
 }

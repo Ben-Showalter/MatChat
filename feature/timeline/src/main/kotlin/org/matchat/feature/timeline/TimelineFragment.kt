@@ -14,16 +14,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
+import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.timeline.databinding.FragmentTimelineBinding
 
 /** S9 Timeline. Compose is the initial focus (people come here to reply). */
 @AndroidEntryPoint
-class TimelineFragment : SoftkeyFragment() {
+class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     override val contentLayoutId: Int = R.layout.fragment_timeline
     override val leftLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_options)
@@ -62,7 +64,7 @@ class TimelineFragment : SoftkeyFragment() {
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
         onImageActivated = { navigator.toImageViewer(it) },
         onAttachmentActivated = { openAttachment(it) },
-        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
+        onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
@@ -111,6 +113,8 @@ class TimelineFragment : SoftkeyFragment() {
             refreshSoftkeys()
         }
 
+        b.pinnedBand.setOnClickListener { navigator.toPinnedMessages(roomId()) }
+
         b.composeInput.addTextChangedListener { text ->
             viewModel.onComposeTextChanged(text?.toString().orEmpty())
         }
@@ -129,6 +133,12 @@ class TimelineFragment : SoftkeyFragment() {
         val b = binding ?: return
         setTitle(state.title)
         setSyncGlyph(SyncState.IDLE)
+        b.pinnedBand.isVisible = state.pinnedCount > 0
+        if (state.pinnedCount > 0) {
+            b.pinnedBand.text = resources.getQuantityString(
+                R.plurals.timeline_pinned_band, state.pinnedCount, state.pinnedCount,
+            )
+        }
         b.unencryptedBand.isVisible = state.showUnencryptedBand
         b.emptyView.isVisible = state.isEmpty
         b.timelineList.isVisible = !state.isEmpty
@@ -145,10 +155,29 @@ class TimelineFragment : SoftkeyFragment() {
         }
     }
 
+    /** RIGHT jumps to Pinned messages (quick-access round) — never while
+     *  composing (RIGHT stays with the EditText's own caret movement there,
+     *  per the user's own explicit ask), and only when there's something to
+     *  jump to. See DirectionalKeyReceiver's doc comment for why this
+     *  narrow exception exists at all. */
+    override fun onDirectionalKey(key: LogicalKey): Boolean {
+        if (key != LogicalKey.RIGHT) return false
+        if (binding?.composeInput?.isFocused == true) return false
+        if (viewModel.state.value.pinnedCount == 0) return false
+        navigator.toPinnedMessages(roomId())
+        return true
+    }
+
     private fun navigate(nav: TimelineNav) {
         when (nav) {
             TimelineNav.Verification -> navigator.toVerification()
             TimelineNav.RoomInfo -> Unit // S12 Room info is built in a later milestone
+            is TimelineNav.Toast -> {
+                val res = when (nav.key) {
+                    TimelineToastKey.PIN_FAILED -> R.string.timeline_pin_failed
+                }
+                Toast.makeText(requireContext(), res, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -356,6 +385,12 @@ class TimelineFragment : SoftkeyFragment() {
             add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
             if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
             add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
+            add(
+                MenuItem(
+                    MSG_PIN,
+                    getString(if (row.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
+                ),
+            )
             add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
@@ -369,8 +404,10 @@ class TimelineFragment : SoftkeyFragment() {
                 ) { viewModel.editMessage(row.eventId, it) }
                     .setOnDismissListener { binding?.composeInput?.requestFocus() }
                 MSG_REACT -> openReactionPicker(row)
+                MSG_PIN -> viewModel.setPinned(row.eventId, !row.isPinned)
                 MSG_COPY -> copyText(row.body)
                 MSG_INFO -> navigator.toMessageInfo(
+                    roomId(),
                     row.eventId,
                     org.matchat.core.model.UserId(row.senderId),
                     row.timestampEpochMs,
@@ -403,29 +440,35 @@ class TimelineFragment : SoftkeyFragment() {
 
     /** Avatars round: loadAvatar/AvatarCache/AvatarBinder are the same shared
      *  path room list and Room Info use (core/ui, since features can't
-     *  depend on each other) — this Fragment only supplies the byte fetch. */
-    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+     *  depend on each other) — this Fragment only supplies the byte fetch.
+     *  name/id are the no-avatar-fallback's color+initial source
+     *  (AvatarFallback round). */
+    private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
         }
     }
 
     /** Populates the "seen by" row with up to [SEEN_BY_MAX] avatars plus a
      *  "+N" overflow label — plain Views built here, not a nested
      *  RecyclerView (this app's convention for a handful of small items;
-     *  the reaction-chip row uses the same shape). */
+     *  the reaction-chip row uses the same shape). Avatars overlap (a
+     *  negative marginEnd) rather than sit side by side — later views draw
+     *  on top of earlier ones under Android's normal z-order, so no extra
+     *  container/ring is needed for the stacked look. */
     private fun bindSeenBy(seenBy: List<org.matchat.core.model.SeenBy>, container: android.widget.LinearLayout) {
         container.removeAllViews()
         val avatarPx = resources.getDimensionPixelSize(org.matchat.core.ui.R.dimen.avatar_size_seen_by)
-        seenBy.take(SEEN_BY_MAX).forEach { entry ->
+        val overlapPx = -(avatarPx / SEEN_BY_OVERLAP_DIVISOR)
+        seenBy.take(SEEN_BY_MAX).forEachIndexed { index, entry ->
             val avatar = android.widget.ImageView(requireContext()).apply {
                 layoutParams = android.widget.LinearLayout.LayoutParams(avatarPx, avatarPx).apply {
-                    marginEnd = SEEN_BY_SPACING_PX
+                    if (index > 0) marginStart = overlapPx
                 }
                 contentDescription = null
             }
             container.addView(avatar)
-            loadAvatarInto(entry.avatarUrl, avatar)
+            loadAvatarInto(entry.avatarUrl, entry.displayName ?: entry.userId.value, entry.userId.value, avatar)
         }
         val overflow = seenBy.size - SEEN_BY_MAX
         if (overflow > 0) {
@@ -474,12 +517,16 @@ class TimelineFragment : SoftkeyFragment() {
      *  the app's only menu construct — for a 10-choice list (now scrollable,
      *  MenuSheet's own Reactions-round change) rather than a new dialog
      *  type. Selecting an already-active reaction removes it (toggleReaction
-     *  is itself a toggle). */
+     *  is itself a toggle). Each choice's toggle key is resolved against the
+     *  message's own existing reactions first (resolveReactionKey) — bug
+     *  fix: reacting with an emoji visually already on the message must
+     *  bump that chip's count, not create a byte-different duplicate. */
     private fun openReactionPicker(row: TimelineRow.Message) {
-        val reactedKeys = row.reactions.filter { it.reactedByMe }.map { it.key }.toSet()
         val items = REACTION_CHOICES.map { (key, label) ->
+            val toggleKey = resolveReactionKey(row.reactions, key)
+            val reacted = row.reactions.any { it.key == toggleKey && it.reactedByMe }
             val text = "$key $label"
-            MenuItem(key, if (key in reactedKeys) getString(R.string.timeline_row_selected_format, text) else text)
+            MenuItem(toggleKey, if (reacted) getString(R.string.timeline_row_selected_format, text) else text)
         }
         MenuSheet.show(requireContext(), items) { selected ->
             viewModel.toggleReaction(row.eventId, selected.id)
@@ -549,12 +596,13 @@ class TimelineFragment : SoftkeyFragment() {
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"
         const val MSG_REACT = "react"
+        const val MSG_PIN = "pin"
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
         const val AVATAR_MAX_PX = 64 // ~2x avatar_size_sender; small on purpose
         const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
-        const val SEEN_BY_SPACING_PX = 2
+        const val SEEN_BY_OVERLAP_DIVISOR = 3 // later avatars overlap ~1/3 of the previous one
         const val SEEN_BY_OVERFLOW_SP = 11f
         const val REACTION_CHIP_SPACING_PX = 10
 

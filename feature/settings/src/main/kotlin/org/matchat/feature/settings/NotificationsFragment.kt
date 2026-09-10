@@ -33,6 +33,19 @@ class NotificationsFragment : SoftkeyFragment() {
     ) { result ->
         val pickedUri = result.data
             ?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        // Crash fix, defense-in-depth: a custom sound's content:// URI can
+        // outlive whatever transient read grant the picker handed us (the
+        // on-device crash this fixes was exactly that, at notify() time,
+        // later). Asking for a persistable grant now is best-effort — most
+        // ringtone/notification MediaStore URIs don't need or support one,
+        // so a failure here is expected and harmless; MessageNotifier.show()
+        // no longer crashes even if this doesn't help for a given URI.
+        pickedUri?.let {
+            runCatching {
+                requireContext().contentResolver
+                    .takePersistableUriPermission(it, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }
         val uri = viewModel.ringtonePickResultToUri(
             pickedUri,
             wasCancelled = result.resultCode != Activity.RESULT_OK,
@@ -72,6 +85,9 @@ class NotificationsFragment : SoftkeyFragment() {
                 RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
                 current?.let { runCatching { Uri.parse(it) }.getOrNull() },
             )
+            // Best-effort: ask for a grant on whatever URI comes back (see the
+            // pickRingtone callback's takePersistableUriPermission attempt).
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         pickRingtone.launch(intent)
     }

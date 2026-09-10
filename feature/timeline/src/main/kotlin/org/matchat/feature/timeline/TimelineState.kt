@@ -24,13 +24,17 @@ sealed interface TimelineRow {
         /** An `mxc://` URI, or null for no avatar set — shown next to
          *  [senderName] when that's non-null (Avatars round). */
         val senderAvatarUrl: String? = null,
-        /** Who's read this (own) message besides the sender — rendered as a
-         *  short avatar row under the bubble; always empty for a received
-         *  message (UX-SPEC S9). */
+        /** Who's read this message besides the sender and the current user —
+         *  rendered as a short avatar row under the bubble; shown on both
+         *  own and received messages (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
         /** Reaction chips shown below the bubble (Reactions round); empty
          *  hides the row entirely. */
         val reactions: List<ReactionSummary> = emptyList(),
+        /** True when pinned — TimelineAdapter prefixes the time text with
+         *  📌, the same compact idiom sendGlyph already uses (Pinned
+         *  messages round). */
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = eventId.value
     }
@@ -43,9 +47,13 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val sendGlyph: String,
+        /** Full sender id, carried for the avatar fallback's color+initial
+         *  (AvatarFallback round; parity with Message.senderId). */
+        val senderId: String = "",
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = "img:${eventId.value}"
     }
@@ -60,8 +68,8 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val mimeType: String?,
-        // true = audio/voice (play in-app), false = open externally
-        val play: Boolean,
+        val play: Boolean, // true = audio/voice (play in-app), false = open externally
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = "att:${eventId.value}"
     }
@@ -92,6 +100,10 @@ data class TimelineState(
     /** "Alice is typing…" / "Several people are typing…", or null when nobody is. */
     val typingText: String? = null,
     val error: ErrorText? = null,
+    /** Count of pinned messages in this room — drives the pinned-messages
+     *  band's visibility/text and whether the RIGHT-key shortcut does
+     *  anything (Pinned messages quick-access round). */
+    val pinnedCount: Int = 0,
 ) {
     val isEmpty: Boolean get() = rows.isEmpty() && !isLoadingEarlier
     val showUnencryptedBand: Boolean get() = !isEncrypted

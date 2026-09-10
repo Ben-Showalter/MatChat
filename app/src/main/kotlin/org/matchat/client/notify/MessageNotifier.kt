@@ -154,7 +154,14 @@ object MessageNotifier {
             .addAction(readAction)
             .build()
 
-        manager(context).notify(id, notification)
+        // Crash fix: a notification whose sound URI the app no longer holds a
+        // read grant for (observed on-device: a custom sound picked via
+        // RingtoneManager, content://media/...) makes notify() throw
+        // SecurityException. This runs inside SyncForegroundService's
+        // session.rooms collector — uncaught, it kills the whole app on every
+        // incoming message. A failed post degrades to "no notification this
+        // time," never a crash.
+        runCatching { manager(context).notify(id, notification) }
     }
 
     fun cancel(context: Context, roomId: RoomId) = manager(context).cancel(notifId(roomId))

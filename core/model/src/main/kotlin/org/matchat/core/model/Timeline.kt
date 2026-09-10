@@ -17,12 +17,16 @@ sealed interface TimelineItem {
         val isRead: Boolean = false,
         /** An `mxc://` URI for the sender's avatar, or null for none set. */
         val senderAvatarUrl: String? = null,
-        /** Who (besides the sender) has a read receipt on this message — the
-         *  "seen by" avatar row, shown only for own messages (UX-SPEC S9). */
+        /** Who (besides the sender and the current user) has a read receipt
+         *  on this message — the "seen by" avatar row, shown on both own
+         *  and received messages (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
         /** Emoji reactions on this message, each with a count and whether we
          *  reacted (Reactions round). */
         val reactions: List<ReactionSummary> = emptyList(),
+        /** True when this event is in the room's m.room.pinned_events list
+         *  (Pinned messages round). */
+        val isPinned: Boolean = false,
     ) : TimelineItem
 
     /**
@@ -48,6 +52,7 @@ sealed interface TimelineItem {
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
+        val isPinned: Boolean = false,
     ) : TimelineItem
 
     data class DaySeparator(val label: String) : TimelineItem
@@ -62,13 +67,22 @@ sealed interface TimelineItem {
 }
 
 /** One member who has read a message, for the per-message "seen by" avatar
- *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set. */
-data class SeenBy(val userId: UserId, val avatarUrl: String?)
+ *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set.
+ *  [displayName] is the no-avatar-fallback's color+initial source
+ *  (AvatarFallback round) — null falls back to [userId] itself. */
+data class SeenBy(val userId: UserId, val avatarUrl: String?, val displayName: String? = null)
 
 /** One emoji reaction on a message, aggregated across everyone who sent it
  *  (Reactions round — UX-SPEC S9/S11). [key] is the emoji itself (the SDK's
- *  reaction key, e.g. "👍"). */
-data class ReactionSummary(val key: String, val count: Int, val reactedByMe: Boolean)
+ *  reaction key, e.g. "👍"). [senderNames] lists who reacted, resolved the
+ *  same way [TimelineItem.Message.senderName] is — for Message info's
+ *  "who reacted" list (a follow-up to the Reactions round). */
+data class ReactionSummary(
+    val key: String,
+    val count: Int,
+    val reactedByMe: Boolean,
+    val senderNames: List<String> = emptyList(),
+)
 
 enum class MediaKind { IMAGE, VIDEO, AUDIO, VOICE, FILE }
 

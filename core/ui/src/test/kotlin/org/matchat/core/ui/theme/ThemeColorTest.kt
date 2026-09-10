@@ -18,8 +18,13 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class ThemeColorTest {
 
-    private val themedContext =
-        ContextThemeWrapper(ApplicationProvider.getApplicationContext(), R.style.Theme_MatChat_Light_Green)
+    // Accent is layered on at runtime (theme.applyStyle, force = true), not
+    // baked into a combined leaf — build the themed context the same way
+    // MainActivity does, base then accent overlay.
+    private val themedContext = ContextThemeWrapper(
+        ApplicationProvider.getApplicationContext(),
+        R.style.Theme_MatChat_Base_Light,
+    ).apply { theme.applyStyle(R.style.Theme_MatChat_Accent_Green, true) }
 
     @Test
     fun `a plain color role resolves to its palette value`() {

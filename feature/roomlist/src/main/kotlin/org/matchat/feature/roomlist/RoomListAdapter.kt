@@ -15,8 +15,11 @@ import org.matchat.feature.roomlist.databinding.ItemRoomBinding
 internal class RoomListAdapter(
     private val onOpen: (RoomRow) -> Unit,
     private val onFocused: (Int) -> Unit,
-    /** Binds a room avatar (Avatars round) — null clears to the placeholder. */
-    private val onAvatarBind: (String?, ImageView) -> Unit,
+    /** Binds a room avatar (Avatars round): url, room name, room id, target —
+     *  the name/id are the no-avatar-fallback's color+initial source
+     *  (AvatarFallback round; a room uses its own id/name the same way a
+     *  message sender uses theirs). */
+    private val onAvatarBind: (String?, String, String, ImageView) -> Unit,
 ) : ListAdapter<RoomRow, RoomListAdapter.RoomViewHolder>(DIFF) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomViewHolder {
@@ -38,7 +41,7 @@ internal class RoomListAdapter(
             binding.roomUnread.text = if (row.unreadCount > 0) row.unreadCount.toString() else ""
             binding.roomUnread.visibility =
                 if (row.isUnread) android.view.View.VISIBLE else android.view.View.GONE
-            onAvatarBind(row.avatarUrl, binding.roomAvatar)
+            onAvatarBind(row.avatarUrl, row.name, row.id.value, binding.roomAvatar)
             binding.root.setOnClickListener { onOpen(row) }
             binding.root.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) onFocused(bindingAdapterPosition)

@@ -16,4 +16,7 @@ sealed interface TimelineAction {
 sealed interface TimelineNav {
     data object Verification : TimelineNav
     data object RoomInfo : TimelineNav
+    data class Toast(val key: TimelineToastKey) : TimelineNav
 }
+
+enum class TimelineToastKey { PIN_FAILED }

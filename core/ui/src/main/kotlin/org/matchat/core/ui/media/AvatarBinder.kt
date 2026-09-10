@@ -3,7 +3,6 @@ package org.matchat.core.ui.media
 import android.widget.ImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.matchat.core.ui.R
 
 /**
  * Binds an avatar into [ImageView], shared by every feature that shows one
@@ -15,22 +14,26 @@ import org.matchat.core.ui.R
  */
 object AvatarBinder {
 
-    /** Shows the placeholder immediately, then replaces it with the decoded
+    /** Shows the no-avatar fallback (a colored circle with [name]'s initial,
+     *  AvatarFallback round) immediately, then replaces it with the decoded
      *  bitmap once [loadBytes] resolves — [image].tag guards against a stale
      *  async result landing on a recycled row (same guard
-     *  TimelineFragment.loadImageInto uses for message images). Call from
-     *  within the Fragment's own lifecycleScope; this suspends until done. */
-    suspend fun bind(image: ImageView, url: String?, maxPx: Int, loadBytes: suspend (String) -> ByteArray?) {
+     *  TimelineFragment.loadImageInto uses for message images). A failed
+     *  download (no avatar set, or the fetch fails) just leaves the fallback
+     *  showing — never the old flat gray placeholder. Call from within the
+     *  Fragment's own lifecycleScope; this suspends until done. */
+    suspend fun bind(
+        image: ImageView,
+        url: String?,
+        name: String,
+        userId: String,
+        maxPx: Int,
+        loadBytes: suspend (String) -> ByteArray?,
+    ) {
         image.tag = url
-        if (url == null) {
-            image.setImageResource(R.drawable.avatar_placeholder)
-            return
-        }
-        AvatarCache.get(url)?.let {
-            image.setImageBitmap(it)
-            return
-        }
-        image.setImageResource(R.drawable.avatar_placeholder)
+        image.setImageBitmap(AvatarCache.fallback(userId, name))
+        if (url == null) return
+        AvatarCache.get(url)?.let { image.setImageBitmap(it); return }
         val bytes = withContext(Dispatchers.IO) { loadBytes(url) } ?: return
         val bitmap = withContext(Dispatchers.Default) { AvatarCache.decodeAndCache(url, bytes, maxPx) }
         if (bitmap != null && image.tag == url) image.setImageBitmap(bitmap)

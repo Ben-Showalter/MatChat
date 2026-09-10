@@ -18,10 +18,12 @@ internal class RoomInfoAdapter(
     private val onFieldActivated: (RoomInfoRow.Field) -> Unit,
     private val onMemberActivated: (RoomInfoRow.Member) -> Unit,
     private val onActionActivated: (RoomInfoRow.Action) -> Unit,
-    /** Binds a member avatar (Avatars round) — never called for Field/Info
-     *  rows, so screens that reuse this adapter but never show a Member row
-     *  (MessageInfoFragment, ProfileFragment) can just take the default. */
-    private val onAvatarBind: (String?, ImageView) -> Unit = { _, _ -> },
+    /** Binds a member avatar (Avatars round): url, name, user id, target —
+     *  the name/id are the no-avatar-fallback's color+initial source
+     *  (AvatarFallback round). Never called for Field/Info rows, so screens
+     *  that reuse this adapter but never show a Member row (MessageInfoFragment,
+     *  ProfileFragment) can just take the default. */
+    private val onAvatarBind: (String?, String, String, ImageView) -> Unit = { _, _, _, _ -> },
 ) : ListAdapter<RoomInfoRow, RecyclerView.ViewHolder>(DIFF) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -56,7 +58,10 @@ internal class RoomInfoAdapter(
                 is RoomInfoRow.Info -> two(row.value, row.label) {
                     itemView.setOnClickListener(null)
                 }
-                is RoomInfoRow.Member -> two(row.name, row.sub, showAvatar = true, avatarUrl = row.avatarUrl) {
+                is RoomInfoRow.Member -> two(
+                    row.name, row.sub, showAvatar = true, avatarUrl = row.avatarUrl,
+                    avatarName = row.name, avatarUserId = row.userId.value,
+                ) {
                     itemView.setOnClickListener { onMemberActivated(row) }
                 }
                 is RoomInfoRow.Section -> single(row.text)
@@ -71,6 +76,8 @@ internal class RoomInfoAdapter(
             secondary: String,
             showAvatar: Boolean = false,
             avatarUrl: String? = null,
+            avatarName: String = "",
+            avatarUserId: String = "",
             wire: () -> Unit,
         ) {
             val primaryView = itemView.findViewById<TextView>(R.id.roominfo_primary)
@@ -81,11 +88,11 @@ internal class RoomInfoAdapter(
             // showAvatar=false (Field/Info rows) hides the ImageView entirely,
             // rather than binding a "no avatar" placeholder these row types
             // have no data for; a Member row shows it even when avatarUrl is
-            // null (a real member with no avatar set — the placeholder is
-            // correct there).
+            // null (a real member with no avatar set — the fallback initial
+            // is correct there, AvatarFallback round).
             itemView.findViewById<ImageView>(R.id.roominfo_avatar)?.let { avatar ->
                 avatar.isVisible = showAvatar
-                if (showAvatar) onAvatarBind(avatarUrl, avatar)
+                if (showAvatar) onAvatarBind(avatarUrl, avatarName, avatarUserId, avatar)
             }
             wire()
         }

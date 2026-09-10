@@ -33,15 +33,16 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
         onFieldActivated = { editField(it) },
         onMemberActivated = { memberMenu(it) },
         onActionActivated = { onAction(it) },
-        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
+        onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
     )
 
     /** Avatars round: same shared AvatarBinder/AvatarCache path (core/ui)
      *  the room list and timeline use — this Fragment only supplies the
-     *  byte fetch. */
-    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+     *  byte fetch. name/id are the no-avatar-fallback's color+initial
+     *  source (AvatarFallback round). */
+    private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
         }
     }
 
@@ -89,6 +90,7 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
 
     private fun onAction(action: RoomInfoRow.Action) {
         when (action.key) {
+            RoomInfoViewModel.KEY_PINNED -> navigator.toPinnedMessages(viewModel.roomId())
             RoomInfoViewModel.KEY_ADD ->
                 TextPromptSheet.show(requireContext(), getString(R.string.roominfo_add_member), "@") {
                     viewModel.addMember(it)
