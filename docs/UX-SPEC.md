@@ -148,16 +148,21 @@ Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
 fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
-beside the sender name (Avatars round), shown/hidden together — 12 sp
+beside the sender name (Avatars round), shown/hidden together. A member
+with no avatar set shows a colored circle with their initial instead of a
+flat placeholder (AvatarFallback round) — a deterministic color per user
+id, from a small fixed palette that stays constant across the app's
+Light/Dark/accent theme; the sender name text is colored to match. 12 sp
 coloured inside the bubble (shown only when the sender changes), body 16 sp,
 time 11 sp shown below the bubble on the same side, with a send-state glyph
 on own messages (`○` sending, `✓` sent, `!` failed). Reactions (Reactions
 round) show as a row of read-only "emoji count" chips below the time line
 — bolder/accent-colored for a reaction we sent — reached via the message
 menu's `React` item, never by tapping a chip (a D-pad row can't usefully
-offer several separately focusable chips). An own message that
-another member has read also shows a short "seen by" row of small avatars
-(up to 4, then "+N") under the time line. Every bubble carries a
+offer several separately focusable chips). A message another member (besides the sender and the current user) has
+read also shows a short "seen by" row of small avatars (up to 4, then
+"+N", each overlapping the previous one) under the time line — shown for
+both own and received messages. Every bubble carries a
 colored stripe (the user's chosen accent, Settings > Theme) on its leading
 edge for received messages, trailing edge for own — the bubble is rounded
 only on the side away from its stripe (square where the stripe sits, so it

@@ -48,8 +48,10 @@ internal class TimelineAdapter(
     private val onImageBind: (EventId, ImageView) -> Unit,
     private val onImageActivated: (EventId) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
-    /** Binds a sender avatar (Avatars round) — null clears to the placeholder. */
-    private val onAvatarBind: (String?, ImageView) -> Unit,
+    /** Binds a sender avatar (Avatars round): url, name, user id, target —
+     *  the name/id are the no-avatar-fallback's color+initial source
+     *  (AvatarFallback round). */
+    private val onAvatarBind: (String?, String, String, ImageView) -> Unit,
     /** Populates the "seen by" row with one small avatar per entry. */
     private val onSeenByBind: (List<SeenBy>, LinearLayout) -> Unit,
     /** Populates the reaction-chip row (display-only — see item_message.xml's
@@ -102,14 +104,17 @@ internal class TimelineAdapter(
         fun bind(row: TimelineRow.Message) {
             senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
-            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
+            sender.setTextColor(org.matchat.core.ui.media.AvatarFallback.colorFor(row.senderId))
+            if (row.senderName != null) {
+                onAvatarBind(row.senderAvatarUrl, row.senderName, row.senderId, senderAvatar)
+            }
             body.text = row.body
             val timeText = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
             time.text = withPinPrefix(row.isPinned, timeText)
             bindBubbleSide(bubble, time, row.isOwn)
             reactions.isVisible = row.reactions.isNotEmpty()
             if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
-            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            seenBy.isVisible = row.seenBy.isNotEmpty()
             if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnFocusChangeListener { _, has -> if (has) onMessageFocused(row.eventId) }
             itemView.setOnClickListener { onMessageActivated(row) }
@@ -130,7 +135,10 @@ internal class TimelineAdapter(
         fun bind(row: TimelineRow.Image) {
             senderRow.isVisible = row.senderName != null
             sender.text = row.senderName.orEmpty()
-            if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
+            sender.setTextColor(org.matchat.core.ui.media.AvatarFallback.colorFor(row.senderId))
+            if (row.senderName != null) {
+                onAvatarBind(row.senderAvatarUrl, row.senderName, row.senderId, senderAvatar)
+            }
             caption.isVisible = !row.caption.isNullOrEmpty()
             caption.text = row.caption.orEmpty()
             val timeText = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
@@ -140,7 +148,7 @@ internal class TimelineAdapter(
             onImageBind(row.eventId, image)
             reactions.isVisible = row.reactions.isNotEmpty()
             if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
-            seenBy.isVisible = row.isOwn && row.seenBy.isNotEmpty()
+            seenBy.isVisible = row.seenBy.isNotEmpty()
             if (seenBy.isVisible) onSeenByBind(row.seenBy, seenBy)
             itemView.setOnClickListener { onImageActivated(row.eventId) }
         }

@@ -17,8 +17,9 @@ sealed interface TimelineItem {
         val isRead: Boolean = false,
         /** An `mxc://` URI for the sender's avatar, or null for none set. */
         val senderAvatarUrl: String? = null,
-        /** Who (besides the sender) has a read receipt on this message — the
-         *  "seen by" avatar row, shown only for own messages (UX-SPEC S9). */
+        /** Who (besides the sender and the current user) has a read receipt
+         *  on this message — the "seen by" avatar row, shown on both own
+         *  and received messages (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
         /** Emoji reactions on this message, each with a count and whether we
          *  reacted (Reactions round). */
@@ -66,8 +67,10 @@ sealed interface TimelineItem {
 }
 
 /** One member who has read a message, for the per-message "seen by" avatar
- *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set. */
-data class SeenBy(val userId: UserId, val avatarUrl: String?)
+ *  row (UX-SPEC S9). [avatarUrl] is an `mxc://` URI, or null for none set.
+ *  [displayName] is the no-avatar-fallback's color+initial source
+ *  (AvatarFallback round) — null falls back to [userId] itself. */
+data class SeenBy(val userId: UserId, val avatarUrl: String?, val displayName: String? = null)
 
 /** One emoji reaction on a message, aggregated across everyone who sent it
  *  (Reactions round — UX-SPEC S9/S11). [key] is the emoji itself (the SDK's

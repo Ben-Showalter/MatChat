@@ -62,7 +62,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
         onImageActivated = { navigator.toImageViewer(it) },
         onAttachmentActivated = { openAttachment(it) },
-        onAvatarBind = { url, image -> loadAvatarInto(url, image) },
+        onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
@@ -438,29 +438,35 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     /** Avatars round: loadAvatar/AvatarCache/AvatarBinder are the same shared
      *  path room list and Room Info use (core/ui, since features can't
-     *  depend on each other) — this Fragment only supplies the byte fetch. */
-    private fun loadAvatarInto(url: String?, image: android.widget.ImageView) {
+     *  depend on each other) — this Fragment only supplies the byte fetch.
+     *  name/id are the no-avatar-fallback's color+initial source
+     *  (AvatarFallback round). */
+    private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
         }
     }
 
     /** Populates the "seen by" row with up to [SEEN_BY_MAX] avatars plus a
      *  "+N" overflow label — plain Views built here, not a nested
      *  RecyclerView (this app's convention for a handful of small items;
-     *  the reaction-chip row uses the same shape). */
+     *  the reaction-chip row uses the same shape). Avatars overlap (a
+     *  negative marginEnd) rather than sit side by side — later views draw
+     *  on top of earlier ones under Android's normal z-order, so no extra
+     *  container/ring is needed for the stacked look. */
     private fun bindSeenBy(seenBy: List<org.matchat.core.model.SeenBy>, container: android.widget.LinearLayout) {
         container.removeAllViews()
         val avatarPx = resources.getDimensionPixelSize(org.matchat.core.ui.R.dimen.avatar_size_seen_by)
-        seenBy.take(SEEN_BY_MAX).forEach { entry ->
+        val overlapPx = -(avatarPx / SEEN_BY_OVERLAP_DIVISOR)
+        seenBy.take(SEEN_BY_MAX).forEachIndexed { index, entry ->
             val avatar = android.widget.ImageView(requireContext()).apply {
                 layoutParams = android.widget.LinearLayout.LayoutParams(avatarPx, avatarPx).apply {
-                    marginEnd = SEEN_BY_SPACING_PX
+                    if (index > 0) marginStart = overlapPx
                 }
                 contentDescription = null
             }
             container.addView(avatar)
-            loadAvatarInto(entry.avatarUrl, avatar)
+            loadAvatarInto(entry.avatarUrl, entry.displayName ?: entry.userId.value, entry.userId.value, avatar)
         }
         val overflow = seenBy.size - SEEN_BY_MAX
         if (overflow > 0) {
@@ -591,7 +597,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
         const val AVATAR_MAX_PX = 64 // ~2x avatar_size_sender; small on purpose
         const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
-        const val SEEN_BY_SPACING_PX = 2
+        const val SEEN_BY_OVERLAP_DIVISOR = 3 // later avatars overlap ~1/3 of the previous one
         const val SEEN_BY_OVERFLOW_SP = 11f
         const val REACTION_CHIP_SPACING_PX = 10
 

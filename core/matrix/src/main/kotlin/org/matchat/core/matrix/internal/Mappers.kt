@@ -72,14 +72,16 @@ internal object Mappers {
         val eventId = eventIdOf(event.eventOrTransactionId)
         val isPinned = eventId in pinnedIds
         // "Seen by" (Avatars round): every read-receipt holder other than the
-        // sender — already a full user-id list on the SDK side (Map<String,
-        // Receipt>), not just a count; readByOther is kept as its own bool for
-        // isRead's cheap single-glyph check rather than reading seenBy.isEmpty()
-        // in the hot render path.
+        // sender and the current user — already a full user-id list on the
+        // SDK side (Map<String, Receipt>), not just a count; readByOther is
+        // kept as its own bool for isRead's cheap single-glyph check rather
+        // than reading seenBy.isEmpty() in the hot render path. Shown on
+        // both own and received messages (seen-by-on-received round) — "who
+        // else has read this," never including the sender or me.
         val seenBy = runCatching {
             event.readReceipts.keys
-                .filter { it != event.sender }
-                .map { SeenBy(UserId(it), members[it]?.avatarUrl) }
+                .filter { it != event.sender && it != ownUserId }
+                .map { SeenBy(UserId(it), members[it]?.avatarUrl, members[it]?.displayName) }
         }.getOrDefault(emptyList())
         val readByOther = seenBy.isNotEmpty()
         val senderAvatarUrl = members[event.sender]?.avatarUrl

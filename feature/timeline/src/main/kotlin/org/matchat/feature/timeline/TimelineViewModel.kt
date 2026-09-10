@@ -253,6 +253,7 @@ class TimelineViewModel @Inject constructor(
                 time = time,
                 isOwn = item.isOwn,
                 sendGlyph = glyph,
+                senderId = item.sender.value,
                 senderAvatarUrl = item.senderAvatarUrl,
                 seenBy = item.seenBy,
                 reactions = item.reactions,

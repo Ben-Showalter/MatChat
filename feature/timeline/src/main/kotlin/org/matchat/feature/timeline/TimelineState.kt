@@ -24,9 +24,9 @@ sealed interface TimelineRow {
         /** An `mxc://` URI, or null for no avatar set — shown next to
          *  [senderName] when that's non-null (Avatars round). */
         val senderAvatarUrl: String? = null,
-        /** Who's read this (own) message besides the sender — rendered as a
-         *  short avatar row under the bubble; always empty for a received
-         *  message (UX-SPEC S9). */
+        /** Who's read this message besides the sender and the current user —
+         *  rendered as a short avatar row under the bubble; shown on both
+         *  own and received messages (UX-SPEC S9). */
         val seenBy: List<SeenBy> = emptyList(),
         /** Reaction chips shown below the bubble (Reactions round); empty
          *  hides the row entirely. */
@@ -47,6 +47,9 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val sendGlyph: String,
+        /** Full sender id, carried for the avatar fallback's color+initial
+         *  (AvatarFallback round; parity with Message.senderId). */
+        val senderId: String = "",
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
