@@ -191,14 +191,18 @@ Sending an empty message is a no-op, not an error.
 ### S11 — Message menu
 Opened with CENTER on a message row. A bottom-anchored list, typically ~5
 rows, each 26 dp, dismiss with RIGHT softkey.
-Items: `Reply` · `Edit` (own messages only) · `React` · `Copy text` ·
-`Message info`.
+Items: `Reply` · `Edit` (own messages only) · `React` · `Pin message` /
+`Unpin message` · `Copy text` · `Message info`.
 `React` (Reactions round) opens a second MenuSheet list of 10 choices
 (thumbs up/down + 8 common smileys, each row "<emoji> <label>", a trailing
 ✓ on one already reacted with) — this list doesn't fit one screen, so
 MenuSheet itself grew a height-capped, scrollable body for it (invisible to
 every shorter menu, whose natural height stays under the cap). Selecting a
 choice already reacted with removes that reaction.
+`Pin message` / `Unpin message` (Pinned messages round) toggles the row's
+label with the message's current state and shows a 📌 prefix on the pinned
+message's time line — the same compact "prefix the time text" idiom the
+send-state glyph already uses.
 Focus starts on `Reply`.
 Softkeys: (blank) | Select | Back — the menu *is* the options list, so LEFT is
 blank here.
@@ -206,12 +210,19 @@ blank here.
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
 members can read this"), member list (a 16 dp avatar beside each name — same
-placeholder-until-decoded treatment as S8/S9 — plus a power label).
-Focus order: member rows.
+placeholder-until-decoded treatment as S8/S9 — plus a power label), then two
+action rows: `Pinned messages` (Pinned messages round, below) and `Add
+member`/`Leave room`.
+Focus order: member rows, then the action rows.
 Softkeys: Options | Select | Back.
 Options: Mute this group · Leave group (confirm) · Help.
-There is **no** "add member" here in v1 — group membership is administered on
-the server. (Direct chats are different: those the user starts themselves, S20.)
+
+**Pinned messages** (reached from Room info > Pinned messages): a read-only
+list of this room's pinned messages, reusing S12's own field-row look
+(sender + time as the caption, the message text as the primary line).
+CENTER opens the room — no screen in this app can jump to a specific
+message yet, so this is a deliberate scope cut, not a broken link. Empty:
+"No pinned messages in this room."
 
 ### S13 — Settings
 Rows: `Notifications` (opens S26) · `Text size` · `Theme` (opens S24) ·

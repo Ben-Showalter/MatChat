@@ -211,6 +211,9 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toRoomInfo(roomId: RoomId) =
         navController.navigate(R.id.roomInfoFragment, bundleOf(ARG_ROOM_ID to roomId.value))
 
+    override fun toPinnedMessages(roomId: RoomId) =
+        navController.navigate(R.id.pinnedMessagesFragment, bundleOf(ARG_ROOM_ID to roomId.value))
+
     override fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long) =
         navController.navigate(
             R.id.messageInfoFragment,

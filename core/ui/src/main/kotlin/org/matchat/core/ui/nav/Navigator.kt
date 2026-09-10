@@ -20,6 +20,8 @@ interface Navigator {
     fun toImageViewer(eventId: EventId)
     /** Room info + basic room edits (S12). */
     fun toRoomInfo(roomId: RoomId)
+    /** Room info > Pinned messages (Pinned messages round). */
+    fun toPinnedMessages(roomId: RoomId)
     /** Message info (S11): metadata for one event, with a link to the sender. */
     fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long)
     /** A sender's profile, reached from message info. */

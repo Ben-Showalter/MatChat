@@ -57,12 +57,20 @@ internal object Mappers {
      * sender not yet in it (e.g. joined mid-conversation before the next
      * member-list refresh), never a blank name; a missing avatar is simply null.
      * [ownUserId] resolves each reaction's reactedByMe (Reactions round).
+     * [pinnedIds] is the room's current m.room.pinned_events list (Pinned
+     * messages round), fetched the same one-shot way as [members].
      */
-    fun toTimelineItem(item: RustTimelineItem, members: Map<String, MemberInfo>, ownUserId: String?): TimelineItem? {
+    fun toTimelineItem(
+        item: RustTimelineItem,
+        members: Map<String, MemberInfo>,
+        ownUserId: String?,
+        pinnedIds: Set<String> = emptySet(),
+    ): TimelineItem? {
         val event = item.asEvent() ?: return null
         val msgLike = event.content as? TimelineItemContent.MsgLike ?: return null
         val messageKind = msgLike.content.kind as? MsgLikeKind.Message ?: return null
         val eventId = eventIdOf(event.eventOrTransactionId)
+        val isPinned = eventId in pinnedIds
         // "Seen by" (Avatars round): every read-receipt holder other than the
         // sender — already a full user-id list on the SDK side (Map<String,
         // Receipt>), not just a count; readByOther is kept as its own bool for
@@ -89,7 +97,8 @@ internal object Mappers {
         }.getOrDefault(emptyList())
 
         val media = mediaOf(
-            messageKind.content.msgType, eventId, event, readByOther, members, senderAvatarUrl, seenBy, reactions,
+            messageKind.content.msgType, eventId, event, readByOther, members,
+            senderAvatarUrl, seenBy, reactions, isPinned,
         )
         if (media != null) return media
 
@@ -105,6 +114,7 @@ internal object Mappers {
             senderAvatarUrl = senderAvatarUrl,
             seenBy = seenBy,
             reactions = reactions,
+            isPinned = isPinned,
         )
     }
 
@@ -125,6 +135,7 @@ internal object Mappers {
         senderAvatarUrl: String?,
         seenBy: List<SeenBy>,
         reactions: List<ReactionSummary>,
+        isPinned: Boolean,
     ): TimelineItem.Media? {
         val (kind, source, filename, caption, mime, size, durationMs) = when (type) {
             is MessageType.Image -> Media6(
@@ -168,6 +179,7 @@ internal object Mappers {
             senderAvatarUrl = senderAvatarUrl,
             seenBy = seenBy,
             reactions = reactions,
+            isPinned = isPinned,
         )
     }
 

@@ -119,6 +119,25 @@ class TimelineViewModelTest {
         assertEquals(listOf(EventId("a") to "👍"), fake.toggledReactions)
     }
 
+    @Test
+    fun `isPinned carries through to the row`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        fake.emit(listOf(message("a", "@wayne:s", "Wayne", "hi", isPinned = true)))
+        subject().state.test {
+            val row = expectMostRecentItem().rows.filterIsInstance<TimelineRow.Message>().single()
+            assertTrue(row.isPinned)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `setPinned calls through to the timeline`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        subject().setPinned(EventId("a"), true)
+        testScheduler.advanceUntilIdle()
+        assertEquals(listOf(EventId("a") to true), fake.pinnedChanges)
+    }
+
     private fun message(
         id: String,
         sender: String,
@@ -127,9 +146,10 @@ class TimelineViewModelTest {
         senderAvatarUrl: String? = null,
         seenBy: List<SeenBy> = emptyList(),
         reactions: List<ReactionSummary> = emptyList(),
+        isPinned: Boolean = false,
     ) = TimelineItem.Message(
         eventId = EventId(id), sender = UserId(sender), senderName = name,
         body = body, timestampEpochMs = 0L, isOwn = false, sendState = SendState.SENT,
-        senderAvatarUrl = senderAvatarUrl, seenBy = seenBy, reactions = reactions,
+        senderAvatarUrl = senderAvatarUrl, seenBy = seenBy, reactions = reactions, isPinned = isPinned,
     )
 }

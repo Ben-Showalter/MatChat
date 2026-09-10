@@ -23,6 +23,9 @@ sealed interface TimelineItem {
         /** Emoji reactions on this message, each with a count and whether we
          *  reacted (Reactions round). */
         val reactions: List<ReactionSummary> = emptyList(),
+        /** True when this event is in the room's m.room.pinned_events list
+         *  (Pinned messages round). */
+        val isPinned: Boolean = false,
     ) : TimelineItem
 
     /**
@@ -48,6 +51,7 @@ sealed interface TimelineItem {
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
+        val isPinned: Boolean = false,
     ) : TimelineItem
 
     data class DaySeparator(val label: String) : TimelineItem

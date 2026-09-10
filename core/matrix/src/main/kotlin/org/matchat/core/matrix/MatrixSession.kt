@@ -149,4 +149,13 @@ interface RoomTimeline {
      *  already reacted with it — Timeline.toggleReaction is itself a toggle
      *  (Reactions round). */
     suspend fun toggleReaction(eventId: EventId, key: String)
+
+    /**
+     * Adds or removes [eventId] from the room's `m.room.pinned_events` list
+     * (Pinned messages round). The SDK has no dedicated pin/unpin call (none
+     * of Room's public methods is pin-named) — this reads the current list,
+     * edits it, and writes it back as a plain state event, the same way
+     * core/rtc's MatrixRTC signalling already does for `m.call.member`.
+     */
+    suspend fun setPinned(eventId: EventId, pinned: Boolean)
 }

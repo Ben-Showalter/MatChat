@@ -51,6 +51,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/pinnedMessagesFragment"
+        android:name="org.matchat.feature.timeline.PinnedMessagesFragment"
+        android:label="Pinned messages">
+        <argument
+            android:name="roomId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/messageInfoFragment"
         android:name="org.matchat.feature.timeline.MessageInfoFragment"
         android:label="Message info">

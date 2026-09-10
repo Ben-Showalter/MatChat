@@ -141,6 +141,11 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { timeline.toggleReaction(eventId, key) }
     }
 
+    /** Pin or unpin a message (Pinned messages round). */
+    fun setPinned(eventId: EventId, pinned: Boolean) {
+        viewModelScope.launch { timeline.setPinned(eventId, pinned) }
+    }
+
     private fun paginateBack() {
         if (loadingEarlier.value) return
         loadingEarlier.update { true }
@@ -181,6 +186,7 @@ class TimelineViewModel @Inject constructor(
                         senderAvatarUrl = item.senderAvatarUrl,
                         seenBy = item.seenBy,
                         reactions = item.reactions,
+                        isPinned = item.isPinned,
                     )
                 }
                 is TimelineItem.Media -> {
@@ -241,6 +247,7 @@ class TimelineViewModel @Inject constructor(
                 senderAvatarUrl = item.senderAvatarUrl,
                 seenBy = item.seenBy,
                 reactions = item.reactions,
+                isPinned = item.isPinned,
             )
         }
         return TimelineRow.Attachment(
@@ -253,6 +260,7 @@ class TimelineViewModel @Inject constructor(
             isOwn = item.isOwn,
             mimeType = item.mimeType,
             play = item.kind == MediaKind.AUDIO || item.kind == MediaKind.VOICE,
+            isPinned = item.isPinned,
         )
     }
 

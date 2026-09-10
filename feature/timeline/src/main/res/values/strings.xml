@@ -29,6 +29,8 @@
     <string name="timeline_msg_reply">Reply</string>
     <string name="timeline_msg_edit">Edit</string>
     <string name="timeline_msg_react">React</string>
+    <string name="timeline_msg_pin">Pin message</string>
+    <string name="timeline_msg_unpin">Unpin message</string>
     <string name="timeline_msg_copy">Copy text</string>
     <string name="timeline_msg_info">Message info</string>
     <!-- Marks a row already selected/active — a local copy of the same
@@ -45,6 +47,10 @@
     <string name="roominfo_bad_address">Enter a full address, e.g. @sam:example.org</string>
     <string name="roominfo_edit_failed">That change didn\'t go through.</string>
     <string name="timeline_edit_title">Edit message</string>
+
+    <!-- Pinned messages (reached from Room info > Pinned messages). -->
+    <string name="pinned_messages_title">Pinned messages</string>
+    <string name="pinned_messages_empty">No pinned messages in this room.</string>
 
     <!-- Message info + profile (S11). -->
     <string name="msginfo_title">Message info</string>

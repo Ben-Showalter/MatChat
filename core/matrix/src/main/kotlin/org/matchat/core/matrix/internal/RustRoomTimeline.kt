@@ -47,6 +47,12 @@ internal class RustRoomTimeline(
     // own listener thread (recompute) sees a fetch that completed on the init
     // coroutine without needing a lock for a plain reference read/swap.
     @Volatile private var members: Map<String, MemberInfo> = emptyMap()
+    // Pinned messages round: same one-shot-then-refresh-on-write shape as
+    // [members] — fetched once at init, and again right after our own
+    // setPinned() succeeds. A pin/unpin made from another client isn't
+    // picked up live (no state-event listener exists yet); reopening the
+    // room re-fetches. A deliberate scope cut, the same shape as members'.
+    @Volatile private var pinnedIds: Set<String> = emptySet()
     private val itemsFlow = MutableStateFlow<List<TimelineItem>>(emptyList())
     private val typingFlow = MutableStateFlow<List<UserId>>(emptyList())
     private var timeline: Timeline? = null
@@ -82,6 +88,7 @@ internal class RustRoomTimeline(
             // after this point keeps showing their MXID/no avatar until the room
             // is reopened — a deliberate scope cut, not a bug.
             runCatching { members = withContext(Dispatchers.IO) { fetchMembers(r) } }
+            runCatching { pinnedIds = withContext(Dispatchers.IO) { fetchPinnedIds(r) } }
             recompute()
 
             typingHandle = runCatching {
@@ -218,6 +225,22 @@ internal class RustRoomTimeline(
         Unit
     }
 
+    override suspend fun setPinned(eventId: EventId, pinned: Boolean) = withContext(Dispatchers.IO) {
+        val r = room ?: return@withContext
+        runCatching {
+            // Re-read the current list right before writing, rather than
+            // trusting the in-memory [pinnedIds], to minimize (not eliminate
+            // — the SDK exposes no compare-and-swap for a state event) the
+            // window for clobbering a concurrent pin/unpin from elsewhere.
+            val current = fetchPinnedIds(r).toList()
+            val next = PinnedEventsContent.withEvent(current, eventId.value, pinned)
+            r.sendStateEventRaw("m.room.pinned_events", "", PinnedEventsContent.toJson(next))
+            pinnedIds = next.toSet()
+        }
+        recompute()
+        Unit
+    }
+
     private fun apply(diffs: List<TimelineDiff>) = synchronized(buffer) {
         diffs.forEach { diff ->
             when (diff) {
@@ -241,7 +264,7 @@ internal class RustRoomTimeline(
 
     private fun recompute() {
         val snapshot = synchronized(buffer) { buffer.toList() }
-        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, members, ownUserId) }
+        itemsFlow.value = snapshot.mapNotNull { Mappers.toTimelineItem(it, members, ownUserId, pinnedIds) }
     }
 
     /** userId -> (displayName, avatarUrl) for every member with either set,
@@ -269,6 +292,11 @@ internal class RustRoomTimeline(
         }
         return out
     }
+
+    /** RoomInfo.pinnedEventIds is a plain field, already the full list — a
+     *  cheap suspend (blocking FFI) call, no pagination like members(). */
+    private suspend fun fetchPinnedIds(room: Room): Set<String> =
+        runCatching { room.roomInfo().pinnedEventIds.toSet() }.getOrDefault(emptySet())
 
     private companion object {
         const val INITIAL_PAGE_COUNT = 20

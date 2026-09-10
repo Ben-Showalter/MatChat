@@ -31,6 +31,10 @@ sealed interface TimelineRow {
         /** Reaction chips shown below the bubble (Reactions round); empty
          *  hides the row entirely. */
         val reactions: List<ReactionSummary> = emptyList(),
+        /** True when pinned — TimelineAdapter prefixes the time text with
+         *  📌, the same compact idiom sendGlyph already uses (Pinned
+         *  messages round). */
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = eventId.value
     }
@@ -46,6 +50,7 @@ sealed interface TimelineRow {
         val senderAvatarUrl: String? = null,
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = "img:${eventId.value}"
     }
@@ -61,6 +66,7 @@ sealed interface TimelineRow {
         val isOwn: Boolean,
         val mimeType: String?,
         val play: Boolean, // true = audio/voice (play in-app), false = open externally
+        val isPinned: Boolean = false,
     ) : TimelineRow {
         override val stableId: String get() = "att:${eventId.value}"
     }

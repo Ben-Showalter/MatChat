@@ -354,6 +354,12 @@ class TimelineFragment : SoftkeyFragment() {
             add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
             if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
             add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
+            add(
+                MenuItem(
+                    MSG_PIN,
+                    getString(if (row.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
+                ),
+            )
             add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
@@ -367,6 +373,7 @@ class TimelineFragment : SoftkeyFragment() {
                 ) { viewModel.editMessage(row.eventId, it) }
                     .setOnDismissListener { binding?.composeInput?.requestFocus() }
                 MSG_REACT -> openReactionPicker(row)
+                MSG_PIN -> viewModel.setPinned(row.eventId, !row.isPinned)
                 MSG_COPY -> copyText(row.body)
                 MSG_INFO -> navigator.toMessageInfo(
                     row.eventId,
@@ -544,6 +551,7 @@ class TimelineFragment : SoftkeyFragment() {
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"
         const val MSG_REACT = "react"
+        const val MSG_PIN = "pin"
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample

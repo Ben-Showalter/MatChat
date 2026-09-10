@@ -89,6 +89,7 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
 
     private fun onAction(action: RoomInfoRow.Action) {
         when (action.key) {
+            RoomInfoViewModel.KEY_PINNED -> navigator.toPinnedMessages(viewModel.roomId())
             RoomInfoViewModel.KEY_ADD ->
                 TextPromptSheet.show(requireContext(), getString(R.string.roominfo_add_member), "@") {
                     viewModel.addMember(it)

@@ -30,6 +30,12 @@ internal fun bindBubbleSide(bubble: LinearLayout, time: TextView, isOwn: Boolean
     (time.layoutParams as LinearLayout.LayoutParams).gravity = gravity
 }
 
+/** Pinned messages round: the compact "prefix the time text" idiom sendGlyph
+ *  already uses, reused rather than adding a new View — 📌 needs no room of
+ *  its own on a 240dp-wide screen. */
+internal fun withPinPrefix(isPinned: Boolean, text: String): String =
+    if (isPinned) "📌 $text" else text
+
 /**
  * Timeline rows: text messages, images, attachments, day/state separators.
  * Focusable rows are the CENTER target; separators are not. DiffUtil keeps scroll
@@ -98,7 +104,8 @@ internal class TimelineAdapter(
             sender.text = row.senderName.orEmpty()
             if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             body.text = row.body
-            time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            val timeText = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            time.text = withPinPrefix(row.isPinned, timeText)
             bindBubbleSide(bubble, time, row.isOwn)
             reactions.isVisible = row.reactions.isNotEmpty()
             if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
@@ -126,7 +133,8 @@ internal class TimelineAdapter(
             if (row.senderName != null) onAvatarBind(row.senderAvatarUrl, senderAvatar)
             caption.isVisible = !row.caption.isNullOrEmpty()
             caption.text = row.caption.orEmpty()
-            time.text = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            val timeText = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            time.text = withPinPrefix(row.isPinned, timeText)
             bindBubbleSide(bubble, time, row.isOwn)
             image.setImageDrawable(null)
             onImageBind(row.eventId, image)
@@ -152,7 +160,7 @@ internal class TimelineAdapter(
             label.text = row.label
             sub.isVisible = !row.sub.isNullOrEmpty()
             sub.text = row.sub.orEmpty()
-            time.text = row.time
+            time.text = withPinPrefix(row.isPinned, row.time)
             itemView.setOnClickListener { onAttachmentActivated(row) }
         }
     }
