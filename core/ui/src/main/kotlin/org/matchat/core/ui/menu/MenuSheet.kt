@@ -1,9 +1,11 @@
 package org.matchat.core.ui.menu
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.view.Gravity
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.matchat.core.ui.R
@@ -29,6 +31,14 @@ object MenuSheet {
         items: List<MenuItem>,
         onSelect: (MenuItem) -> Unit,
     ): Dialog {
+        // Confirmed bug: opening this from Options while compose_input (or any
+        // EditText) has focus and the IME is showing left the menu invisible —
+        // a plain Dialog can render behind an active IME window (a higher
+        // z-order window type), so the menu was technically open, just hidden.
+        // This has no text field of its own, so there's no reason to keep the
+        // keyboard up while it's showing; hiding it first also resolves that.
+        hideKeyboard(context)
+
         val list = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(context.themeColor(R.attr.colorSurfaceBright))
@@ -53,6 +63,16 @@ object MenuSheet {
         dialog.show()
         list.getChildAt(0)?.requestFocus()
         return dialog
+    }
+
+    /** Best-effort: requires [context] to be (or wrap) the hosting Activity, which
+     *  Fragment.requireContext() always is in practice. Silently no-ops otherwise
+     *  or if nothing is currently focused — never worth crashing the menu over. */
+    private fun hideKeyboard(context: Context) {
+        val activity = context as? Activity ?: return
+        val focused = activity.currentFocus ?: return
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(focused.windowToken, 0)
     }
 
     private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView =
