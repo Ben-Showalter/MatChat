@@ -63,7 +63,7 @@
         android:background="@drawable/focus_selector"
         android:focusable="true"
         android:focusableInTouchMode="true"
-        android:inputType="textShortMessage|textCapSentences|textAutoCorrect"
+        android:inputType="textShortMessage|textMultiLine|textCapSentences|textAutoCorrect"
         android:imeOptions="actionSend"
         android:importantForAutofill="no"
         android:textSize="@dimen/text_body"
