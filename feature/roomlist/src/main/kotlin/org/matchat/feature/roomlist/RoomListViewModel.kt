@@ -94,8 +94,7 @@ class RoomListViewModel @Inject constructor(
     /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
     suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
 
-    private fun List<InviteSummary>.toBand(): InviteBand? =
-        if (isEmpty()) null else InviteBand(size)
+    private fun List<InviteSummary>.toBand(): InviteBand? = if (isEmpty()) null else InviteBand(size)
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

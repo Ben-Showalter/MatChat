@@ -11,13 +11,17 @@ import org.matchat.core.model.UserId
  */
 interface Navigator {
     fun toSignIn()
+
     /** After a successful sign-in: room list becomes the root, onboarding is popped. */
     fun toRoomListRoot()
+
     /** After sign-out: welcome becomes the root, everything else is cleared. */
     fun toWelcomeRoot()
     fun toRoom(roomId: RoomId)
+
     /** Full-screen image viewer for a timeline image (D-pad pan, * / # zoom). */
     fun toImageViewer(eventId: EventId)
+
     /** Room info + basic room edits (S12). */
     fun toRoomInfo(roomId: RoomId)
     /** Room info > Pinned messages (Pinned messages round). */
@@ -28,6 +32,7 @@ interface Navigator {
     fun toMessageInfo(roomId: RoomId, eventId: EventId, senderId: UserId, timestampEpochMs: Long)
     /** A sender's profile, reached from message info. */
     fun toProfile(userId: UserId)
+
     /** Voice call screen (docs/VOICE.md). [incoming] true rings; false dials out. */
     fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean)
     fun toInvites()
@@ -37,8 +42,10 @@ interface Navigator {
     fun toVerification()
     fun toSettings()
     fun toTheme()
+
     /** Settings > Advanced (Phase 6, UI improvement plan): softkey swap. */
     fun toAdvanced()
+
     /** Settings > Notifications: on/off + sound. */
     fun toNotifications()
     fun toPolicy()

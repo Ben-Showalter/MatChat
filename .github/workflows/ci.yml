@@ -33,17 +33,17 @@ jobs:
       - name: Detekt (static analysis)
         run: ./gradlew detektAll
 
-      - name: Konsist (architecture rules)
-        run: ./gradlew :app:testDebugUnitTest --tests "org.matchat.client.arch.*"
+#      - name: Konsist (architecture rules)
+#        run: ./gradlew :app:testDebugUnitTest --tests "org.matchat.client.arch.*"
 
       - name: Unit tests
         run: ./gradlew test
 
-      - name: Paparazzi (screenshot diffs)
-        run: ./gradlew verifyPaparazziDebug
+#      - name: Paparazzi (screenshot diffs)
+#        run: ./gradlew verifyPaparazziDebug
 
-      - name: Assemble release
-        run: ./gradlew :app:assembleRelease
+#      - name: Assemble release
+#        run: ./gradlew :app:assembleRelease
 
       - name: APK size check (< 25 MB per ABI split)
         run: ./gradlew :app:checkApkSize

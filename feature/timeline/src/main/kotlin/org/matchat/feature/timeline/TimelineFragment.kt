@@ -50,7 +50,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
         ) { granted ->
-            if (granted) beginRecording() else {
+            if (granted) {
+                beginRecording()
+            } else {
                 Toast.makeText(requireContext(), R.string.timeline_record_denied, Toast.LENGTH_SHORT).show()
             }
         }
@@ -497,8 +499,11 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
                     textSize = SEEN_BY_OVERFLOW_SP
                     setTextColor(
                         requireContext().themeColor(
-                            if (r.reactedByMe) org.matchat.core.ui.R.attr.colorFocusAccent
-                            else org.matchat.core.ui.R.attr.colorTextMetaOnFocus,
+                            if (r.reactedByMe) {
+                                org.matchat.core.ui.R.attr.colorFocusAccent
+                            } else {
+                                org.matchat.core.ui.R.attr.colorTextMetaOnFocus
+                            },
                         ),
                     )
                     if (r.reactedByMe) setTypeface(typeface, android.graphics.Typeface.BOLD)

@@ -44,13 +44,12 @@ class NotificationsViewModel @Inject constructor(
     /** The current sound's stored uri, for pre-selecting the picker. */
     fun currentSoundUri(): String? = userPreferences.notificationSoundUri.value
 
-    private fun combineState() =
-        combine(
-            userPreferences.notificationsEnabled,
-            userPreferences.notificationSoundUri,
-        ) { enabled, soundUri ->
-            NotificationsState(enabled = enabled, sound = soundChoiceFor(soundUri))
-        }
+    private fun combineState() = combine(
+        userPreferences.notificationsEnabled,
+        userPreferences.notificationSoundUri,
+    ) { enabled, soundUri ->
+        NotificationsState(enabled = enabled, sound = soundChoiceFor(soundUri))
+    }
 
     private fun soundChoiceFor(soundUri: String?): SoundChoice = when (soundUri) {
         null -> SoundChoice.Default

@@ -34,11 +34,7 @@ data class MenuItem(
  */
 object MenuSheet {
 
-    fun show(
-        context: Context,
-        items: List<MenuItem>,
-        onSelect: (MenuItem) -> Unit,
-    ): Dialog {
+    fun show(context: Context, items: List<MenuItem>, onSelect: (MenuItem) -> Unit): Dialog {
         // Confirmed bug: opening this from Options while compose_input (or any
         // EditText) has focus and the IME is showing left the menu invisible —
         // a plain Dialog can render behind an active IME window (a higher
@@ -57,10 +53,12 @@ object MenuSheet {
         // rows are plain views that need no AppCompat theming.
         val dialog = Dialog(context, R.style.Theme_MatChat_Menu)
         items.forEach { item ->
-            list.addView(rowFor(context, item) {
-                onSelect(item)
-                dialog.dismiss()
-            })
+            list.addView(
+                rowFor(context, item) {
+                    onSelect(item)
+                    dialog.dismiss()
+                },
+            )
         }
         val scroll = boundedScrollView(context).apply { addView(list) }
         dialog.setContentView(scroll)
@@ -95,21 +93,20 @@ object MenuSheet {
         imm?.hideSoftInputFromWindow(focused.windowToken, 0)
     }
 
-    private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView =
-        TextView(context).apply {
-            text = item.label
-            textSize = MENU_ROW_TEXT_SP
-            setTextColor(context.themeColor(R.attr.colorTextOnFocus))
-            minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
-            gravity = Gravity.CENTER_VERTICAL
-            val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)
-            setPadding(pad, pad, pad, pad)
-            isEnabled = item.enabled
-            isFocusable = item.enabled
-            isFocusableInTouchMode = false
-            setBackgroundResource(R.drawable.focus_selector)
-            if (item.enabled) setOnClickListener { onClick() }
-        }
+    private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView = TextView(context).apply {
+        text = item.label
+        textSize = MENU_ROW_TEXT_SP
+        setTextColor(context.themeColor(R.attr.colorTextOnFocus))
+        minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
+        gravity = Gravity.CENTER_VERTICAL
+        val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)
+        setPadding(pad, pad, pad, pad)
+        isEnabled = item.enabled
+        isFocusable = item.enabled
+        isFocusableInTouchMode = false
+        setBackgroundResource(R.drawable.focus_selector)
+        if (item.enabled) setOnClickListener { onClick() }
+    }
 
     private const val MENU_ROW_TEXT_SP = 16f // body floor (PLAN.md G5)
     private const val MAX_HEIGHT_FRACTION = 0.6 // leaves the title bar visible above it

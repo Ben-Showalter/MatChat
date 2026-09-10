@@ -1,9 +1,9 @@
 package org.matchat.core.matrix
 
 import kotlinx.coroutines.flow.Flow
+import org.matchat.core.model.CallState
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
-import org.matchat.core.model.CallState
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
@@ -52,6 +52,7 @@ interface MatrixSession {
     suspend fun setRoomName(roomId: RoomId, name: String): Result<Unit>
     suspend fun setRoomTopic(roomId: RoomId, topic: String): Result<Unit>
     suspend fun inviteMember(roomId: RoomId, address: UserId): Result<Unit>
+
     /** Remove (kick) a member from the room. */
     suspend fun removeMember(roomId: RoomId, userId: UserId): Result<Unit>
     suspend fun leaveRoom(roomId: RoomId): Result<Unit>
