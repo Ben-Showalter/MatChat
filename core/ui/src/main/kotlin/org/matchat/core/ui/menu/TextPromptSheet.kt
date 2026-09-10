@@ -4,12 +4,14 @@ import android.app.Dialog
 import android.content.Context
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.matchat.core.ui.R
+import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.core.ui.theme.themeDimenPx
 
@@ -62,20 +64,37 @@ object TextPromptSheet {
             if (actionId == EditorInfo.IME_ACTION_DONE) { confirm(); true } else false
         }
 
-        container.addView(
-            TextView(context).apply {
-                text = context.getString(R.string.prompt_ok)
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
-                setTextColor(context.themeColor(R.attr.colorTextOnFocus))
-                minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, pad, 0, 0)
-                isFocusable = true
-                isFocusableInTouchMode = false
-                setBackgroundResource(R.drawable.focus_selector)
-                setOnClickListener { confirm() }
-            },
-        )
+        val ok = TextView(context).apply {
+            text = context.getString(R.string.prompt_ok)
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
+            setTextColor(context.themeColor(R.attr.colorTextOnFocus))
+            minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, pad, 0, 0)
+            isFocusable = true
+            isFocusableInTouchMode = false
+            setBackgroundResource(R.drawable.focus_selector)
+            setOnClickListener { confirm() }
+        }
+        container.addView(ok)
+
+        // Bug fix: a multi-line field's own ArrowKeyMovementMethod intercepts
+        // DPAD_DOWN for in-text cursor movement before Android's focus search
+        // ever gets a chance to move focus down to OK — from most cursor
+        // positions the OK row was simply unreachable, so an edit had no way
+        // to be submitted. This app's D-pad model treats DOWN as "move to the
+        // next thing" everywhere else, never as in-field cursor navigation,
+        // so unconditionally redirecting DOWN to OK (rather than only when
+        // the movement method happens to decline it) is consistent, not a
+        // narrow patch.
+        field.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
+                ok.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
 
         dialog.setContentView(container)
         dialog.window?.apply {
@@ -84,7 +103,7 @@ object TextPromptSheet {
         }
         dialog.setCancelable(true)
         dialog.show()
-        field.requestFocus()
+        FocusEngine.requestInitialFocus(field)
         return dialog
     }
 }
