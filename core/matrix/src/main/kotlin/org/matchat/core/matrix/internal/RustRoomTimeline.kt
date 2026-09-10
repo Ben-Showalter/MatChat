@@ -47,11 +47,16 @@ internal class RustRoomTimeline(
     // own listener thread (recompute) sees a fetch that completed on the init
     // coroutine without needing a lock for a plain reference read/swap.
     @Volatile private var members: Map<String, MemberInfo> = emptyMap()
-    // Pinned messages round: same one-shot-then-refresh-on-write shape as
-    // [members] — fetched once at init, and again right after our own
-    // setPinned() succeeds. A pin/unpin made from another client isn't
-    // picked up live (no state-event listener exists yet); reopening the
-    // room re-fetches. A deliberate scope cut, the same shape as members'.
+    // Pinned messages round: seeded from the process-lifetime [PinnedEventsCache]
+    // when another RustRoomTimeline instance for this room has already primed
+    // it, falling back to a cold room.roomInfo() read otherwise (see init{}).
+    // Live-updated by the cache subscription below — a pin made through a
+    // *sibling* instance for this room (Timeline vs. Pinned Messages vs.
+    // Message info all hold their own instance, per RustMatrixSession.timeline)
+    // now reaches this one immediately, which is the actual fix (see
+    // PinnedEventsCache's doc comment for the root cause). A pin/unpin made
+    // from another *client* still isn't picked up live (no state-event
+    // listener exists yet); reopening the room re-fetches.
     @Volatile private var pinnedIds: Set<String> = emptySet()
     private val itemsFlow = MutableStateFlow<List<TimelineItem>>(emptyList())
     private val typingFlow = MutableStateFlow<List<UserId>>(emptyList())
@@ -88,8 +93,25 @@ internal class RustRoomTimeline(
             // after this point keeps showing their MXID/no avatar until the room
             // is reopened — a deliberate scope cut, not a bug.
             runCatching { members = withContext(Dispatchers.IO) { fetchMembers(r) } }
-            runCatching { pinnedIds = withContext(Dispatchers.IO) { fetchPinnedIds(r) } }
+            val roomId = r.id()
+            val cached = PinnedEventsCache.get(roomId)
+            pinnedIds = cached
+                ?: runCatching { withContext(Dispatchers.IO) { fetchPinnedIds(r) } }
+                    .getOrDefault(emptySet())
+                    .also { PinnedEventsCache.put(roomId, it) }
             recompute()
+            // The live fix: a pin/unpin made through a sibling RustRoomTimeline
+            // for this same room shows here immediately, not just after this
+            // instance is torn down and rebuilt. `scope` is the shared,
+            // never-cancelled-per-instance scope RustMatrixSession already gives
+            // every RustRoomTimeline (see the diff-listener/typing subscriptions
+            // above), so this is the same lifecycle, not a new leak.
+            scope.launch {
+                PinnedEventsCache.updatesFor(roomId).collect { ids ->
+                    pinnedIds = ids
+                    recompute()
+                }
+            }
 
             typingHandle = runCatching {
                 r.subscribeToTypingNotifications(object : TypingNotificationsListener {
@@ -236,6 +258,11 @@ internal class RustRoomTimeline(
             val next = PinnedEventsContent.withEvent(current, eventId.value, pinned)
             r.sendStateEventRaw("m.room.pinned_events", "", PinnedEventsContent.toJson(next))
             pinnedIds = next.toSet()
+            // Publish to the shared cache so every other RustRoomTimeline for
+            // this room (a sibling screen already open, or one opened after
+            // this write) sees the same truth — this is the actual
+            // persistence fix; see PinnedEventsCache's doc comment.
+            PinnedEventsCache.put(r.id(), pinnedIds)
         }
         // Bug fix: this used to be a bare runCatching with no signal back to
         // the caller — a rejected write (most likely: the sender lacks the
