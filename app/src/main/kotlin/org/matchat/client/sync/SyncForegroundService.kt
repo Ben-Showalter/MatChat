@@ -58,7 +58,7 @@ class SyncForegroundService : LifecycleService() {
         }
     }
 
-    private fun onRooms(rooms: List<RoomSummary>) {
+    private suspend fun onRooms(rooms: List<RoomSummary>) {
         if (!seeded) {
             rooms.forEach { lastUnread[it.id.value] = it.unreadCount }
             seeded = true

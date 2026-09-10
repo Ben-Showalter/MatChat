@@ -14,6 +14,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import androidx.core.content.getSystemService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.matchat.client.MainActivity
 import org.matchat.client.R
 import org.matchat.core.model.RoomId
@@ -61,7 +63,7 @@ object MessageNotifier {
      * Settings. Idempotent and safe to call on every notification post and at
      * app startup — a no-op once the current version's channel already exists.
      */
-    fun ensureChannel(context: Context, version: Int, soundUri: String?) {
+    suspend fun ensureChannel(context: Context, version: Int, soundUri: String?) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService<NotificationManager>() ?: return
         val id = channelId(version)
@@ -73,7 +75,7 @@ object MessageNotifier {
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
                 enableVibration(true)
-                setSound(resolveSoundUri(soundUri), notificationAudioAttributes())
+                setSound(leadInSoundUri(context, soundUri), notificationAudioAttributes())
             },
         )
         if (version > 0) runCatching { manager.deleteNotificationChannel(channelId(version - 1)) }
@@ -81,7 +83,7 @@ object MessageNotifier {
 
     /** The [SAFE_CHANNEL_ID] fallback channel — always the system default
      *  sound, created once and never deleted/versioned. */
-    private fun ensureSafeChannel(context: Context) {
+    private suspend fun ensureSafeChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService<NotificationManager>() ?: return
         if (manager.getNotificationChannel(SAFE_CHANNEL_ID) != null) return
@@ -92,7 +94,7 @@ object MessageNotifier {
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
                 enableVibration(true)
-                setSound(resolveSoundUri(null), notificationAudioAttributes())
+                setSound(leadInSoundUri(context, null), notificationAudioAttributes())
             },
         )
     }
@@ -111,7 +113,18 @@ object MessageNotifier {
         else -> Uri.parse(soundUri)
     }
 
-    fun show(
+    /** [resolveSoundUri], then (off the calling thread) prepends the
+     *  Bluetooth wake-up silent lead-in (SilentLeadInSound) — the silent
+     *  choice (null) is returned as-is, nothing to process. Only reached
+     *  from channel creation, which happens once per sound choice
+     *  (ensureChannel/ensureSafeChannel both no-op once their channel
+     *  already exists), so the decode cost here is rare, not per-notification. */
+    private suspend fun leadInSoundUri(context: Context, soundUri: String?): Uri? {
+        val resolved = resolveSoundUri(soundUri) ?: return null
+        return withContext(Dispatchers.IO) { SilentLeadInSound.process(context, resolved) }
+    }
+
+    suspend fun show(
         context: Context,
         roomId: RoomId,
         title: String,

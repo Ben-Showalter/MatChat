@@ -48,7 +48,9 @@
         <receiver android:name=".notify.MessageReplyReceiver" android:exported="false" />
         <receiver android:name=".notify.MarkReadReceiver" android:exported="false" />
 
-        <!-- Hands downloaded attachments to the system viewer via content:// URIs. -->
+        <!-- Hands downloaded attachments to the system viewer, and
+             silence-prefixed notification sounds to NotificationManager,
+             via content:// URIs. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
