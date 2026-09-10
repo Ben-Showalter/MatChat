@@ -2,9 +2,9 @@ package org.matchat.client
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
 import org.matchat.client.notify.MessageNotifier
 import org.matchat.core.ui.prefs.UserPreferences
+import javax.inject.Inject
 
 /** Hilt graph root. The sync foreground service (not this class) owns the SDK
  *  client; the app just constructs the graph (ARCHITECTURE.md "Sync lifecycle"). */

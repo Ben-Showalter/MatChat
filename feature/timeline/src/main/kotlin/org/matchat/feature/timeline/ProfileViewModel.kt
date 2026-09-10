@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +15,7 @@ import kotlinx.coroutines.launch
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.UserId
+import javax.inject.Inject
 
 /** A sender's profile (S11): name + address, with a Send-message action. */
 @HiltViewModel

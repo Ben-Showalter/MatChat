@@ -1,7 +1,5 @@
 package org.matchat.core.matrix.internal
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +24,8 @@ import org.matchat.core.model.UserId
 import org.matrix.rustcomponents.sdk.CreateRoomParameters
 import org.matrix.rustcomponents.sdk.RoomPreset
 import org.matrix.rustcomponents.sdk.RoomVisibility
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * The app-facing session, backed by [RustMatrixClientHolder]. Joined rooms and

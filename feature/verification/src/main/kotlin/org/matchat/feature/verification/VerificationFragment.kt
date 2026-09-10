@@ -13,12 +13,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SasEmoji
-import org.matchat.core.ui.R as UiR
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.verification.databinding.FragmentVerificationBinding
+import org.matchat.core.ui.R as UiR
 
 /** S5/S6/S7 — emoji (SAS) verification with recovery-key fallback. */
 @AndroidEntryPoint

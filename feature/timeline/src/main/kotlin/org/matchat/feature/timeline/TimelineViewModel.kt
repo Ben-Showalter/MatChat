@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +22,7 @@ import org.matchat.core.model.RoomId
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.format.RelativeTime
 import org.matchat.core.policy.PolicyProvider
+import javax.inject.Inject
 
 @HiltViewModel
 class TimelineViewModel @Inject constructor(

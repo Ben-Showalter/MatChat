@@ -1,14 +1,14 @@
 package org.matchat.core.matrix.internal
 
 import android.util.Log
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.QrLoginStep
 import org.matchat.core.policy.PolicyProvider
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Password sign-in and session restore against the SDK. The homeserver comes

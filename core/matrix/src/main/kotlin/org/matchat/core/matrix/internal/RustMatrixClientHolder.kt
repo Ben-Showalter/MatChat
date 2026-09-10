@@ -1,7 +1,5 @@
 package org.matchat.core.matrix.internal
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,6 +20,8 @@ import org.matrix.rustcomponents.sdk.RoomListEntriesUpdate
 import org.matrix.rustcomponents.sdk.RoomListEntriesWithDynamicAdaptersResult
 import org.matrix.rustcomponents.sdk.SlidingSyncVersionBuilder
 import org.matrix.rustcomponents.sdk.SyncService
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Owns the single SDK [Client] and its [SyncService] for the process, and turns

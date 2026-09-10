@@ -10,12 +10,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.ui.R as UiR
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.newchat.databinding.FragmentNewChatBinding
+import org.matchat.core.ui.R as UiR
 
 /** S20 New message. LEFT is blank; each row is a focus stop. */
 @AndroidEntryPoint

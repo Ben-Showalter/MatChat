@@ -3,12 +3,12 @@ package org.matchat.feature.timeline
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.text.DateFormat
-import java.util.Date
 import org.matchat.core.model.UserId
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import java.text.DateFormat
+import java.util.Date
 
 /** S11 Message info: read-only metadata for one event, with a link to the sender's
  *  profile. All data comes from nav args, so no ViewModel is needed. */

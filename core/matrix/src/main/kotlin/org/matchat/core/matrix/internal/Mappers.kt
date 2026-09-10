@@ -14,8 +14,8 @@ import org.matrix.rustcomponents.sdk.MediaSource
 import org.matrix.rustcomponents.sdk.MessageType
 import org.matrix.rustcomponents.sdk.MsgLikeKind
 import org.matrix.rustcomponents.sdk.Room
-import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 import org.matrix.rustcomponents.sdk.TimelineItemContent
+import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 
 /** A room member's already-synced name/avatar (RustRoomTimeline.fetchMembers,
  *  RustMatrixSession.roomMembers) — either field may be null when the server

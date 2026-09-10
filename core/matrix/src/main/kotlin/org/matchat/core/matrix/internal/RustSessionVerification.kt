@@ -1,7 +1,5 @@
 package org.matchat.core.matrix.internal
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,6 +14,8 @@ import org.matrix.rustcomponents.sdk.SessionVerificationController
 import org.matrix.rustcomponents.sdk.SessionVerificationControllerDelegate
 import org.matrix.rustcomponents.sdk.SessionVerificationData
 import org.matrix.rustcomponents.sdk.SessionVerificationRequestDetails
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * SDK-backed emoji (SAS) verification (S6). Wraps SessionVerificationController and

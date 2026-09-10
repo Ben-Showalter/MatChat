@@ -3,12 +3,12 @@ package org.matchat.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.matchat.core.policy.PolicyProvider
+import javax.inject.Inject
 
 /** S23 Policy — read-only. It exists so a user who was just blocked can find out
  *  why without phoning anyone. It never offers a way around the policy. */

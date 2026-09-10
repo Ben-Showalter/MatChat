@@ -19,13 +19,13 @@ import org.matrix.rustcomponents.sdk.Room
 import org.matrix.rustcomponents.sdk.TaskHandle
 import org.matrix.rustcomponents.sdk.Timeline
 import org.matrix.rustcomponents.sdk.TimelineDiff
-import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 import org.matrix.rustcomponents.sdk.TimelineListener
 import org.matrix.rustcomponents.sdk.TypingNotificationsListener
 import org.matrix.rustcomponents.sdk.UploadParameters
 import org.matrix.rustcomponents.sdk.UploadSource
 import org.matrix.rustcomponents.sdk.VideoInfo
 import org.matrix.rustcomponents.sdk.messageEventContentFromMarkdown
+import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 
 /**
  * A live room timeline backed by the SDK (S9). Maintains an ordered buffer of SDK

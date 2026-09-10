@@ -12,7 +12,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
-import javax.inject.Inject
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -30,6 +29,7 @@ import org.matchat.core.ui.prefs.AccentColor
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 import org.matchat.core.ui.softkey.LogicalKeyReceiver
+import javax.inject.Inject
 
 /**
  * The single Activity (ARCHITECTURE.md). It owns the nav host, the one global key
