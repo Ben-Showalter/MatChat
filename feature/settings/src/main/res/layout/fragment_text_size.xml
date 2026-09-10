@@ -23,7 +23,7 @@
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
-            android:id="@+id/text_size_large"
+            android:id="@+id/text_size_small"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -23,18 +23,21 @@
     <dimen name="text_heading">17sp</dimen>
     <!-- Softkey bar labels only (view_softkey_bar.xml) — a dedicated size,
          bumped from the shared 11sp text_meta floor for legibility
-         (UI improvement plan, Phase 4). Do not reuse text_meta's dimen for
-         this or bump text_meta itself: timestamps/day-separators/sender
-         names also use it and UX-SPEC.md specifies them separately.
-         Deliberately excluded from the Text size setting (no _large
-         counterpart, no textSizeSoftkeyLabel attr) — the softkey bar is a
-         fixed-height chrome band, not a row; growing its label risks
-         clipping a band that's already nearly full. -->
-    <dimen name="text_softkey_label">13sp</dimen>
+         (UI improvement plan, Phase 4; bumped again for the chrome-bar
+         legibility pass below). Do not reuse text_meta's dimen for this or
+         bump text_meta itself: timestamps/day-separators/sender names also
+         use it and UX-SPEC.md specifies them separately. Deliberately
+         excluded from the Text size setting (no _large counterpart, no
+         textSizeSoftkeyLabel attr) — the softkey bar is a fixed-height
+         chrome band, not a row, so it doesn't shrink in Small mode either;
+         softkey_bar_height below grows to match. -->
+    <dimen name="text_softkey_label">16sp</dimen>
 
-    <!-- Text size setting: Large counterparts (Settings > Text size,
-         UX-SPEC §S16 — explicit values there; the rest extrapolated at
-         roughly the same ratio). -->
+    <!-- Text size setting: the larger set, used by default (Theme.MatChat.
+         Size.Normal — Settings > Text size, UX-SPEC §S16 — explicit values
+         there; the rest extrapolated at roughly the same ratio). The
+         un-suffixed dimens above are the smaller set, used only by
+         Theme.MatChat.Size.Small. -->
     <dimen name="text_body_large">20sp</dimen>
     <dimen name="text_label_large">18sp</dimen>
     <dimen name="text_meta_large">14sp</dimen>
@@ -44,9 +47,12 @@
     <dimen name="text_sender_large">15sp</dimen>
     <dimen name="text_heading_large">21sp</dimen>
 
-    <!-- Chrome bands (UX-SPEC §1) -->
-    <dimen name="title_bar_height">18dp</dimen>
-    <dimen name="softkey_bar_height">20dp</dimen>
+    <!-- Chrome bands (UX-SPEC §1). Grown (from 18/20dp) to fit the bigger
+         chrome text: the title bar's own text now defaults to 18sp
+         (?attr/textSizeLabel, Size.Normal) and softkey_bar_height needs
+         room for the bumped, fixed 16sp text_softkey_label above. -->
+    <dimen name="title_bar_height">24dp</dimen>
+    <dimen name="softkey_bar_height">26dp</dimen>
 
     <!-- Rows use minHeight, never a fixed height (UX-SPEC S16), specifically
          so they're free to grow at the largest font scale (AGENTS.md). -->

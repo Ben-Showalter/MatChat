@@ -128,20 +128,20 @@ class MainActivity : AppCompatActivity(), Navigator {
      *  §S16) — also applied via theme.applyStyle(_, force = true). */
     private fun sizeStyleFor(size: TextSizePreference): Int = when (size) {
         TextSizePreference.NORMAL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Normal
-        TextSizePreference.LARGE -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Large
+        TextSizePreference.SMALL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Small
     }
 
-    /** Settings > Text size's own row toggles the same preference; this is the
-     *  "Hold * to make text larger" shortcut Help already promises (S14's
-     *  help_large_text string predates this wiring). Deliberately global (any
-     *  screen), unlike Pinned messages' RIGHT shortcut (TimelineFragment's
-     *  narrow, explicit DirectionalKeyReceiver exception) — Text size isn't
-     *  scoped to one screen, so it's handled here rather than delegated to
-     *  the current screen's LogicalKeyReceiver. */
+    /** Settings > Text size's own row toggles the same preference; this is
+     *  also the "Hold * to change text size" shortcut Help promises (S14's
+     *  help_text_size string). Deliberately global (any screen), unlike
+     *  Pinned messages' RIGHT shortcut (TimelineFragment's narrow, explicit
+     *  DirectionalKeyReceiver exception) — Text size isn't scoped to one
+     *  screen, so it's handled here rather than delegated to the current
+     *  screen's LogicalKeyReceiver. */
     private fun toggleTextSize() {
         val next = when (userPreferences.textSize.value) {
-            TextSizePreference.NORMAL -> TextSizePreference.LARGE
-            TextSizePreference.LARGE -> TextSizePreference.NORMAL
+            TextSizePreference.NORMAL -> TextSizePreference.SMALL
+            TextSizePreference.SMALL -> TextSizePreference.NORMAL
         }
         lifecycleScope.launch { userPreferences.setTextSize(next) }
     }

@@ -14,9 +14,10 @@
     <string name="settings_policy_managed">Policy — Managed by your organization</string>
     <string name="settings_policy_unmanaged">Policy — Not managed</string>
 
-    <!-- Text size (reached from S13 Settings > Text size; UX-SPEC §S16). -->
+    <!-- Text size (reached from S13 Settings > Text size; UX-SPEC §S16).
+         Normal is the larger, default size; Small is the reduced option. -->
     <string name="text_size_normal">Normal</string>
-    <string name="text_size_large">Large</string>
+    <string name="text_size_small">Small</string>
 
     <!-- S24 Theme (reached from S13 Settings > Theme). -->
     <string name="theme_title">Theme</string>
@@ -85,5 +86,5 @@
     <string name="help_center">Center key opens or sends the item in focus.</string>
     <string name="help_back">Right key or Back returns to the previous screen.</string>
     <string name="help_unread">Hold # to jump to the next unread group.</string>
-    <string name="help_large_text">Hold * to make text larger.</string>
+    <string name="help_text_size">Hold * to change text size.</string>
 </resources>

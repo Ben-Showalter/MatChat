@@ -9,7 +9,8 @@ import org.matchat.core.ui.R
 import org.robolectric.RobolectricTestRunner
 
 /** Mirrors [ThemeColorTest]'s pattern for [themeDimenPx] — the Text size
- *  setting round's dimension counterpart to [themeColor]. */
+ *  setting round's dimension counterpart to [themeColor]. Normal is the
+ *  larger, default set (the `_large` dimens); Small is the reduced option. */
 @RunWith(RobolectricTestRunner::class)
 class ThemeDimenTest {
 
@@ -22,22 +23,22 @@ class ThemeDimenTest {
     }
 
     @Test
-    fun `Normal size resolves textSizeBody to text_body`() {
+    fun `Normal size resolves textSizeBody to text_body_large`() {
         val context = themedContext(R.style.Theme_MatChat_Size_Normal)
-        val resolved = context.themeDimenPx(R.attr.textSizeBody)
-        assertEquals(context.resources.getDimension(R.dimen.text_body), resolved)
-    }
-
-    @Test
-    fun `Large size resolves textSizeBody to text_body_large, not the Normal value`() {
-        val context = themedContext(R.style.Theme_MatChat_Size_Large)
         val resolved = context.themeDimenPx(R.attr.textSizeBody)
         assertEquals(context.resources.getDimension(R.dimen.text_body_large), resolved)
     }
 
     @Test
-    fun `Large size resolves rowMinHeight to row_min_height_large`() {
-        val context = themedContext(R.style.Theme_MatChat_Size_Large)
+    fun `Small size resolves textSizeBody to text_body, not the Normal value`() {
+        val context = themedContext(R.style.Theme_MatChat_Size_Small)
+        val resolved = context.themeDimenPx(R.attr.textSizeBody)
+        assertEquals(context.resources.getDimension(R.dimen.text_body), resolved)
+    }
+
+    @Test
+    fun `Normal size resolves rowMinHeight to row_min_height_large`() {
+        val context = themedContext(R.style.Theme_MatChat_Size_Normal)
         val resolved = context.themeDimenPx(R.attr.rowMinHeight)
         assertEquals(context.resources.getDimension(R.dimen.row_min_height_large), resolved)
     }

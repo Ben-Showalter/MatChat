@@ -12,10 +12,11 @@ import org.matchat.core.ui.prefs.TextSizePreference
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.feature.settings.databinding.FragmentTextSizeBinding
 
-/** Settings > Text size (UX-SPEC §S16): Normal/Large, two inline focusable
- *  rows — same shape as ThemeFragment's Appearance section (only 2 states,
- *  so a MenuSheet picker isn't warranted the way Accent color's 16 choices
- *  need one). Also toggled from any screen by holding * (MainActivity). */
+/** Settings > Text size (UX-SPEC §S16): Normal (the larger, default set) /
+ *  Small, two inline focusable rows — same shape as ThemeFragment's
+ *  Appearance section (only 2 states, so a MenuSheet picker isn't warranted
+ *  the way Accent color's 16 choices need one). Also toggled from any
+ *  screen by holding * (MainActivity). */
 @AndroidEntryPoint
 class TextSizeFragment : SoftkeyFragment() {
 
@@ -32,7 +33,7 @@ class TextSizeFragment : SoftkeyFragment() {
         setTitle(getString(R.string.settings_text_size))
 
         b.textSizeNormal.setOnClickListener { viewModel.onAction(TextSizeAction.SelectNormal) }
-        b.textSizeLarge.setOnClickListener { viewModel.onAction(TextSizeAction.SelectLarge) }
+        b.textSizeSmall.setOnClickListener { viewModel.onAction(TextSizeAction.SelectSmall) }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -45,7 +46,7 @@ class TextSizeFragment : SoftkeyFragment() {
     private fun render(state: TextSizeState) {
         val b = binding ?: return
         b.textSizeNormal.text = labelFor(R.string.text_size_normal, state.size == TextSizePreference.NORMAL)
-        b.textSizeLarge.text = labelFor(R.string.text_size_large, state.size == TextSizePreference.LARGE)
+        b.textSizeSmall.text = labelFor(R.string.text_size_small, state.size == TextSizePreference.SMALL)
     }
 
     private fun labelFor(labelRes: Int, selected: Boolean): CharSequence {

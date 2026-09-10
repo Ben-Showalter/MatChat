@@ -31,20 +31,20 @@ class TextSizeViewModelTest {
     }
 
     @Test
-    fun `selecting Large updates the fake and the state`() = runTest {
+    fun `selecting Small updates the fake and the state`() = runTest {
         val vm = subject()
-        vm.onAction(TextSizeAction.SelectLarge)
+        vm.onAction(TextSizeAction.SelectSmall)
         vm.state.test {
-            assertEquals(TextSizePreference.LARGE, expectMostRecentItem().size)
+            assertEquals(TextSizePreference.SMALL, expectMostRecentItem().size)
             cancelAndIgnoreRemainingEvents()
         }
-        assertEquals(TextSizePreference.LARGE, prefs.textSize.value)
+        assertEquals(TextSizePreference.SMALL, prefs.textSize.value)
     }
 
     @Test
-    fun `selecting Normal after Large returns to Normal`() = runTest {
+    fun `selecting Normal after Small returns to Normal`() = runTest {
         val vm = subject()
-        vm.onAction(TextSizeAction.SelectLarge)
+        vm.onAction(TextSizeAction.SelectSmall)
         vm.onAction(TextSizeAction.SelectNormal)
         vm.state.test {
             assertEquals(TextSizePreference.NORMAL, expectMostRecentItem().size)

@@ -51,11 +51,11 @@ class SharedPreferencesUserPreferencesTest {
     @Test
     fun `text size read-after-write, including a fresh instance`() = runTest {
         val prefs = SharedPreferencesUserPreferences(context)
-        prefs.setTextSize(TextSizePreference.LARGE)
-        assertEquals(TextSizePreference.LARGE, prefs.textSize.value)
+        prefs.setTextSize(TextSizePreference.SMALL)
+        assertEquals(TextSizePreference.SMALL, prefs.textSize.value)
 
         val reloaded = SharedPreferencesUserPreferences(context)
-        assertEquals(TextSizePreference.LARGE, reloaded.textSize.value)
+        assertEquals(TextSizePreference.SMALL, reloaded.textSize.value)
     }
 
     @Test
