@@ -17,10 +17,11 @@ class SharedPreferencesUserPreferencesTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `defaults are light, green, and not swapped`() {
+    fun `defaults are light, green, Normal, and not swapped`() {
         val prefs = SharedPreferencesUserPreferences(context)
         assertEquals(ThemeMode.LIGHT, prefs.themeMode.value)
         assertEquals(AccentColor.GREEN, prefs.accentColor.value)
+        assertEquals(TextSizePreference.NORMAL, prefs.textSize.value)
         assertEquals(false, prefs.softkeysSwapped.value)
         assertEquals(true, prefs.notificationsEnabled.value)
         assertEquals(null, prefs.notificationSoundUri.value)
@@ -45,6 +46,16 @@ class SharedPreferencesUserPreferencesTest {
 
         val reloaded = SharedPreferencesUserPreferences(context)
         assertEquals(AccentColor.BLUE, reloaded.accentColor.value)
+    }
+
+    @Test
+    fun `text size read-after-write, including a fresh instance`() = runTest {
+        val prefs = SharedPreferencesUserPreferences(context)
+        prefs.setTextSize(TextSizePreference.LARGE)
+        assertEquals(TextSizePreference.LARGE, prefs.textSize.value)
+
+        val reloaded = SharedPreferencesUserPreferences(context)
+        assertEquals(TextSizePreference.LARGE, reloaded.textSize.value)
     }
 
     @Test

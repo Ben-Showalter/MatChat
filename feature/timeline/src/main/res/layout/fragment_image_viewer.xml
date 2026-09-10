@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:text="@string/viewer_loading" />
 
     <TextView
@@ -31,6 +31,6 @@
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:text="@string/viewer_hint" />
 </FrameLayout>

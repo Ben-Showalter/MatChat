@@ -12,7 +12,7 @@
         android:id="@+id/call_peer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_heading"
+        android:textSize="?attr/textSizeHeading"
         android:textColor="?attr/colorTextPrimary"
         android:gravity="center" />
 
@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextSecondary"
         android:gravity="center" />
 
@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorWarning"
         android:gravity="center"
         android:text="@string/call_not_e2ee" />
@@ -40,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary"
         android:gravity="center" />
 </LinearLayout>

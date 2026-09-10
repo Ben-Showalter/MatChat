@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Settings > Advanced (Phase 6, UI improvement plan; docs/adr/0007). One
-     focusable toggle row; CENTER (or a tap) flips it. The selected state is
-     a trailing checkmark on the label (theme_row_selected_format, shared
-     with S24 Theme), never color alone (AGENTS.md). -->
+<!-- Settings > Text size (UX-SPEC §S16). Two focusable rows, Normal then
+     Large; CENTER (or a tap) selects one. The selected row carries a
+     trailing checkmark (theme_row_selected_format, shared with S24 Theme
+     and Advanced), never color alone (AGENTS.md). -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -15,7 +15,7 @@
         android:paddingEnd="@dimen/content_pad">
 
         <TextView
-            android:id="@+id/advanced_swap_softkeys"
+            android:id="@+id/text_size_normal"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -23,14 +23,11 @@
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
+            android:id="@+id/text_size_large"
+            style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusable="false"
-            android:textSize="?attr/textSizeMeta"
-            android:textColor="?attr/colorTextSecondary"
-            android:paddingStart="@dimen/content_pad"
-            android:paddingEnd="@dimen/content_pad"
-            android:paddingTop="2dp"
-            android:text="@string/advanced_swap_softkeys_sub" />
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 </ScrollView>

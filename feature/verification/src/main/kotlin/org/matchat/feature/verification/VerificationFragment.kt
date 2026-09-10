@@ -1,5 +1,6 @@
 package org.matchat.feature.verification
 
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
@@ -17,6 +18,7 @@ import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.verification.databinding.FragmentVerificationBinding
 import org.matchat.core.ui.R as UiR
 
@@ -119,7 +121,7 @@ class VerificationFragment : SoftkeyFragment() {
             addView(
                 TextView(requireContext()).apply {
                     text = emoji.name
-                    textSize = LABEL_SP
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeMeta))
                     gravity = Gravity.CENTER
                     setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
                 },
@@ -133,7 +135,8 @@ class VerificationFragment : SoftkeyFragment() {
 
     private companion object {
         const val EMOJIS_PER_ROW = 4
+        // Deliberately excluded from Text size scaling — a decorative icon,
+        // not read text (item_attachment.xml's glyph, same reasoning).
         const val EMOJI_SP = 28f
-        const val LABEL_SP = 11f
     }
 }

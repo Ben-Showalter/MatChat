@@ -2,6 +2,7 @@ package org.matchat.core.ui.menu
 
 import android.app.Dialog
 import android.content.Context
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -10,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import org.matchat.core.ui.R
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 
 /**
  * The single text-entry construct (S12 room edits, message edit): a
@@ -35,7 +37,7 @@ object TextPromptSheet {
         container.addView(
             TextView(context).apply {
                 text = title
-                textSize = LABEL_SP
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeLabel))
                 setTextColor(context.themeColor(R.attr.colorTextSecondary))
             },
         )
@@ -43,7 +45,7 @@ object TextPromptSheet {
         val field = EditText(context).apply {
             setText(initial)
             setSelection(text.length)
-            textSize = BODY_SP
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
             setTextColor(context.themeColor(R.attr.colorTextPrimary))
             isSingleLine = singleLine
             imeOptions = EditorInfo.IME_ACTION_DONE
@@ -63,7 +65,7 @@ object TextPromptSheet {
         container.addView(
             TextView(context).apply {
                 text = context.getString(R.string.prompt_ok)
-                textSize = BODY_SP
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
                 setTextColor(context.themeColor(R.attr.colorTextOnFocus))
                 minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
                 gravity = Gravity.CENTER_VERTICAL
@@ -85,7 +87,4 @@ object TextPromptSheet {
         field.requestFocus()
         return dialog
     }
-
-    private const val LABEL_SP = 14f
-    private const val BODY_SP = 16f
 }

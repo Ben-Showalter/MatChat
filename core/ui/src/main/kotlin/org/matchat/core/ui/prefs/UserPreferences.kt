@@ -16,6 +16,12 @@ enum class AccentColor {
     TEAL, CYAN, INDIGO, VIOLET, ORCHID, ROSE, RUST, OCHRE, OLIVE, FOREST, SLATE, WINE,
 }
 
+/** Settings > Text size (UX-SPEC §S16): scales text, avatars, and row heights
+ *  together app-wide, via the same ?attr indirection + Activity.recreate()
+ *  mechanism as [AccentColor] (Theme.MatChat.Size.{Normal,Large}, themes.xml).
+ *  Also toggled by holding `*` (LogicalKey.STAR_HOLD), from any screen. */
+enum class TextSizePreference { NORMAL, LARGE }
+
 /**
  * How the app renders itself. A [StateFlow], not a value read once, so a
  * screen observing it updates live if it ever changes out from under it —
@@ -26,6 +32,7 @@ enum class AccentColor {
 interface UserPreferences {
     val themeMode: StateFlow<ThemeMode>
     val accentColor: StateFlow<AccentColor>
+    val textSize: StateFlow<TextSizePreference>
 
     /** Settings > Advanced > "Swap Left/Right keys" (Phase 6, UI improvement
      *  plan) — for a device whose hardware softkeys are physically reversed.
@@ -56,6 +63,7 @@ interface UserPreferences {
 
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setAccentColor(color: AccentColor)
+    suspend fun setTextSize(size: TextSizePreference)
     suspend fun setSoftkeysSwapped(swapped: Boolean)
     suspend fun setNotificationsEnabled(enabled: Boolean)
 

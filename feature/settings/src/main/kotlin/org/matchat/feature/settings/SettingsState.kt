@@ -8,6 +8,7 @@ data class SettingsState(
 
 sealed interface SettingsAction {
     data object OpenEncryption : SettingsAction
+    data object OpenTextSize : SettingsAction
     data object OpenTheme : SettingsAction
     data object OpenAdvanced : SettingsAction
     data object OpenNotifications : SettingsAction
@@ -18,6 +19,7 @@ sealed interface SettingsAction {
 
 sealed interface SettingsNav {
     data object Encryption : SettingsNav
+    data object TextSize : SettingsNav
     data object Theme : SettingsNav
     data object Advanced : SettingsNav
     data object Notifications : SettingsNav

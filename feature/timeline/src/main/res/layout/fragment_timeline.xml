@@ -19,8 +19,8 @@
         style="@style/Widget.MatChat.Row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="@dimen/row_min_height_compact"
-        android:textSize="@dimen/text_label"
+        android:minHeight="?attr/rowMinHeightCompact"
+        android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus"
         android:visibility="gone"
         tools:text="📌 3 pinned messages ›"
@@ -36,7 +36,7 @@
         android:paddingEnd="@dimen/content_pad"
         android:background="?attr/colorWarning"
         android:textColor="?attr/colorTextOnInverse"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:text="@string/timeline_unencrypted"
         android:visibility="gone" />
 
@@ -47,7 +47,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:padding="@dimen/content_pad"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextSecondary"
         android:text="@string/timeline_empty"
         android:visibility="gone" />
@@ -69,7 +69,7 @@
         android:gravity="center_vertical"
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary"
         android:textStyle="italic"
         android:visibility="gone" />
@@ -86,7 +86,7 @@
         android:inputType="textShortMessage|textMultiLine|textCapSentences|textAutoCorrect"
         android:imeOptions="actionSend"
         android:importantForAutofill="no"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextPrimary"
         android:hint="@string/timeline_compose_hint" />
 
@@ -102,6 +102,6 @@
         android:paddingEnd="@dimen/content_pad"
         android:background="?attr/colorWarning"
         android:textColor="?attr/colorTextOnInverse"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:visibility="gone" />
 </LinearLayout>

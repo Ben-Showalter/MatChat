@@ -1,5 +1,6 @@
 package org.matchat.feature.timeline
 
+import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -21,6 +22,7 @@ import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.timeline.databinding.FragmentTimelineBinding
 
 /** S9 Timeline. Compose is the initial focus (people come here to reply). */
@@ -443,9 +445,15 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  (AvatarFallback round). */
     private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, avatarMaxPx()) { viewModel.loadAvatar(it) }
         }
     }
+
+    /** Decode-quality cap, ~2x avatarSizeSender — small on purpose. A compile-time
+     *  literal can't respond to the runtime Text size choice, so this is computed
+     *  from the theme attr at bind time instead of a const. */
+    private fun avatarMaxPx(): Int =
+        (requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeSender) * 2).toInt()
 
     /** Populates the "seen by" row with up to [SEEN_BY_MAX] avatars plus a
      *  "+N" overflow label — plain Views built here, not a nested
@@ -456,7 +464,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  container/ring is needed for the stacked look. */
     private fun bindSeenBy(seenBy: List<org.matchat.core.model.SeenBy>, container: android.widget.LinearLayout) {
         container.removeAllViews()
-        val avatarPx = resources.getDimensionPixelSize(org.matchat.core.ui.R.dimen.avatar_size_seen_by)
+        val avatarPx = requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeSeenBy).toInt()
         val overlapPx = -(avatarPx / SEEN_BY_OVERLAP_DIVISOR)
         seenBy.take(SEEN_BY_MAX).forEachIndexed { index, entry ->
             val avatar = android.widget.ImageView(requireContext()).apply {
@@ -473,7 +481,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             container.addView(
                 android.widget.TextView(requireContext()).apply {
                     text = "+$overflow"
-                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextSize(
+                        TypedValue.COMPLEX_UNIT_PX,
+                        requireContext().themeDimenPx(org.matchat.core.ui.R.attr.textSizeMeta),
+                    )
                     setTextColor(requireContext().themeColor(org.matchat.core.ui.R.attr.colorTextMetaOnFocus))
                 },
             )
@@ -494,7 +505,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             container.addView(
                 android.widget.TextView(requireContext()).apply {
                     text = "${r.key} ${r.count}"
-                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextSize(
+                        TypedValue.COMPLEX_UNIT_PX,
+                        requireContext().themeDimenPx(org.matchat.core.ui.R.attr.textSizeMeta),
+                    )
                     setTextColor(
                         requireContext().themeColor(
                             if (r.reactedByMe) org.matchat.core.ui.R.attr.colorFocusAccent
@@ -595,10 +609,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
-        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_sender; small on purpose
         const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
         const val SEEN_BY_OVERLAP_DIVISOR = 3 // later avatars overlap ~1/3 of the previous one
-        const val SEEN_BY_OVERFLOW_SP = 11f
         const val REACTION_CHIP_SPACING_PX = 10
 
         // Thumbs up/down + 8 common smileys — ~10 total, per the user's own

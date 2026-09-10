@@ -26,6 +26,7 @@ import org.matchat.core.ui.key.KeyMap
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.prefs.AccentColor
+import org.matchat.core.ui.prefs.TextSizePreference
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
@@ -62,6 +63,7 @@ class MainActivity : AppCompatActivity(), Navigator {
         ).userPreferences()
         setTheme(baseStyleFor(userPreferences.themeMode.value))
         theme.applyStyle(accentStyleFor(userPreferences.accentColor.value), true)
+        theme.applyStyle(sizeStyleFor(userPreferences.textSize.value), true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val host = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
@@ -79,15 +81,20 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun observeThemeChanges() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(userPreferences.themeMode, userPreferences.accentColor, ::Pair)
+                combine(
+                    userPreferences.themeMode,
+                    userPreferences.accentColor,
+                    userPreferences.textSize,
+                    ::Triple,
+                )
                     .drop(1)
                     .collect { recreate() }
             }
         }
     }
 
-    /** The base carries every role that doesn't depend on accent (or, once
-     *  Text size lands, size) — see themes.xml's file header. */
+    /** The base carries every role that doesn't depend on accent or size —
+     *  see themes.xml's file header. */
     private fun baseStyleFor(mode: ThemeMode): Int = when (mode) {
         ThemeMode.LIGHT -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Light
         ThemeMode.DARK -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Dark
@@ -116,6 +123,28 @@ class MainActivity : AppCompatActivity(), Navigator {
         AccentColor.SLATE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Slate,
         AccentColor.WINE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Wine,
     )
+
+    /** Layered on top of the accent overlay (Settings > Text size, UX-SPEC
+     *  §S16) — also applied via theme.applyStyle(_, force = true). */
+    private fun sizeStyleFor(size: TextSizePreference): Int = when (size) {
+        TextSizePreference.NORMAL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Normal
+        TextSizePreference.LARGE -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Large
+    }
+
+    /** Settings > Text size's own row toggles the same preference; this is the
+     *  "Hold * to make text larger" shortcut Help already promises (S14's
+     *  help_large_text string predates this wiring). Deliberately global (any
+     *  screen), unlike Pinned messages' RIGHT shortcut (TimelineFragment's
+     *  narrow, explicit DirectionalKeyReceiver exception) — Text size isn't
+     *  scoped to one screen, so it's handled here rather than delegated to
+     *  the current screen's LogicalKeyReceiver. */
+    private fun toggleTextSize() {
+        val next = when (userPreferences.textSize.value) {
+            TextSizePreference.NORMAL -> TextSizePreference.LARGE
+            TextSizePreference.LARGE -> TextSizePreference.NORMAL
+        }
+        lifecycleScope.launch { userPreferences.setTextSize(next) }
+    }
 
     private val notificationPermission =
         registerForActivityResult(
@@ -172,7 +201,14 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Long-press # / * are power-user shortcuts routed as hold keys.
         if (event.action == KeyEvent.ACTION_DOWN && event.isLongPress) {
-            KeyMap.holdKey(event.keyCode)?.let { return receiver()?.onLogicalKey(it) ?: false }
+            val hold = KeyMap.holdKey(event.keyCode)
+            // Deliberately global (any screen), not delegated to the current
+            // screen's LogicalKeyReceiver — see toggleTextSize()'s doc comment.
+            if (hold == LogicalKey.STAR_HOLD) {
+                toggleTextSize()
+                return true
+            }
+            hold?.let { return receiver()?.onLogicalKey(it) ?: false }
         }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
@@ -274,6 +310,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toVerification() = navController.navigate(R.id.verificationFragment)
     override fun toSettings() = navController.navigate(R.id.settingsFragment)
     override fun toTheme() = navController.navigate(R.id.themeFragment)
+    override fun toTextSize() = navController.navigate(R.id.textSizeFragment)
     override fun toAdvanced() = navController.navigate(R.id.advancedFragment)
     override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)

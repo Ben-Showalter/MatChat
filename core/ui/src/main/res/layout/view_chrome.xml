@@ -30,7 +30,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="?attr/colorTextOnInverse"
-            android:textSize="@dimen/text_label" />
+            android:textSize="?attr/textSizeLabel" />
 
         <!-- Sync/offline glyph only (UX-SPEC §1): ⟳ syncing, ! offline. -->
         <TextView
@@ -40,7 +40,7 @@
             android:paddingStart="4dp"
             android:paddingEnd="@dimen/content_pad"
             android:textColor="?attr/colorTextOnInverse"
-            android:textSize="@dimen/text_meta" />
+            android:textSize="?attr/textSizeMeta" />
     </LinearLayout>
 
     <FrameLayout

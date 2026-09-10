@@ -14,6 +14,10 @@
     <string name="settings_policy_managed">Policy — Managed by your organization</string>
     <string name="settings_policy_unmanaged">Policy — Not managed</string>
 
+    <!-- Text size (reached from S13 Settings > Text size; UX-SPEC §S16). -->
+    <string name="text_size_normal">Normal</string>
+    <string name="text_size_large">Large</string>
+
     <!-- S24 Theme (reached from S13 Settings > Theme). -->
     <string name="theme_title">Theme</string>
     <string name="theme_appearance_header">Appearance</string>

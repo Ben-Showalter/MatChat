@@ -3,6 +3,7 @@ package org.matchat.core.ui.menu
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import org.matchat.core.ui.R
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 
 /** One row of a [MenuSheet]. [enabled] false renders greyed and is not focusable. */
 data class MenuItem(
@@ -98,7 +100,7 @@ object MenuSheet {
     private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView =
         TextView(context).apply {
             text = item.label
-            textSize = MENU_ROW_TEXT_SP
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
             setTextColor(context.themeColor(R.attr.colorTextOnFocus))
             minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
             gravity = Gravity.CENTER_VERTICAL
@@ -111,6 +113,5 @@ object MenuSheet {
             if (item.enabled) setOnClickListener { onClick() }
         }
 
-    private const val MENU_ROW_TEXT_SP = 16f // body floor (PLAN.md G5)
     private const val MAX_HEIGHT_FRACTION = 0.6 // leaves the title bar visible above it
 }

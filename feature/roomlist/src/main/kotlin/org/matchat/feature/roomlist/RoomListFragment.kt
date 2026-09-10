@@ -17,6 +17,7 @@ import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.roomlist.databinding.FragmentRoomListBinding
 
 /**
@@ -47,7 +48,7 @@ class RoomListFragment : SoftkeyFragment() {
      *  byte fetch. */
     private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, avatarMaxPx()) { viewModel.loadAvatar(it) }
         }
     }
 
@@ -141,12 +142,17 @@ class RoomListFragment : SoftkeyFragment() {
         super.onDestroyView()
     }
 
+    /** Decode-quality cap, ~2x avatarSizeList — a compile-time literal can't
+     *  respond to the runtime Text size choice, so this is computed from the
+     *  theme attr at bind time instead of a const. */
+    private fun avatarMaxPx(): Int =
+        (requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeList) * 2).toInt()
+
     private companion object {
         const val OPT_NEW = "new"
         const val OPT_READ = "read"
         const val OPT_SETTINGS = "settings"
         const val OPT_HELP = "help"
         const val OPT_SIGNOUT = "signout"
-        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_list
     }
 }

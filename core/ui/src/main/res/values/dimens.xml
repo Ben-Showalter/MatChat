@@ -2,27 +2,58 @@
 <!-- Type floor (PLAN.md G5, UX-SPEC §2): body 16 sp · interactive labels 14 sp ·
      secondary metadata 11 sp. Nothing a user reads goes below 11 sp. -->
 <resources>
-    <!-- Text sizes -->
+    <!-- Text sizes. Each role here (except text_softkey_label — see its own
+         note) has a Large counterpart below (Settings > Text size, UX-SPEC
+         §S16), surfaced through the matching textSize<Role> attr
+         (attrs.xml/themes.xml), never referenced directly by a layout. -->
     <dimen name="text_body">16sp</dimen>
     <dimen name="text_label">14sp</dimen>
     <dimen name="text_meta">11sp</dimen>
     <dimen name="text_room_name">16sp</dimen>
+    <!-- item_room.xml's message preview — previously an orphan raw 13sp,
+         promoted to a named role for the Text size round. -->
+    <dimen name="text_room_preview">13sp</dimen>
+    <!-- The full-address display text (fragment_type_address.xml,
+         fragment_invite_detail.xml) — UX-SPEC §S19 calls this out as its own
+         role ("the full address... this is the thing the user is judging"),
+         so it gets a dedicated dimen rather than reusing text_room_preview's
+         (same Normal value today, but a coincidence, not a coupling). -->
+    <dimen name="text_address">13sp</dimen>
     <dimen name="text_sender">12sp</dimen>
     <dimen name="text_heading">17sp</dimen>
     <!-- Softkey bar labels only (view_softkey_bar.xml) — a dedicated size,
          bumped from the shared 11sp text_meta floor for legibility
          (UI improvement plan, Phase 4). Do not reuse text_meta's dimen for
          this or bump text_meta itself: timestamps/day-separators/sender
-         names also use it and UX-SPEC.md specifies them separately. -->
+         names also use it and UX-SPEC.md specifies them separately.
+         Deliberately excluded from the Text size setting (no _large
+         counterpart, no textSizeSoftkeyLabel attr) — the softkey bar is a
+         fixed-height chrome band, not a row; growing its label risks
+         clipping a band that's already nearly full. -->
     <dimen name="text_softkey_label">13sp</dimen>
+
+    <!-- Text size setting: Large counterparts (Settings > Text size,
+         UX-SPEC §S16 — explicit values there; the rest extrapolated at
+         roughly the same ratio). -->
+    <dimen name="text_body_large">20sp</dimen>
+    <dimen name="text_label_large">18sp</dimen>
+    <dimen name="text_meta_large">14sp</dimen>
+    <dimen name="text_room_name_large">21sp</dimen>
+    <dimen name="text_room_preview_large">16sp</dimen>
+    <dimen name="text_address_large">16sp</dimen>
+    <dimen name="text_sender_large">15sp</dimen>
+    <dimen name="text_heading_large">21sp</dimen>
 
     <!-- Chrome bands (UX-SPEC §1) -->
     <dimen name="title_bar_height">18dp</dimen>
     <dimen name="softkey_bar_height">20dp</dimen>
 
-    <!-- Rows use minHeight, never a fixed height (UX-SPEC S16). -->
+    <!-- Rows use minHeight, never a fixed height (UX-SPEC S16), specifically
+         so they're free to grow at the largest font scale (AGENTS.md). -->
     <dimen name="row_min_height">44dp</dimen>
     <dimen name="row_min_height_compact">36dp</dimen>
+    <dimen name="row_min_height_large">64dp</dimen>
+    <dimen name="row_min_height_compact_large">52dp</dimen>
 
     <!-- Focus highlight: trailing-edge accent bar width, no rounded corners
          (UX-SPEC §2). Widened from 3dp after the first pass read as barely
@@ -61,4 +92,10 @@
     <dimen name="avatar_size_list">32dp</dimen>
     <dimen name="avatar_size_sender">16dp</dimen>
     <dimen name="avatar_size_seen_by">14dp</dimen>
+
+    <!-- Text size setting: Large counterparts, same ~1.44-1.45x ratio as the
+         row-height growth above (UX-SPEC §S16). -->
+    <dimen name="avatar_size_list_large">44dp</dimen>
+    <dimen name="avatar_size_sender_large">24dp</dimen>
+    <dimen name="avatar_size_seen_by_large">20dp</dimen>
 </resources>

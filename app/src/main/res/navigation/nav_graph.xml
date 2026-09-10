@@ -120,6 +120,11 @@
         android:label="Theme" />
 
     <fragment
+        android:id="@+id/textSizeFragment"
+        android:name="org.matchat.feature.settings.TextSizeFragment"
+        android:label="Text size" />
+
+    <fragment
         android:id="@+id/advancedFragment"
         android:name="org.matchat.feature.settings.AdvancedFragment"
         android:label="Advanced" />

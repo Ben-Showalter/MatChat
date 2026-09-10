@@ -37,6 +37,8 @@ interface Navigator {
     fun toVerification()
     fun toSettings()
     fun toTheme()
+    /** Settings > Text size: Normal/Large (UX-SPEC §S16). */
+    fun toTextSize()
     /** Settings > Advanced (Phase 6, UI improvement plan): softkey swap. */
     fun toAdvanced()
     /** Settings > Notifications: on/off + sound. */
