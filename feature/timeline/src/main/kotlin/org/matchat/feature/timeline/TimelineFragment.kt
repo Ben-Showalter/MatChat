@@ -14,16 +14,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
+import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.feature.timeline.databinding.FragmentTimelineBinding
 
 /** S9 Timeline. Compose is the initial focus (people come here to reply). */
 @AndroidEntryPoint
-class TimelineFragment : SoftkeyFragment() {
+class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     override val contentLayoutId: Int = R.layout.fragment_timeline
     override val leftLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_options)
@@ -109,6 +111,8 @@ class TimelineFragment : SoftkeyFragment() {
             refreshSoftkeys()
         }
 
+        b.pinnedBand.setOnClickListener { navigator.toPinnedMessages(roomId()) }
+
         b.composeInput.addTextChangedListener { text ->
             viewModel.onComposeTextChanged(text?.toString().orEmpty())
         }
@@ -127,6 +131,12 @@ class TimelineFragment : SoftkeyFragment() {
         val b = binding ?: return
         setTitle(state.title)
         setSyncGlyph(SyncState.IDLE)
+        b.pinnedBand.isVisible = state.pinnedCount > 0
+        if (state.pinnedCount > 0) {
+            b.pinnedBand.text = resources.getQuantityString(
+                R.plurals.timeline_pinned_band, state.pinnedCount, state.pinnedCount,
+            )
+        }
         b.unencryptedBand.isVisible = state.showUnencryptedBand
         b.emptyView.isVisible = state.isEmpty
         b.timelineList.isVisible = !state.isEmpty
@@ -143,10 +153,29 @@ class TimelineFragment : SoftkeyFragment() {
         }
     }
 
+    /** RIGHT jumps to Pinned messages (quick-access round) — never while
+     *  composing (RIGHT stays with the EditText's own caret movement there,
+     *  per the user's own explicit ask), and only when there's something to
+     *  jump to. See DirectionalKeyReceiver's doc comment for why this
+     *  narrow exception exists at all. */
+    override fun onDirectionalKey(key: LogicalKey): Boolean {
+        if (key != LogicalKey.RIGHT) return false
+        if (binding?.composeInput?.isFocused == true) return false
+        if (viewModel.state.value.pinnedCount == 0) return false
+        navigator.toPinnedMessages(roomId())
+        return true
+    }
+
     private fun navigate(nav: TimelineNav) {
         when (nav) {
             TimelineNav.Verification -> navigator.toVerification()
             TimelineNav.RoomInfo -> Unit // S12 Room info is built in a later milestone
+            is TimelineNav.Toast -> {
+                val res = when (nav.key) {
+                    TimelineToastKey.PIN_FAILED -> R.string.timeline_pin_failed
+                }
+                Toast.makeText(requireContext(), res, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

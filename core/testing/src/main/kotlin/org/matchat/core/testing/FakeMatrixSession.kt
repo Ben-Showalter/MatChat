@@ -188,9 +188,11 @@ class FakeTimeline(
     }
 
     val pinnedChanges = mutableListOf<Pair<EventId, Boolean>>()
+    var pinnedResult: Boolean = true
 
-    override suspend fun setPinned(eventId: EventId, pinned: Boolean) {
+    override suspend fun setPinned(eventId: EventId, pinned: Boolean): Boolean {
         pinnedChanges += eventId to pinned
+        return pinnedResult
     }
 
     fun emit(items: List<TimelineItem>) { itemsFlow.value = items }

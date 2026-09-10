@@ -156,6 +156,12 @@ interface RoomTimeline {
      * of Room's public methods is pin-named) — this reads the current list,
      * edits it, and writes it back as a plain state event, the same way
      * core/rtc's MatrixRTC signalling already does for `m.call.member`.
+     *
+     * Returns whether the write actually succeeded. `m.room.pinned_events`
+     * needs `state_default` power level (moderator+ by default) to send —
+     * a plain member's attempt is rejected by the homeserver, and this is
+     * the only way the caller finds out rather than the change silently not
+     * sticking (the bug this return value fixes).
      */
-    suspend fun setPinned(eventId: EventId, pinned: Boolean)
+    suspend fun setPinned(eventId: EventId, pinned: Boolean): Boolean
 }

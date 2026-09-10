@@ -97,6 +97,10 @@ data class TimelineState(
     /** "Alice is typing…" / "Several people are typing…", or null when nobody is. */
     val typingText: String? = null,
     val error: ErrorText? = null,
+    /** Count of pinned messages in this room — drives the pinned-messages
+     *  band's visibility/text and whether the RIGHT-key shortcut does
+     *  anything (Pinned messages quick-access round). */
+    val pinnedCount: Int = 0,
 ) {
     val isEmpty: Boolean get() = rows.isEmpty() && !isLoadingEarlier
     val showUnencryptedBand: Boolean get() = !isEncrypted

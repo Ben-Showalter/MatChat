@@ -60,6 +60,9 @@ class TimelineViewModel @Inject constructor(
                 isComposeFocused = composing,
                 isLoadingEarlier = loading,
                 typingText = typingLine(typing),
+                pinnedCount = items.count {
+                    (it is TimelineItem.Message && it.isPinned) || (it is TimelineItem.Media && it.isPinned)
+                },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimelineState())
 
@@ -141,9 +144,15 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { timeline.toggleReaction(eventId, key) }
     }
 
-    /** Pin or unpin a message (Pinned messages round). */
+    /** Pin or unpin a message (Pinned messages round). m.room.pinned_events
+     *  needs state_default power level (moderator+ by default) to send — a
+     *  plain member's write is rejected by the server; surface that instead
+     *  of letting it look like nothing happened (the bug this fixes). */
     fun setPinned(eventId: EventId, pinned: Boolean) {
-        viewModelScope.launch { timeline.setPinned(eventId, pinned) }
+        viewModelScope.launch {
+            val ok = timeline.setPinned(eventId, pinned)
+            if (!ok) emit(TimelineNav.Toast(TimelineToastKey.PIN_FAILED))
+        }
     }
 
     private fun paginateBack() {

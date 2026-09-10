@@ -165,12 +165,24 @@ sits flush, not a full rounded rect). A focused bubble's border recolors to
 the accent and thickens, in place of the app's usual flat-fill-plus-bar
 focus style (AGENTS.md §4's named exception) — the row itself has no
 background.
+**Pinned-messages band** (Pinned messages quick-access round): when the room
+has ≥1 pinned message, a band reading "📌 N pinned message(s) ›" sits at the
+very top of the content, above the unencrypted-warning band — same row
+shape as the room list's invitation band. It's the first focus stop, CENTER
+opens Pinned messages, but walking UP from the newest message to reach it
+is impractical in a long room, so D-pad **RIGHT** also jumps straight there
+from anywhere in the message list — except while the compose box is
+focused, where RIGHT stays with the text cursor as normal (a narrow,
+documented exception to "directional keys are never reassigned per
+screen," scoped to this one shortcut — see `DirectionalKeyReceiver`).
+Hidden entirely when nothing is pinned.
 If the room is **not encrypted**, a persistent 14 dp band sits directly under the
-title bar: "This group is not encrypted." (G4). Encrypted rooms show nothing —
-encryption is the norm, not a decoration.
+title bar (below the pinned band, if both show): "This group is not encrypted."
+(G4). Encrypted rooms show nothing — encryption is the norm, not a decoration.
 Bottom: a one-line message input strip (18 dp) that is the **last** focus stop.
-Focus order: oldest-loaded message → … → newest → input strip. Initial focus:
-input strip (people come here to reply), ↑ walks back through history.
+Focus order: pinned band (if any) → oldest-loaded message → … → newest →
+input strip. Initial focus: input strip (people come here to reply), ↑ walks
+back through history.
 Reaching the top item triggers `paginateBack(20)`; a 16 dp "Loading earlier
 messages…" row appears while it runs.
 Softkeys: Options | Select | Back.

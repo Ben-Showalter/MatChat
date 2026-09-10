@@ -28,6 +28,7 @@ import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.prefs.AccentColor
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
+import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.LogicalKeyReceiver
 import javax.inject.Inject
 
@@ -162,6 +163,15 @@ class MainActivity : AppCompatActivity(), Navigator {
             ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
         // the softkeys, CENTER and digits are offered to the screen first.
+        // Narrow, explicit exception (Pinned messages quick-access round, mirrors
+        // docs/adr/0007's softkey-swap exception): RIGHT specifically is offered
+        // to the current screen first, ONLY if it opts in via
+        // DirectionalKeyReceiver — every screen that doesn't implement it (i.e.
+        // everything except TimelineFragment today) behaves exactly as before.
+        if (logical == LogicalKey.RIGHT) {
+            val consumed = (receiver() as? DirectionalKeyReceiver)?.onDirectionalKey(logical) ?: false
+            if (consumed) return true
+        }
         if (logical == LogicalKey.UP || logical == LogicalKey.DOWN ||
             logical == LogicalKey.LEFT || logical == LogicalKey.RIGHT
         ) {

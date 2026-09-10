@@ -225,9 +225,9 @@ internal class RustRoomTimeline(
         Unit
     }
 
-    override suspend fun setPinned(eventId: EventId, pinned: Boolean) = withContext(Dispatchers.IO) {
-        val r = room ?: return@withContext
-        runCatching {
+    override suspend fun setPinned(eventId: EventId, pinned: Boolean): Boolean = withContext(Dispatchers.IO) {
+        val r = room ?: return@withContext false
+        val result = runCatching {
             // Re-read the current list right before writing, rather than
             // trusting the in-memory [pinnedIds], to minimize (not eliminate
             // — the SDK exposes no compare-and-swap for a state event) the
@@ -237,8 +237,14 @@ internal class RustRoomTimeline(
             r.sendStateEventRaw("m.room.pinned_events", "", PinnedEventsContent.toJson(next))
             pinnedIds = next.toSet()
         }
+        // Bug fix: this used to be a bare runCatching with no signal back to
+        // the caller — a rejected write (most likely: the sender lacks the
+        // state_default power level m.room.pinned_events needs) silently
+        // looked identical to success ("doesn't stick", on-device report).
+        // recompute() still runs either way: on success it picks up the new
+        // pinnedIds; on failure it just re-renders the unchanged state.
         recompute()
-        Unit
+        result.isSuccess
     }
 
     private fun apply(diffs: List<TimelineDiff>) = synchronized(buffer) {

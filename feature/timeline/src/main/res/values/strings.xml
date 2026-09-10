@@ -6,6 +6,13 @@
     <string name="timeline_utd">This message can\'t be read on this phone yet.</string>
     <string name="timeline_fix_encryption">Fix encryption</string>
 
+    <!-- Pinned-messages band (Pinned messages quick-access round), e.g.
+         "📌 1 pinned message ›" / "📌 3 pinned messages ›". -->
+    <plurals name="timeline_pinned_band">
+        <item quantity="one">📌 %d pinned message ›</item>
+        <item quantity="other">📌 %d pinned messages ›</item>
+    </plurals>
+
     <!-- Options (S9). -->
     <string name="timeline_opt_call">Call</string>
     <string name="timeline_opt_send_photo">Send photo</string>
@@ -31,6 +38,7 @@
     <string name="timeline_msg_react">React</string>
     <string name="timeline_msg_pin">Pin message</string>
     <string name="timeline_msg_unpin">Unpin message</string>
+    <string name="timeline_pin_failed">Couldn\'t pin — you may not have permission in this room.</string>
     <string name="timeline_msg_copy">Copy text</string>
     <string name="timeline_msg_info">Message info</string>
     <!-- Marks a row already selected/active — a local copy of the same
