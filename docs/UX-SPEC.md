@@ -166,7 +166,7 @@ Special rows:
 Empty: "No messages yet. Say hello."
 
 ### S10 — Compose (input focused)
-The input strip expands to 3 lines max as text grows; the timeline shrinks.
+The input strip expands to 5 lines max as text grows; the timeline shrinks.
 System IME (T9 / multi-tap) provides text entry — we never draw a keyboard.
 Softkeys while the input is focused: Options | **Send** | Back.
 Options: Clear · Cancel.

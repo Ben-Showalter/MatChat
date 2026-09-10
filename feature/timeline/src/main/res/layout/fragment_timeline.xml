@@ -59,7 +59,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="18dp"
-        android:maxLines="3"
+        android:maxLines="5"
         android:background="@drawable/focus_selector"
         android:focusable="true"
         android:focusableInTouchMode="true"
