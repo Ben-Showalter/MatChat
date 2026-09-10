@@ -6,14 +6,19 @@ import org.matchat.core.model.UserId
 /** Where a call is in its lifecycle (docs/VOICE.md). */
 enum class CallPhase {
     IDLE,
+
     /** We are placing a call and publishing our membership. */
     DIALING,
+
     /** An incoming call is ringing (a RING notification within its lifetime). */
     RINGING,
+
     /** Joining the media transport (LiveKit). */
     CONNECTING,
+
     /** In the call with live audio. */
     CONNECTED,
+
     /** The call has ended (hung up, declined, or failed). */
     ENDED,
 }

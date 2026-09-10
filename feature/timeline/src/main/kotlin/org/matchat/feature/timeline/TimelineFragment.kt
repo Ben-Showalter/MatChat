@@ -47,7 +47,9 @@ class TimelineFragment : SoftkeyFragment() {
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
         ) { granted ->
-            if (granted) beginRecording() else {
+            if (granted) {
+                beginRecording()
+            } else {
                 Toast.makeText(requireContext(), R.string.timeline_record_denied, Toast.LENGTH_SHORT).show()
             }
         }

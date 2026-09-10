@@ -27,10 +27,10 @@ class TimelineViewModelTest {
     private val roomId = RoomId("!room:server")
     private val clock = MillisClock { 0L }
 
-    private fun subject() =
-        TimelineViewModel(session, clock, SavedStateHandle(mapOf("roomId" to roomId.value)))
+    private fun subject() = TimelineViewModel(session, clock, SavedStateHandle(mapOf("roomId" to roomId.value)))
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test
@@ -69,9 +69,13 @@ class TimelineViewModelTest {
         assertTrue(fake.sent.isEmpty())
     }
 
-    private fun message(id: String, sender: String, name: String, body: String) =
-        TimelineItem.Message(
-            eventId = EventId(id), sender = UserId(sender), senderName = name,
-            body = body, timestampEpochMs = 0L, isOwn = false, sendState = SendState.SENT,
-        )
+    private fun message(id: String, sender: String, name: String, body: String) = TimelineItem.Message(
+        eventId = EventId(id),
+        sender = UserId(sender),
+        senderName = name,
+        body = body,
+        timestampEpochMs = 0L,
+        isOwn = false,
+        sendState = SendState.SENT,
+    )
 }

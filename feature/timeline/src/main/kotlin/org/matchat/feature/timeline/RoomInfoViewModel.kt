@@ -35,7 +35,9 @@ class RoomInfoViewModel @Inject constructor(
     private val navChannel = Channel<RoomInfoNav>(Channel.BUFFERED)
     val navEvents: Flow<RoomInfoNav> = navChannel.receiveAsFlow()
 
-    init { reload() }
+    init {
+        reload()
+    }
 
     fun reload() {
         viewModelScope.launch {
@@ -77,7 +79,9 @@ class RoomInfoViewModel @Inject constructor(
         }
     }
 
-    private fun emit(nav: RoomInfoNav) { viewModelScope.launch { navChannel.send(nav) } }
+    private fun emit(nav: RoomInfoNav) {
+        viewModelScope.launch { navChannel.send(nav) }
+    }
 
     private fun rows(details: RoomDetails?, members: List<RoomMemberSummary>): List<RoomInfoRow> {
         val rows = mutableListOf<RoomInfoRow>()

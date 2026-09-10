@@ -4,17 +4,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.matrix.RoomTimeline
+import org.matchat.core.model.CallState
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
 import org.matchat.core.model.InviteSummary
+import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
+import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
-import org.matchat.core.model.CallState
-import org.matchat.core.model.MediaKind
-import org.matchat.core.model.RoomDetails
-import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 
@@ -38,8 +38,7 @@ class FakeMatrixSession(
     var profileResult: (UserId) -> Result<Profile> = { Result.success(Profile(it, null)) }
     var startDirectChatResult: (UserId) -> Result<RoomId> = { Result.success(RoomId("!new:local")) }
 
-    override fun timeline(roomId: RoomId): RoomTimeline =
-        timelines.getOrPut(roomId) { FakeTimeline() }
+    override fun timeline(roomId: RoomId): RoomTimeline = timelines.getOrPut(roomId) { FakeTimeline() }
 
     override suspend fun acceptInvite(roomId: RoomId): Result<Unit> {
         invitesFlow.value = invitesFlow.value.filterNot { it.roomId == roomId }
@@ -56,8 +55,7 @@ class FakeMatrixSession(
 
     override suspend fun lookupProfile(address: UserId): Result<Profile> = profileResult(address)
 
-    override suspend fun startDirectChat(address: UserId): Result<RoomId> =
-        startDirectChatResult(address)
+    override suspend fun startDirectChat(address: UserId): Result<RoomId> = startDirectChatResult(address)
 
     var recoverResult: Result<Unit> = Result.success(Unit)
     var lastRecoveryKey: String? = null
@@ -79,9 +77,13 @@ class FakeMatrixSession(
         sentMessages += roomId to body
     }
 
-    override suspend fun markRoomRead(roomId: RoomId) { readRooms += roomId }
+    override suspend fun markRoomRead(roomId: RoomId) {
+        readRooms += roomId
+    }
 
-    override suspend fun setPresence(online: Boolean) { lastPresenceOnline = online }
+    override suspend fun setPresence(online: Boolean) {
+        lastPresenceOnline = online
+    }
 
     var roomDetailsResult: RoomDetails? = null
     var members: List<RoomMemberSummary> = emptyList()
@@ -159,9 +161,15 @@ class FakeTimeline(
     var canPaginate = false
 
     override suspend fun paginateBack(count: Int): Boolean = canPaginate
-    override suspend fun send(body: String) { sent += body }
-    override suspend fun editMessage(eventId: EventId, newBody: String) { edits += eventId to newBody }
-    override suspend fun sendTyping(isTyping: Boolean) { typingNotices += isTyping }
+    override suspend fun send(body: String) {
+        sent += body
+    }
+    override suspend fun editMessage(eventId: EventId, newBody: String) {
+        edits += eventId to newBody
+    }
+    override suspend fun sendTyping(isTyping: Boolean) {
+        typingNotices += isTyping
+    }
 
     override suspend fun sendMedia(path: String, mimeType: String, kind: MediaKind, caption: String?) {
         sentMedia += path
@@ -173,6 +181,10 @@ class FakeTimeline(
 
     override suspend fun markRead(eventId: EventId) = Unit
 
-    fun emit(items: List<TimelineItem>) { itemsFlow.value = items }
-    fun emitTyping(users: List<UserId>) { typingFlow.value = users }
+    fun emit(items: List<TimelineItem>) {
+        itemsFlow.value = items
+    }
+    fun emitTyping(users: List<UserId>) {
+        typingFlow.value = users
+    }
 }

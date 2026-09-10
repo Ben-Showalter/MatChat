@@ -74,15 +74,14 @@ class NewChatFragment : SoftkeyFragment() {
         }
     }
 
-    private fun header(text: String): TextView =
-        TextView(requireContext()).apply {
-            this.text = text.uppercase()
-            textSize = HEADER_SP
-            setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
-            isFocusable = false
-            val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
-            setPadding(0, pad, 0, 2)
-        }
+    private fun header(text: String): TextView = TextView(requireContext()).apply {
+        this.text = text.uppercase()
+        textSize = HEADER_SP
+        setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
+        isFocusable = false
+        val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
+        setPadding(0, pad, 0, 2)
+    }
 
     private fun contactRow(row: ContactRow): View =
         actionRow(row.primary, row.secondary) { viewModel.onAction(NewChatAction.Select(row.address)) }

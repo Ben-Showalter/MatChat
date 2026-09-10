@@ -27,6 +27,7 @@ class RoomListFragment : SoftkeyFragment() {
     override val contentLayoutId: Int = R.layout.fragment_room_list
     override val leftLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_options)
     override val centerLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_open)
+
     // Room list is top level: RIGHT is Exit, not Back (UX-SPEC S8).
     override val rightLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_exit)
 
@@ -64,7 +65,9 @@ class RoomListFragment : SoftkeyFragment() {
         b.inviteBand.isVisible = state.inviteBand != null
         state.inviteBand?.let {
             b.inviteBand.text = resources.getQuantityString(
-                R.plurals.roomlist_invitations, it.count, it.count,
+                R.plurals.roomlist_invitations,
+                it.count,
+                it.count,
             )
         }
 

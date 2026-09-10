@@ -102,29 +102,28 @@ class VerificationFragment : SoftkeyFragment() {
         }
     }
 
-    private fun emojiCell(emoji: SasEmoji): View =
-        LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
-            setPadding(pad, pad, pad, pad)
-            addView(
-                TextView(requireContext()).apply {
-                    text = emoji.symbol
-                    textSize = EMOJI_SP
-                    gravity = Gravity.CENTER
-                },
-            )
-            addView(
-                TextView(requireContext()).apply {
-                    text = emoji.name
-                    textSize = LABEL_SP
-                    gravity = Gravity.CENTER
-                    setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
-                },
-            )
-        }
+    private fun emojiCell(emoji: SasEmoji): View = LinearLayout(requireContext()).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER
+        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
+        setPadding(pad, pad, pad, pad)
+        addView(
+            TextView(requireContext()).apply {
+                text = emoji.symbol
+                textSize = EMOJI_SP
+                gravity = Gravity.CENTER
+            },
+        )
+        addView(
+            TextView(requireContext()).apply {
+                text = emoji.name
+                textSize = LABEL_SP
+                gravity = Gravity.CENTER
+                setTextColor(ContextCompat.getColor(requireContext(), UiR.color.text_secondary))
+            },
+        )
+    }
 
     override fun onDestroyView() {
         binding = null

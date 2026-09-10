@@ -54,8 +54,14 @@ class ZoomPanImageView @JvmOverloads constructor(
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (bitmap == null) return super.onKeyDown(keyCode, event)
         return when (keyCode) {
-            KeyEvent.KEYCODE_STAR -> { zoomIn(); true }
-            KeyEvent.KEYCODE_POUND -> { zoomOut(); true }
+            KeyEvent.KEYCODE_STAR -> {
+                zoomIn()
+                true
+            }
+            KeyEvent.KEYCODE_POUND -> {
+                zoomOut()
+                true
+            }
             KeyEvent.KEYCODE_DPAD_LEFT -> pan(PAN_STEP, 0f)
             KeyEvent.KEYCODE_DPAD_RIGHT -> pan(-PAN_STEP, 0f)
             KeyEvent.KEYCODE_DPAD_UP -> pan(0f, PAN_STEP)
@@ -84,7 +90,10 @@ class ZoomPanImageView @JvmOverloads constructor(
         val current = ZOOM_LEVELS.indexOfLast { it <= zoom + 0.01f }.coerceAtLeast(0)
         val next = (current + direction).coerceIn(0, ZOOM_LEVELS.lastIndex)
         zoom = ZOOM_LEVELS[next]
-        if (zoom <= FIT) { panX = 0f; panY = 0f }
+        if (zoom <= FIT) {
+            panX = 0f
+            panY = 0f
+        }
         clampPan()
         invalidate()
     }
@@ -115,9 +124,11 @@ class ZoomPanImageView @JvmOverloads constructor(
         panY = panY.coerceIn(-maxY, maxY)
     }
 
-    private fun fitScale(bmp: Bitmap): Float =
-        if (width == 0 || height == 0) 1f
-        else minOf(width.toFloat() / bmp.width, height.toFloat() / bmp.height)
+    private fun fitScale(bmp: Bitmap): Float = if (width == 0 || height == 0) {
+        1f
+    } else {
+        minOf(width.toFloat() / bmp.width, height.toFloat() / bmp.height)
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)

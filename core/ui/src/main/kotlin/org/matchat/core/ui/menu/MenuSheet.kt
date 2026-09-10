@@ -24,11 +24,7 @@ data class MenuItem(
  */
 object MenuSheet {
 
-    fun show(
-        context: Context,
-        items: List<MenuItem>,
-        onSelect: (MenuItem) -> Unit,
-    ): Dialog {
+    fun show(context: Context, items: List<MenuItem>, onSelect: (MenuItem) -> Unit): Dialog {
         val list = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(ContextCompat.getColor(context, R.color.surface_bright))
@@ -39,10 +35,12 @@ object MenuSheet {
         // rows are plain views that need no AppCompat theming.
         val dialog = Dialog(context, R.style.Theme_MatChat_Menu)
         items.forEach { item ->
-            list.addView(rowFor(context, item) {
-                onSelect(item)
-                dialog.dismiss()
-            })
+            list.addView(
+                rowFor(context, item) {
+                    onSelect(item)
+                    dialog.dismiss()
+                },
+            )
         }
         dialog.setContentView(list)
         dialog.window?.apply {
@@ -55,21 +53,20 @@ object MenuSheet {
         return dialog
     }
 
-    private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView =
-        TextView(context).apply {
-            text = item.label
-            textSize = MENU_ROW_TEXT_SP
-            setTextColor(ContextCompat.getColor(context, R.color.text_on_focus))
-            minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
-            gravity = Gravity.CENTER_VERTICAL
-            val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)
-            setPadding(pad, pad, pad, pad)
-            isEnabled = item.enabled
-            isFocusable = item.enabled
-            isFocusableInTouchMode = false
-            setBackgroundResource(R.drawable.focus_selector)
-            if (item.enabled) setOnClickListener { onClick() }
-        }
+    private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView = TextView(context).apply {
+        text = item.label
+        textSize = MENU_ROW_TEXT_SP
+        setTextColor(ContextCompat.getColor(context, R.color.text_on_focus))
+        minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
+        gravity = Gravity.CENTER_VERTICAL
+        val pad = context.resources.getDimensionPixelSize(R.dimen.content_pad)
+        setPadding(pad, pad, pad, pad)
+        isEnabled = item.enabled
+        isFocusable = item.enabled
+        isFocusableInTouchMode = false
+        setBackgroundResource(R.drawable.focus_selector)
+        if (item.enabled) setOnClickListener { onClick() }
+    }
 
     private const val MENU_ROW_TEXT_SP = 16f // body floor (PLAN.md G5)
 }
