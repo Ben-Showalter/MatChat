@@ -1,10 +1,10 @@
 package org.matchat.core.matrix.internal
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.matchat.core.matrix.RoomTimeline
 import org.matchat.core.model.EventId
@@ -16,16 +16,16 @@ import org.matrix.rustcomponents.sdk.EventOrTransactionId
 import org.matrix.rustcomponents.sdk.FileInfo
 import org.matrix.rustcomponents.sdk.ImageInfo
 import org.matrix.rustcomponents.sdk.Room
-import org.matrix.rustcomponents.sdk.UploadParameters
-import org.matrix.rustcomponents.sdk.UploadSource
-import org.matrix.rustcomponents.sdk.VideoInfo
 import org.matrix.rustcomponents.sdk.TaskHandle
 import org.matrix.rustcomponents.sdk.Timeline
 import org.matrix.rustcomponents.sdk.TimelineDiff
-import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 import org.matrix.rustcomponents.sdk.TimelineListener
 import org.matrix.rustcomponents.sdk.TypingNotificationsListener
+import org.matrix.rustcomponents.sdk.UploadParameters
+import org.matrix.rustcomponents.sdk.UploadSource
+import org.matrix.rustcomponents.sdk.VideoInfo
 import org.matrix.rustcomponents.sdk.messageEventContentFromMarkdown
+import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
 
 /**
  * A live room timeline backed by the SDK (S9). Maintains an ordered buffer of SDK
@@ -42,6 +42,7 @@ internal class RustRoomTimeline(
 ) : RoomTimeline {
 
     private val buffer = mutableListOf<RustTimelineItem>()
+
     // Sender display names + avatars (Phase 7, extended in the Avatars round):
     // fetched once below, not per event/recompute — @Volatile so the SDK's
     // own listener thread (recompute) sees a fetch that completed on the init
@@ -128,82 +129,86 @@ internal class RustRoomTimeline(
         Unit
     }
 
-    override suspend fun sendMedia(
-        path: String,
-        mimeType: String,
-        kind: MediaKind,
-        caption: String?,
-    ) = withContext(Dispatchers.IO) {
-        val tl = timeline ?: return@withContext
-        val size = runCatching { java.io.File(path).length().toULong() }.getOrNull()
-        // The SDK uploads from an UploadSource.File(path); each type takes its own
-        // *Info record (all fields nullable) and returns a join handle to await.
-        // sendImage/sendVideo take an optional thumbnail UploadSource (null here);
-        // sendAudio/sendFile take none. Voice is stage 3 (sendVoiceMessage).
-        val params = UploadParameters(
-            source = UploadSource.File(path),
-            caption = caption,
-            formattedCaption = null,
-            mentions = null,
-            inReplyTo = null,
-            extraContentJson = null,
-        )
-        runCatching {
-            val handle = when (kind) {
-                MediaKind.IMAGE -> tl.sendImage(
-                    params,
-                    null,
-                    ImageInfo(
-                        height = null, width = null, mimetype = mimeType, size = size,
-                        thumbnailInfo = null, thumbnailSource = null, blurhash = null, isAnimated = null,
-                    ),
-                )
-                MediaKind.VIDEO -> tl.sendVideo(
-                    params,
-                    null,
-                    VideoInfo(
-                        duration = null, height = null, width = null, mimetype = mimeType, size = size,
-                        thumbnailInfo = null, thumbnailSource = null, blurhash = null,
-                    ),
-                )
-                MediaKind.AUDIO, MediaKind.VOICE -> tl.sendAudio(
-                    params,
-                    AudioInfo(duration = null, size = size, mimetype = mimeType),
-                )
-                MediaKind.FILE -> tl.sendFile(
-                    params,
-                    FileInfo(mimetype = mimeType, size = size, thumbnailInfo = null, thumbnailSource = null),
-                )
+    override suspend fun sendMedia(path: String, mimeType: String, kind: MediaKind, caption: String?) =
+        withContext(Dispatchers.IO) {
+            val tl = timeline ?: return@withContext
+            val size = runCatching { java.io.File(path).length().toULong() }.getOrNull()
+            // The SDK uploads from an UploadSource.File(path); each type takes its own
+            // *Info record (all fields nullable) and returns a join handle to await.
+            // sendImage/sendVideo take an optional thumbnail UploadSource (null here);
+            // sendAudio/sendFile take none. Voice is stage 3 (sendVoiceMessage).
+            val params = UploadParameters(
+                source = UploadSource.File(path),
+                caption = caption,
+                formattedCaption = null,
+                mentions = null,
+                inReplyTo = null,
+                extraContentJson = null,
+            )
+            runCatching {
+                val handle = when (kind) {
+                    MediaKind.IMAGE -> tl.sendImage(
+                        params,
+                        null,
+                        ImageInfo(
+                            height = null,
+                            width = null,
+                            mimetype = mimeType,
+                            size = size,
+                            thumbnailInfo = null,
+                            thumbnailSource = null,
+                            blurhash = null,
+                            isAnimated = null,
+                        ),
+                    )
+                    MediaKind.VIDEO -> tl.sendVideo(
+                        params,
+                        null,
+                        VideoInfo(
+                            duration = null,
+                            height = null,
+                            width = null,
+                            mimetype = mimeType,
+                            size = size,
+                            thumbnailInfo = null,
+                            thumbnailSource = null,
+                            blurhash = null,
+                        ),
+                    )
+                    MediaKind.AUDIO, MediaKind.VOICE -> tl.sendAudio(
+                        params,
+                        AudioInfo(duration = null, size = size, mimetype = mimeType),
+                    )
+                    MediaKind.FILE -> tl.sendFile(
+                        params,
+                        FileInfo(mimetype = mimeType, size = size, thumbnailInfo = null, thumbnailSource = null),
+                    )
+                }
+                handle.join()
             }
-            handle.join()
+            Unit
         }
-        Unit
-    }
 
-    override suspend fun sendVoice(
-        path: String,
-        mimeType: String,
-        durationMs: Long,
-        waveform: List<Float>,
-    ) = withContext(Dispatchers.IO) {
-        val tl = timeline ?: return@withContext
-        val size = runCatching { java.io.File(path).length().toULong() }.getOrNull()
-        val params = UploadParameters(
-            source = UploadSource.File(path),
-            caption = null,
-            formattedCaption = null,
-            mentions = null,
-            inReplyTo = null,
-            extraContentJson = null,
-        )
-        val info = AudioInfo(
-            duration = java.time.Duration.ofMillis(durationMs),
-            size = size,
-            mimetype = mimeType,
-        )
-        runCatching { tl.sendVoiceMessage(params, info, waveform).join() }
-        Unit
-    }
+    override suspend fun sendVoice(path: String, mimeType: String, durationMs: Long, waveform: List<Float>) =
+        withContext(Dispatchers.IO) {
+            val tl = timeline ?: return@withContext
+            val size = runCatching { java.io.File(path).length().toULong() }.getOrNull()
+            val params = UploadParameters(
+                source = UploadSource.File(path),
+                caption = null,
+                formattedCaption = null,
+                mentions = null,
+                inReplyTo = null,
+                extraContentJson = null,
+            )
+            val info = AudioInfo(
+                duration = java.time.Duration.ofMillis(durationMs),
+                size = size,
+                mimetype = mimeType,
+            )
+            runCatching { tl.sendVoiceMessage(params, info, waveform).join() }
+            Unit
+        }
 
     override suspend fun markRead(eventId: EventId) = withContext(Dispatchers.IO) {
         // Read receipts are sent on the latest visible event by the SDK. This runs

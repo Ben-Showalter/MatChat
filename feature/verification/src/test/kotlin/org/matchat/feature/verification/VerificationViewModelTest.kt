@@ -22,6 +22,7 @@ class VerificationViewModelTest {
     private val session = FakeMatrixSession()
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     private fun subject() = VerificationViewModel(sas, session)

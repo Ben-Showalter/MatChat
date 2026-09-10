@@ -43,7 +43,9 @@ class MainActivity : AppCompatActivity(), Navigator {
     private lateinit var navController: NavController
 
     @Inject lateinit var auth: MatrixAuth
+
     @Inject lateinit var sessionStore: MatrixSessionStore
+
     @Inject lateinit var session: org.matchat.core.matrix.MatrixSession
 
     // Read via an EntryPoint, not @Inject: Hilt's own field injection runs
@@ -142,7 +144,10 @@ class MainActivity : AppCompatActivity(), Navigator {
         toRoomListRoot() // replaces Welcome up front; the list shows until sync warms
         lifecycleScope.launch {
             if (auth.restoreSession().isSuccess) {
-                pendingRoomId?.let { pendingRoomId = null; toRoom(RoomId(it)) }
+                pendingRoomId?.let {
+                    pendingRoomId = null
+                    toRoom(RoomId(it))
+                }
             } else {
                 toWelcomeRoot()
             }
@@ -211,28 +216,26 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toRoomInfo(roomId: RoomId) =
         navController.navigate(R.id.roomInfoFragment, bundleOf(ARG_ROOM_ID to roomId.value))
 
-    override fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long) =
-        navController.navigate(
-            R.id.messageInfoFragment,
-            bundleOf(
-                ARG_EVENT_ID to eventId.value,
-                ARG_SENDER_ID to senderId.value,
-                ARG_TIMESTAMP to timestampEpochMs,
-            ),
-        )
+    override fun toMessageInfo(eventId: EventId, senderId: UserId, timestampEpochMs: Long) = navController.navigate(
+        R.id.messageInfoFragment,
+        bundleOf(
+            ARG_EVENT_ID to eventId.value,
+            ARG_SENDER_ID to senderId.value,
+            ARG_TIMESTAMP to timestampEpochMs,
+        ),
+    )
 
     override fun toProfile(userId: UserId) =
         navController.navigate(R.id.profileFragment, bundleOf(ARG_USER_ID to userId.value))
 
-    override fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean) =
-        navController.navigate(
-            R.id.callFragment,
-            bundleOf(
-                ARG_ROOM_ID to roomId.value,
-                "peerName" to peerName.orEmpty(),
-                "incoming" to incoming,
-            ),
-        )
+    override fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean) = navController.navigate(
+        R.id.callFragment,
+        bundleOf(
+            ARG_ROOM_ID to roomId.value,
+            "peerName" to peerName.orEmpty(),
+            "incoming" to incoming,
+        ),
+    )
 
     override fun toInvites() = navController.navigate(R.id.invitesFragment)
     override fun toInvite(roomId: RoomId) =
@@ -247,7 +250,9 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
     override fun toHelp() = navController.navigate(R.id.helpFragment)
-    override fun back() { navController.navigateUp() }
+    override fun back() {
+        navController.navigateUp()
+    }
 
     companion object {
         const val ARG_ROOM_ID = "roomId"

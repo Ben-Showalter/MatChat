@@ -19,7 +19,7 @@ spotless {
         target("**/*.kt")
         targetExclude("**/build/**/*.kt")
         ktlint().editorConfigOverride(
-            mapOf("android" to "true"),
+            mapOf("android" to "true")
         )
     }
     kotlinGradle {

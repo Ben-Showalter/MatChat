@@ -17,8 +17,8 @@ import org.matchat.core.model.EventId
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
-import org.matchat.core.model.SendState
 import org.matchat.core.model.SeenBy
+import org.matchat.core.model.SendState
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 import org.matchat.core.testing.FakeMatrixSession
@@ -31,10 +31,10 @@ class TimelineViewModelTest {
     private val clock = MillisClock { 0L }
     private val policy = FakePolicyProvider()
 
-    private fun subject() =
-        TimelineViewModel(session, clock, policy, SavedStateHandle(mapOf("roomId" to roomId.value)))
+    private fun subject() = TimelineViewModel(session, clock, policy, SavedStateHandle(mapOf("roomId" to roomId.value)))
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test
@@ -79,7 +79,10 @@ class TimelineViewModelTest {
         fake.emit(
             listOf(
                 message(
-                    "a", "@wayne:s", "Wayne", "hi",
+                    "a",
+                    "@wayne:s",
+                    "Wayne",
+                    "hi",
                     senderAvatarUrl = "mxc://s/wayne-avatar",
                     seenBy = listOf(SeenBy(UserId("@merv:s"), "mxc://s/merv-avatar")),
                 ),
@@ -99,7 +102,10 @@ class TimelineViewModelTest {
         fake.emit(
             listOf(
                 message(
-                    "a", "@wayne:s", "Wayne", "hi",
+                    "a",
+                    "@wayne:s",
+                    "Wayne",
+                    "hi",
                     reactions = listOf(ReactionSummary("👍", 2, reactedByMe = true)),
                 ),
             ),

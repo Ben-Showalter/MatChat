@@ -53,9 +53,15 @@ internal class RustSessionVerification @Inject constructor(
             if (emojis.isNotEmpty()) _state.value = SasState.Comparing(emojis)
         }
 
-        override fun didFinish() { _state.value = SasState.Success }
-        override fun didFail() { _state.value = SasState.Cancelled }
-        override fun didCancel() { _state.value = SasState.Cancelled }
+        override fun didFinish() {
+            _state.value = SasState.Success
+        }
+        override fun didFail() {
+            _state.value = SasState.Cancelled
+        }
+        override fun didCancel() {
+            _state.value = SasState.Cancelled
+        }
     }
 
     override suspend fun start() {

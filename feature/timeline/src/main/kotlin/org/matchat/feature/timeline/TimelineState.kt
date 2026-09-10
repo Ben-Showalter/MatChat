@@ -60,7 +60,8 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val mimeType: String?,
-        val play: Boolean, // true = audio/voice (play in-app), false = open externally
+        // true = audio/voice (play in-app), false = open externally
+        val play: Boolean,
     ) : TimelineRow {
         override val stableId: String get() = "att:${eventId.value}"
     }

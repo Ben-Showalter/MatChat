@@ -20,6 +20,7 @@ class NotificationsViewModelTest {
     private fun subject() = NotificationsViewModel(prefs)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
+
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
     @Test
