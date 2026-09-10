@@ -70,36 +70,3 @@ softkey and Back via the other; only which *physical* key produces which
   existing convention — not a reason to remove this preference, which serves
   a different case (unconfigured/unknown hardware, or a device that's
   reversed but not per-device-detectable).
-
-## Addendum: an optional AccessibilityService for a predictive-text conflict
-
-Diagnosed with the user via `adb logcat` on real hardware: on a device
-running a system predictive-text ("T9word") keyboard, that IME consumes
-`KEYCODE_SOFT_RIGHT` before `MainActivity.dispatchKeyEvent` ever sees it —
-but only while composing (an `EditText`/IME is active). Outside of
-composing, the normal path already worked. (A separate app on that device,
-TurboText, also runs its own accessibility-based key *logger* — confirmed
-via its own log output to be observing, not consuming, the key; a red
-herring in the investigation, not the actual cause.)
-
-This is a real platform conflict between two apps' hardware-key handling,
-not something fixable by changing what `KeyMap`/`dispatchKeyEvent` do with
-an event they never receive. The fix: `MatChatKeyAccessibilityService`
-(`app/accessibility`), an `AccessibilityService` requesting
-`FLAG_REQUEST_FILTER_KEY_EVENTS` — a flag whose documented purpose is
-letting a service see hardware keys earlier in the platform's dispatch
-pipeline than IME processing does. It claims only the four softkey-ish
-codes (`SOFT_LEFT`/`SOFT_RIGHT`/`MENU`/`BACK`) and hands them to
-`MainActivity.handleExternalSoftkey`, which runs them through the exact
-same `KeyMap` + `LogicalKeyReceiver` path `dispatchKeyEvent` already uses —
-no parallel/divergent key-handling logic. Every other code (T9's own
-digit/D-pad/CENTER input) is explicitly never touched, so text entry is
-unaffected whether or not this service is enabled.
-
-It requests no window-content access (`canRetrieveWindowContent="false"` —
-this service never reads the screen) and is entirely inert unless the user
-explicitly enables it in system Accessibility settings; `Settings >
-Advanced` (S25) got a second row linking straight there, since it's a
-system-level toggle this app can neither read nor set itself. Nothing about
-normal `dispatchKeyEvent` handling changes for a device or user that
-doesn't enable it.

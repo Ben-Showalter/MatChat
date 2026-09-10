@@ -320,20 +320,14 @@ Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus
 Light. Softkeys: (blank) | Select | Back.
 
 ### S25 — Advanced
-Reached from Settings → Advanced (docs/adr/0007). Two focusable rows:
-"Swap Left/Right keys", with an 11 sp subtitle explaining why it exists
-("For a phone whose hardware Left and Right keys are reversed.") — CENTER
-toggles it immediately, same as S24's rows, no separate confirm, a trailing
-checkmark when on, selection never conveyed by color alone. Takes effect on
-the very next key press — no recreate, unlike S24 (there's no chrome to
-rebuild, just future key events reading the new preference). Then "Softkey
-helper (system setting)", with its own 11 sp subtitle, which opens the
-system's own Accessibility settings screen (a device-level toggle this app
-can neither read nor set for itself, so it's a plain link/action row, not a
-checkmarked one — see `MatChatKeyAccessibilityService`'s doc comment and
-the ADR's addendum for what it's for).
-Focus order: Swap Left/Right keys → Softkey helper. Softkeys: (blank) |
-Select | Back.
+Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
+Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
+phone whose hardware Left and Right keys are reversed."). CENTER toggles it
+immediately, same as S24's rows — no separate confirm. The row carries a
+trailing checkmark when on; selection is never conveyed by color alone.
+Takes effect on the very next key press — no recreate, unlike S24 (there's
+no chrome to rebuild, just future key events reading the new preference).
+Focus: the one row. Softkeys: (blank) | Select | Back.
 
 ## 4. Content voice
 
