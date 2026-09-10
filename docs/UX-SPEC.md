@@ -44,6 +44,13 @@ Every screen has three fixed bands:
 | `#` (hold) | Next unread room. |
 | `*` (hold) | Toggle large-text mode. |
 
+"Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
+different meaning (AGENTS.md §4) — Options and Back are always exactly one
+softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
+is a separate, global, opt-in exception for hardware whose physical softkeys
+are reversed: it flips which *physical* key produces which *logical* one,
+for every screen at once, not a per-screen reassignment.
+
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`): body 16 sp ·
 interactive labels 14 sp · secondary metadata — timestamps, day separators,
 sender names, field captions — 11 sp; softkey labels 13 sp, their own
@@ -190,9 +197,9 @@ There is **no** "add member" here in v1 — group membership is administered on
 the server. (Direct chats are different: those the user starts themselves, S20.)
 
 ### S13 — Settings
-Rows: `Notifications` · `Text size` · `Theme` (opens S24) · `Encryption`
-(verification status) · `About this phone's session` · `Policy` · `Help` ·
-`Sign out`.
+Rows: `Notifications` · `Text size` · `Theme` (opens S24) · `Advanced` (opens
+S25) · `Encryption` (verification status) · `About this phone's session` ·
+`Policy` · `Help` · `Sign out`.
 The `Policy` row reads "Managed by your organization" or "Not managed" and opens
 a read-only screen listing the homeserver, the allowed servers (or "All servers
 allowed"), and whether direct chat is on. A user who cannot message someone must
@@ -311,6 +318,16 @@ those stay fixed so they keep meaning what they mean regardless of the
 user's taste.
 Focus order: Light → Dark → Green → Amber → Blue → Plum. Initial focus:
 Light. Softkeys: (blank) | Select | Back.
+
+### S25 — Advanced
+Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
+Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
+phone whose hardware Left and Right keys are reversed."). CENTER toggles it
+immediately, same as S24's rows — no separate confirm. The row carries a
+trailing checkmark when on; selection is never conveyed by color alone.
+Takes effect on the very next key press — no recreate, unlike S24 (there's
+no chrome to rebuild, just future key events reading the new preference).
+Focus: the one row. Softkeys: (blank) | Select | Back.
 
 ## 4. Content voice
 

@@ -158,7 +158,8 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
-        val logical = KeyMap.map(event) ?: return super.dispatchKeyEvent(event)
+        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value)
+            ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
         // the softkeys, CENTER and digits are offered to the screen first.
         if (logical == LogicalKey.UP || logical == LogicalKey.DOWN ||
@@ -242,6 +243,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toVerification() = navController.navigate(R.id.verificationFragment)
     override fun toSettings() = navController.navigate(R.id.settingsFragment)
     override fun toTheme() = navController.navigate(R.id.themeFragment)
+    override fun toAdvanced() = navController.navigate(R.id.advancedFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
     override fun toHelp() = navController.navigate(R.id.helpFragment)
     override fun back() { navController.navigateUp() }

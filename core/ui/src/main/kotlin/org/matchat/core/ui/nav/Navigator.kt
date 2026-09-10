@@ -33,6 +33,8 @@ interface Navigator {
     fun toVerification()
     fun toSettings()
     fun toTheme()
+    /** Settings > Advanced (Phase 6, UI improvement plan): softkey swap. */
+    fun toAdvanced()
     fun toPolicy()
     fun toHelp()
     fun back()

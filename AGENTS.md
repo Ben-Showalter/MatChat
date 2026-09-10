@@ -148,6 +148,15 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   may change the wording of the centre label (`Open`, `Send`, `Select`), leave
   LEFT blank when it has no options, and choose what Options contains. RIGHT is
   Back on every screen without exception (top level: `Exit`).
+  - **Named exception: Settings > Advanced > "Swap Left/Right keys"**
+    (docs/adr/0007), for hardware whose physical softkeys are reversed. It
+    flips which *physical* key produces `SOFT_LEFT`/`SOFT_RIGHT` (in
+    `KeyMap.map`, the one file that reads a keycode, per the rule below) —
+    globally, for every screen at once. It is not a per-screen reassignment:
+    `SoftkeyFragment.onLogicalKey`'s `SOFT_LEFT -> onOptions()` mapping never
+    changes, and Options/Back stay exactly one softkey each. Do not add a
+    second, independent key-remapping preference without the same kind of
+    explicit direction the ADR records.
 - Raw key codes are handled in **one** place: `:core:ui`'s key map. Softkey
   codes vary by device — `KEYCODE_SOFT_LEFT`/`SOFT_RIGHT` are often not
   dispatched at all, and the keys arrive as `KEYCODE_MENU`/`KEYCODE_BACK` or an

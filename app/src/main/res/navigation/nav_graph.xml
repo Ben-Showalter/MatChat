@@ -110,6 +110,11 @@
         android:label="Theme" />
 
     <fragment
+        android:id="@+id/advancedFragment"
+        android:name="org.matchat.feature.settings.AdvancedFragment"
+        android:label="Advanced" />
+
+    <fragment
         android:id="@+id/policyFragment"
         android:name="org.matchat.feature.settings.PolicyFragment"
         android:label="Policy" />

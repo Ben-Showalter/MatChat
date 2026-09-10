@@ -39,6 +39,15 @@
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
+            android:id="@+id/settings_advanced"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_advanced"
+            android:textSize="@dimen/text_label"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
             android:id="@+id/settings_encryption"
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"

@@ -26,6 +26,9 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val accentColorState = MutableStateFlow(readEnum(KEY_ACCENT_COLOR, AccentColor.GREEN))
     override val accentColor: StateFlow<AccentColor> = accentColorState
 
+    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
+    override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         prefs.edit { putString(KEY_THEME_MODE, mode.name) }
         themeModeState.value = mode
@@ -34,6 +37,11 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     override suspend fun setAccentColor(color: AccentColor) {
         prefs.edit { putString(KEY_ACCENT_COLOR, color.name) }
         accentColorState.value = color
+    }
+
+    override suspend fun setSoftkeysSwapped(swapped: Boolean) {
+        prefs.edit { putBoolean(KEY_SOFTKEYS_SWAPPED, swapped) }
+        softkeysSwappedState.value = swapped
     }
 
     private inline fun <reified T : Enum<T>> readEnum(key: String, default: T): T =
@@ -45,5 +53,6 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         const val PREFS_NAME = "user_preferences"
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_ACCENT_COLOR = "accent_color"
+        const val KEY_SOFTKEYS_SWAPPED = "softkeys_swapped"
     }
 }

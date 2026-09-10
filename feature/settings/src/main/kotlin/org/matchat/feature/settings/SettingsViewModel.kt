@@ -33,6 +33,7 @@ class SettingsViewModel @Inject constructor(
         when (action) {
             SettingsAction.OpenEncryption -> emit(SettingsNav.Encryption)
             SettingsAction.OpenTheme -> emit(SettingsNav.Theme)
+            SettingsAction.OpenAdvanced -> emit(SettingsNav.Advanced)
             SettingsAction.OpenPolicy -> emit(SettingsNav.Policy)
             SettingsAction.OpenHelp -> emit(SettingsNav.Help)
             SettingsAction.ConfirmSignOut -> signOut()

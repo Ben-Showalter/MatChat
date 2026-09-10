@@ -15,8 +15,25 @@ import android.view.KeyEvent
  */
 object KeyMap {
 
-    /** Returns the logical key for a key-DOWN event, or null to fall through. */
-    fun map(event: KeyEvent): LogicalKey? = when (event.keyCode) {
+    /** Returns the logical key for a key-DOWN event, or null to fall through.
+     *  [swapped] (Settings > Advanced > "Swap Left/Right keys", Phase 6 of the
+     *  UI improvement plan; docs/adr/0007) flips SOFT_LEFT/SOFT_RIGHT at the
+     *  end, after the normal per-device keycode table below — a device whose
+     *  hardware softkeys are physically reversed still maps LEFT-position to
+     *  Options semantically everywhere past this function, just via the
+     *  opposite raw keycode. */
+    fun map(event: KeyEvent, swapped: Boolean = false): LogicalKey? {
+        val logical = mapRaw(event) ?: return null
+        return if (swapped) swapSoftkeys(logical) else logical
+    }
+
+    private fun swapSoftkeys(key: LogicalKey): LogicalKey = when (key) {
+        LogicalKey.SOFT_LEFT -> LogicalKey.SOFT_RIGHT
+        LogicalKey.SOFT_RIGHT -> LogicalKey.SOFT_LEFT
+        else -> key
+    }
+
+    private fun mapRaw(event: KeyEvent): LogicalKey? = when (event.keyCode) {
         KeyEvent.KEYCODE_DPAD_UP -> LogicalKey.UP
         KeyEvent.KEYCODE_DPAD_DOWN -> LogicalKey.DOWN
         KeyEvent.KEYCODE_DPAD_LEFT -> LogicalKey.LEFT

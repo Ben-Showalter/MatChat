@@ -17,10 +17,11 @@ class SharedPreferencesUserPreferencesTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `defaults are light and green`() {
+    fun `defaults are light, green, and not swapped`() {
         val prefs = SharedPreferencesUserPreferences(context)
         assertEquals(ThemeMode.LIGHT, prefs.themeMode.value)
         assertEquals(AccentColor.GREEN, prefs.accentColor.value)
+        assertEquals(false, prefs.softkeysSwapped.value)
     }
 
     @Test
@@ -41,5 +42,15 @@ class SharedPreferencesUserPreferencesTest {
 
         val reloaded = SharedPreferencesUserPreferences(context)
         assertEquals(AccentColor.BLUE, reloaded.accentColor.value)
+    }
+
+    @Test
+    fun `softkeys-swapped read-after-write, including a fresh instance`() = runTest {
+        val prefs = SharedPreferencesUserPreferences(context)
+        prefs.setSoftkeysSwapped(true)
+        assertEquals(true, prefs.softkeysSwapped.value)
+
+        val reloaded = SharedPreferencesUserPreferences(context)
+        assertEquals(true, reloaded.softkeysSwapped.value)
     }
 }

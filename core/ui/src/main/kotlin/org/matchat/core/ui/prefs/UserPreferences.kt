@@ -24,6 +24,15 @@ interface UserPreferences {
     val themeMode: StateFlow<ThemeMode>
     val accentColor: StateFlow<AccentColor>
 
+    /** Settings > Advanced > "Swap Left/Right keys" (Phase 6, UI improvement
+     *  plan) — for a device whose hardware softkeys are physically reversed.
+     *  A narrow, explicit exception to "LEFT=Options/RIGHT=Back, always"
+     *  (AGENTS.md §4, docs/adr/0007). Read directly (StateFlow.value, not
+     *  collected) by KeyMap's one caller (MainActivity.dispatchKeyEvent) on
+     *  every key press — swapping takes effect immediately, no recreate. */
+    val softkeysSwapped: StateFlow<Boolean>
+
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setAccentColor(color: AccentColor)
+    suspend fun setSoftkeysSwapped(swapped: Boolean)
 }

@@ -6,10 +6,31 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 import org.matchat.core.model.SyncState
 import org.matchat.core.ui.R
 import org.matchat.core.ui.databinding.ViewChromeBinding
 import org.matchat.core.ui.key.LogicalKey
+import org.matchat.core.ui.prefs.UserPreferences
+import javax.inject.Inject
+
+/** Swaps which screen position (left/right) shows which label when the
+ *  physical keys are swapped (Settings > Advanced, Phase 6 of the UI
+ *  improvement plan) — the RIGHT label becomes reachable via the LEFT
+ *  hardware key (and vice versa), so the on-screen text must swap position
+ *  too, or it would visually lie about which physical button does what.
+ *  A top-level pure function (not a private Fragment method), so
+ *  SoftkeyMirrorTest exercises it without a Fragment harness. */
+internal fun mirroredLabels(
+    left: CharSequence,
+    center: CharSequence,
+    right: CharSequence,
+    swapped: Boolean,
+): Triple<CharSequence, CharSequence, CharSequence> =
+    if (swapped) Triple(right, center, left) else Triple(left, center, right)
 
 /**
  * Every screen extends this (AGENTS.md §4). It owns the three chrome bands and
@@ -23,8 +44,16 @@ import org.matchat.core.ui.key.LogicalKey
  * raw keycode and never reassigns a key to a different meaning. A subclass MUST
  * declare all three labels — [SoftkeyLabelsDeclaredTest] fails a screen that
  * leaves one unset. A label may be empty; the declaration may not be omitted.
+ *
+ * LEFT/RIGHT stay Options/Back *semantically* even with the swap preference on
+ * (KeyMap already normalized which raw keycode produces which [LogicalKey] by
+ * the time [onLogicalKey] sees it — this class's own key contract above never
+ * changes); only [renderSoftkeys] mirrors which screen position shows which
+ * label, to match.
  */
 abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
+
+    @Inject lateinit var userPreferences: UserPreferences
 
     private var chrome: ViewChromeBinding? = null
 
@@ -45,11 +74,12 @@ abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
         val binding = ViewChromeBinding.inflate(inflater, container, false)
         chrome = binding
         inflater.inflate(contentLayoutId, binding.chromeContent, true)
-        binding.chromeSoftkeys.render(leftLabel, centerLabel, rightLabel)
+        renderSoftkeys()
         // Tapping a softkey label behaves exactly like its hardware key (useful on
         // an emulator / touch device; a no-op on a real feature phone).
         binding.chromeSoftkeys.onKey = { key -> onLogicalKey(key) }
         onContentViewCreated(binding.chromeContent.getChildAt(0))
+        observeSoftkeySwap()
         return binding.root
     }
 
@@ -63,7 +93,26 @@ abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
 
     /** Re-render the softkey labels after a state change (e.g. compose → Send). */
     protected fun refreshSoftkeys() {
-        chrome?.chromeSoftkeys?.render(leftLabel, centerLabel, rightLabel)
+        renderSoftkeys()
+    }
+
+    private fun renderSoftkeys() {
+        val swapped = userPreferences.softkeysSwapped.value
+        val (left, center, right) = mirroredLabels(leftLabel, centerLabel, rightLabel, swapped)
+        chrome?.chromeSoftkeys?.render(left, center, right, swapped)
+    }
+
+    /** Re-renders if the swap preference changes while this screen is visible
+     *  (e.g. the user backs out of Settings > Advanced into a room list that
+     *  was already on the back stack). The very first render above already
+     *  reads the current value directly (StateFlow.value), so there's no
+     *  flash of the wrong labels before this collector's first emission. */
+    private fun observeSoftkeySwap() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                userPreferences.softkeysSwapped.collect { renderSoftkeys() }
+            }
+        }
     }
 
     protected fun setTitle(title: CharSequence) {
