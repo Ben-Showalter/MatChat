@@ -220,12 +220,13 @@
     </style>
 
     <!-- Manifest default / fallback — see the file header. Baked with the
-         Normal (large) size set, matching the default preference. -->
+         Normal (large) size set and the Rust accent, matching the default
+         preferences (SharedPreferencesUserPreferences). -->
     <style name="Theme.MatChat" parent="Theme.MatChat.Base.Light">
-        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorFocusAccent">@color/accent_rust</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
-        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_rust_tint</item>
+        <item name="colorBubbleOwn">@color/accent_rust_tint</item>
         <item name="textSizeBody">@dimen/text_body_large</item>
         <item name="textSizeLabel">@dimen/text_label_large</item>
         <item name="textSizeMeta">@dimen/text_meta_large</item>
