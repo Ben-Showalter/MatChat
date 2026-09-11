@@ -51,11 +51,12 @@
 
     <!-- Advanced (reached from S13 Settings > Advanced; Phase 6, UI
          improvement plan; docs/adr/0007). A narrow, explicit exception to
-         "LEFT=Options/RIGHT=Back, always" — for a device whose hardware
-         softkeys are physically reversed. -->
+         "LEFT=Options/RIGHT=Back, always" — on by default (Options on the
+         right, Phase 4 of the UI improvement plan); also useful for a
+         device whose hardware softkeys are physically reversed. -->
     <string name="advanced_title">Advanced</string>
     <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
-    <string name="advanced_swap_softkeys_sub">For a phone whose hardware Left and Right keys are reversed.</string>
+    <string name="advanced_swap_softkeys_sub">On: Options on the right, Back on the left. Turn off for Options on the left.</string>
 
     <!-- S26 Notifications (reached from S13 Settings > Notifications). -->
     <string name="notifications_title">Notifications</string>
@@ -82,9 +83,11 @@
     <!-- S14 Help. -->
     <string name="help_title">Help</string>
     <string name="help_softkeys">Left key opens Options. Right key goes Back.</string>
+    <string name="help_softkeys_swapped">Right key opens Options. Left key goes Back.</string>
     <string name="help_dpad">Up and Down move between items.</string>
     <string name="help_center">Center key opens or sends the item in focus.</string>
     <string name="help_back">Right key or Back returns to the previous screen.</string>
+    <string name="help_back_swapped">Left key or Back returns to the previous screen.</string>
     <string name="help_unread">Hold # to jump to the next unread group.</string>
     <string name="help_text_size">Hold * to change text size.</string>
 </resources>

@@ -56,9 +56,11 @@ Every screen has three fixed bands:
 "Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
 different meaning (AGENTS.md §4) — Options and Back are always exactly one
 softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
-is a separate, global, opt-in exception for hardware whose physical softkeys
-are reversed: it flips which *physical* key produces which *logical* one,
-for every screen at once, not a per-screen reassignment.
+is a separate, global exception, **on by default** (Options on the physical
+right, Back on the left) with the toggle still there for anyone who prefers
+the original left-Options layout or has hardware with reversed physical
+softkeys: it flips which *physical* key produces which *logical* one, for
+every screen at once, not a per-screen reassignment.
 
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`), at the Small text
 size — the default (Normal) is larger, §S16: body 16 sp · interactive labels
@@ -391,13 +393,14 @@ Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
 
 ### S25 — Advanced
 Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
-Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
-phone whose hardware Left and Right keys are reversed."). CENTER toggles it
-immediately, same as S24's rows — no separate confirm. The row carries a
-trailing checkmark when on; selection is never conveyed by color alone.
-Takes effect on the very next key press — no recreate, unlike S24 (there's
-no chrome to rebuild, just future key events reading the new preference).
-Focus: the one row. Softkeys: (blank) | Select | Back.
+Left/Right keys", **on by default**, with an 11 sp subtitle explaining what
+it does ("On: Options on the right, Back on the left. Turn off for Options
+on the left."). CENTER toggles it immediately, same as S24's rows — no
+separate confirm. The row carries a trailing checkmark when on; selection is
+never conveyed by color alone. Takes effect on the very next key press — no
+recreate, unlike S24 (there's no chrome to rebuild, just future key events
+reading the new preference). Focus: the one row. Softkeys: (blank) | Select
+| Back.
 
 ### S26 — Notifications
 Reached from Settings → Notifications. Two focusable rows, in fixed order:
