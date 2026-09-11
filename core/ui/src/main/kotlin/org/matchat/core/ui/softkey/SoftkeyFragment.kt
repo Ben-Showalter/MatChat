@@ -1,21 +1,38 @@
 package org.matchat.core.ui.softkey
 
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.AttrRes
 import androidx.annotation.LayoutRes
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SyncState
+import org.matchat.core.model.SyncStateSource
 import org.matchat.core.ui.R
 import org.matchat.core.ui.databinding.ViewChromeBinding
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.prefs.UserPreferences
+import org.matchat.core.ui.theme.themeColor
 import javax.inject.Inject
+
+/** SYNCING (connected) -> green; OFFLINE/ERROR (not connected) -> red; IDLE
+ *  (no active session — before login or after logout) -> null, meaning
+ *  "hide the dot" rather than pick a color for a state with nothing to show
+ *  (Online indicator round). A top-level pure function, same reasoning as
+ *  [mirroredLabels] below — testable without a Fragment/Robolectric. */
+@AttrRes
+internal fun connectionDotColorAttr(state: SyncState): Int? = when (state) {
+    SyncState.IDLE -> null
+    SyncState.SYNCING -> R.attr.colorEncrypted
+    SyncState.OFFLINE, SyncState.ERROR -> R.attr.colorError
+}
 
 /** Swaps which screen position (left/right) shows which label when the
  *  physical keys are swapped (Settings > Advanced, Phase 6 of the UI
@@ -55,6 +72,13 @@ abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
 
     @Inject lateinit var userPreferences: UserPreferences
 
+    /** Online indicator round: injected here (not read manually per-screen)
+     *  so every screen shows correct, live connection state without each
+     *  one wiring it — previously only RoomListFragment passed real state,
+     *  TimelineFragment hardcoded IDLE, and ~15 other screens never called
+     *  the old setSyncGlyph at all. */
+    @Inject lateinit var syncStateSource: SyncStateSource
+
     private var chrome: ViewChromeBinding? = null
 
     /** The feature layout inflated into the content band. */
@@ -80,6 +104,7 @@ abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
         binding.chromeSoftkeys.onKey = { key -> onLogicalKey(key) }
         onContentViewCreated(binding.chromeContent.getChildAt(0))
         observeSoftkeySwap()
+        observeSyncState()
         return binding.root
     }
 
@@ -119,13 +144,36 @@ abstract class SoftkeyFragment : Fragment(), LogicalKeyReceiver {
         chrome?.chromeTitle?.text = title
     }
 
-    /** Title-bar sync glyph: ⟳ syncing, ! offline, nothing otherwise (UX-SPEC §1). */
-    protected fun setSyncGlyph(state: SyncState) {
+    /** Live on every screen (Online indicator round) — no per-screen call
+     *  needed, unlike the old setSyncGlyph this replaces. The very first
+     *  emission lands before the first frame draws (StateFlow.value read
+     *  immediately on collect), so there's no flash of stale state. */
+    private fun observeSyncState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                syncStateSource.syncState.collect(::renderSyncState)
+            }
+        }
+    }
+
+    /** Title-bar sync glyph (⟳ syncing, ! offline, nothing otherwise — UX-SPEC
+     *  §1) plus the small connection dot beside it (Online indicator round).
+     *  The glyph stays the primary cue — color is never the only signal
+     *  (AGENTS.md) — the dot is a secondary at-a-glance addition. */
+    private fun renderSyncState(state: SyncState) {
         chrome?.chromeSync?.text = when (state) {
             SyncState.SYNCING -> getString(R.string.glyph_syncing)
             SyncState.OFFLINE, SyncState.ERROR -> getString(R.string.glyph_offline)
             SyncState.IDLE -> ""
         }
+        val dot = chrome?.chromeConnectionDot ?: return
+        val attr = connectionDotColorAttr(state)
+        dot.isVisible = attr != null
+        if (attr == null) return
+        val color = dot.context.themeColor(attr)
+        val drawable = dot.background as? GradientDrawable ?: GradientDrawable().also { dot.background = it }
+        drawable.shape = GradientDrawable.OVAL
+        drawable.setColor(color)
     }
 
     // --- Key contract ------------------------------------------------------
