@@ -59,6 +59,43 @@ softkey and Back via the other; only which *physical* key produces which
   Activity recreate needed (unlike the theme preferences, which do recreate
   — this one has no visual chrome to rebuild, just future key events).
 
+## Addendum — an AccessibilityService workaround for one class of hardware
+
+Diagnosed together with the user via adb logcat on real hardware: on some
+devices, the system's own predictive-text ("T9word") keyboard consumes
+`KEYCODE_SOFT_RIGHT` before `MainActivity.dispatchKeyEvent` ever sees it, but
+ONLY while an EditText/IME is active (composing) — outside of composing,
+normal dispatch already works fine. This is a real conflict between two
+apps' hardware-key handling, not something fixable by changing what
+`KeyMap`/`dispatchKeyEvent` do with an event they never receive in the first
+place.
+
+Fix: `MatChatKeyAccessibilityService` (`app/accessibility`), an
+`AccessibilityService` requesting `FLAG_REQUEST_FILTER_KEY_EVENTS` — the
+documented purpose of that flag is letting a service see hardware keys
+earlier in the platform's dispatch pipeline than IME processing does, giving
+it a chance to claim the key before the IME can swallow it.
+
+Scope is deliberately as narrow as possible, per explicit user direction:
+the service claims **only** the physical right softkey
+(`KEYCODE_SOFT_RIGHT`) — not the left softkey, not `MENU`, not the dedicated
+`BACK` key. Every other key, including all of a T9 IME's own digit/D-pad/
+CENTER input, returns `false` immediately and is completely untouched,
+whether or not this service is enabled. A claimed key is handed to
+`MainActivity.handleExternalSoftkey` → `handleAccessibilityKeyEvent`, which
+runs it through the exact same `KeyMap` + `LogicalKeyReceiver` path
+`dispatchKeyEvent` already uses — no parallel/divergent key-handling logic.
+
+Entirely inert unless the user explicitly enables it in system Accessibility
+settings (Settings > Advanced > "Softkey helper", a plain link row to the
+system screen — the app can't read or set this itself). Landed once before,
+reverted for having shipped with no unit-testable seam at all; this version
+extracts the one genuinely pure piece (`isInterceptedSoftkey`, the keycode
+filter) into a tested top-level function, while the rest — a real
+Accessibility-permission grant and a real (or simulated) T9 IME actually
+swallowing the key — can only be verified with manual on-device QA, which is
+called out explicitly rather than claimed as covered by the test suite.
+
 ## Consequences
 
 - `AGENTS.md` §4 carries a named-exception note pointing here.
@@ -70,3 +107,7 @@ softkey and Back via the other; only which *physical* key produces which
   existing convention — not a reason to remove this preference, which serves
   a different case (unconfigured/unknown hardware, or a device that's
   reversed but not per-device-detectable).
+- The AccessibilityService above is a separate, narrower mitigation for a
+  different problem (an IME swallowing the key before dispatch, not a
+  reversed physical layout) — the two are independent and can be enabled in
+  any combination.

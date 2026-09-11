@@ -56,6 +56,10 @@
     <string name="advanced_title">Advanced</string>
     <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
     <string name="advanced_swap_softkeys_sub">For a phone whose hardware Left and Right keys are reversed.</string>
+    <string name="advanced_accessibility_row">Softkey helper (system setting)</string>
+    <string name="advanced_accessibility_row_sub">On some phones the predictive-text keyboard captures
+        the right softkey while typing a message. Opens system Accessibility settings to turn on the
+        MatChat softkey helper, if you need it.</string>
 
     <!-- S26 Notifications (reached from S13 Settings > Notifications). -->
     <string name="notifications_title">Notifications</string>

@@ -34,6 +34,7 @@ class AdvancedFragment : SoftkeyFragment() {
         b.advancedSwapSoftkeys.setOnClickListener {
             viewModel.onAction(AdvancedAction.ToggleSoftkeysSwapped)
         }
+        b.advancedAccessibilityRow.setOnClickListener { openAccessibilitySettings() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -48,6 +49,15 @@ class AdvancedFragment : SoftkeyFragment() {
         val label = getString(R.string.advanced_swap_softkeys)
         b.advancedSwapSoftkeys.text =
             if (state.softkeysSwapped) getString(R.string.theme_row_selected_format, label) else label
+    }
+
+    /** The toggle above is our own preference; whether
+     *  MatChatKeyAccessibilityService is enabled is a system setting, not
+     *  something this app can read or set directly — only the OS's own
+     *  Accessibility screen can grant it. */
+    private fun openAccessibilitySettings() {
+        val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        runCatching { startActivity(intent) }
     }
 
     override fun onDestroyView() {
