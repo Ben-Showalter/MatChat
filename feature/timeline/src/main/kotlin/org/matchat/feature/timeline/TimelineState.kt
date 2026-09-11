@@ -2,6 +2,7 @@ package org.matchat.feature.timeline
 
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.EventId
+import org.matchat.core.model.MediaKind
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.SendState
@@ -98,6 +99,20 @@ sealed interface TimelineRow {
     }
 }
 
+/** A picked/captured attachment staged for sending but not yet uploaded —
+ *  the user can type a caption into `compose_input` before the actual send
+ *  (Attachment staging round). Mirrors exactly the arguments
+ *  [TimelineViewModel.sendMedia] already takes; nothing new is invented on
+ *  the send path, only when it's called. */
+data class PendingAttachment(
+    val path: String,
+    val mimeType: String,
+    val kind: MediaKind,
+    /** Shown in the attachment preview row — the picked file's display name
+     *  (or a fixed label for a camera capture, which has none worth showing). */
+    val displayName: String,
+)
+
 /**
  * Everything the timeline shows (S9). The unencrypted warning band, loading of
  * earlier messages, empty and error are all fields here (AGENTS.md §3, G4).
@@ -115,6 +130,10 @@ data class TimelineState(
      *  band's visibility/text and whether the RIGHT-key shortcut does
      *  anything (Pinned messages quick-access round). */
     val pinnedCount: Int = 0,
+    /** A picked photo/file/camera-capture waiting to be sent, or null when
+     *  nothing is staged (Attachment staging round). Drives the attachment
+     *  preview row's visibility above `compose_input`. */
+    val pendingAttachment: PendingAttachment? = null,
 ) {
     val isEmpty: Boolean get() = rows.isEmpty() && !isLoadingEarlier
     val showUnencryptedBand: Boolean get() = !isEncrypted

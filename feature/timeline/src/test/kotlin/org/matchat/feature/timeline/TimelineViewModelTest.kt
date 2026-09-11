@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.matchat.core.model.EventId
+import org.matchat.core.model.MediaKind
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
@@ -71,6 +72,69 @@ class TimelineViewModelTest {
         vm.onAction(TimelineAction.Send("   "))
         testScheduler.advanceUntilIdle()
         assertTrue(fake.sent.isEmpty())
+    }
+
+    @Test
+    fun `staging an attachment doesn't send it until Send`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        testScheduler.advanceUntilIdle()
+        assertTrue(fake.sentMediaCalls.isEmpty())
+        vm.state.test {
+            assertEquals(attachment, expectMostRecentItem().pendingAttachment)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `Send with a staged attachment sends it with the typed text as its caption`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        vm.onAction(TimelineAction.Send("look at this"))
+        testScheduler.advanceUntilIdle()
+        assertEquals(
+            listOf(
+                org.matchat.core.testing.FakeTimeline.SentMedia(
+                    "/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "look at this",
+                ),
+            ),
+            fake.sentMediaCalls,
+        )
+        assertTrue(fake.sent.isEmpty()) // not also sent as a plain text message
+        vm.state.test {
+            assertNull(expectMostRecentItem().pendingAttachment) // cleared after sending
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `Send with a staged attachment and no typed text sends with a null caption`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        vm.onAction(TimelineAction.Send("   "))
+        testScheduler.advanceUntilIdle()
+        assertEquals(null, fake.sentMediaCalls.single().caption)
+    }
+
+    @Test
+    fun `ClearPendingAttachment discards the staged attachment without sending`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        vm.onAction(TimelineAction.ClearPendingAttachment)
+        testScheduler.advanceUntilIdle()
+        assertTrue(fake.sentMediaCalls.isEmpty())
+        vm.state.test {
+            assertNull(expectMostRecentItem().pendingAttachment)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
