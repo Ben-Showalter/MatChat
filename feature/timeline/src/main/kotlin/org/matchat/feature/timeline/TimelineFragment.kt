@@ -64,6 +64,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
         onImageActivated = { openMessageMenu(menuContextFor(it)) },
         onAttachmentActivated = { openMessageMenu(menuContextFor(it)) },
+        onVoiceBubbleActivated = { openMessageMenu(menuContextFor(it)) },
         onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
@@ -340,6 +341,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
+    /** Stages the recording (Attachment staging round) rather than sending it
+     *  immediately — same treatment as a picked photo/file/camera capture,
+     *  so a caption can be typed first here too. */
     private fun stopRecordingAndSend() {
         val rec = recorder ?: return
         val result = rec.stop()
@@ -353,7 +357,21 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             Toast.makeText(requireContext(), R.string.timeline_record_too_short, Toast.LENGTH_SHORT).show()
             return
         }
-        viewModel.sendVoice(result.file.absolutePath, rec.mimeType, result.durationMs, result.waveform)
+        val secs = result.durationMs / 1000
+        val name = getString(
+            R.string.timeline_attachment_voice_name_format,
+            "%d:%02d".format(secs / 60, secs % 60),
+        )
+        stageAttachment(
+            PendingAttachment(
+                result.file.absolutePath,
+                rec.mimeType,
+                org.matchat.core.model.MediaKind.VOICE,
+                name,
+                durationMs = result.durationMs,
+                waveform = result.waveform,
+            ),
+        )
     }
 
     private fun cancelRecording() {
@@ -572,6 +590,18 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         editAction = null,
     )
 
+    private fun menuContextFor(row: TimelineRow.VoiceBubble) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = null,
+        openAction = { openVoiceBubble(row) },
+        editAction = null,
+    )
+
     private fun copyText(text: String) {
         val clipboard = requireContext()
             .getSystemService(android.content.ClipboardManager::class.java)
@@ -702,6 +732,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
 
+    /** Attachment rows are video/file only now (VOICE/AUDIO get
+     *  [openVoiceBubble] instead), so this always opens externally. */
     private fun openAttachment(row: TimelineRow.Attachment) {
         viewLifecycleOwner.lifecycleScope.launch {
             val ctx = requireContext()
@@ -713,7 +745,24 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
             }
-            if (row.play) playAudio(file) else openExternally(file, row.mimeType)
+            openExternally(file, row.mimeType)
+        }
+    }
+
+    /** Every VoiceBubble row is playable in-app (unlike Attachment, which also
+     *  covers video/file — those open externally instead). */
+    private fun openVoiceBubble(row: TimelineRow.VoiceBubble) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val ctx = requireContext()
+            val bytes = viewModel.loadMedia(row.eventId)
+            if (bytes == null) {
+                Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
+            }
+            playAudio(file)
         }
     }
 

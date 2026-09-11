@@ -168,7 +168,10 @@ class FakeTimeline(
 
     /** Paths only, kept for callers that don't care about the rest. */
     val sentMedia: List<String> get() = sentMediaCalls.map { it.path }
-    val sentVoice = mutableListOf<String>()
+
+    data class SentVoice(val path: String, val mimeType: String, val durationMs: Long, val waveform: List<Float>)
+    val sentVoiceCalls = mutableListOf<SentVoice>()
+    val sentVoice: List<String> get() = sentVoiceCalls.map { it.path }
     val edits = mutableListOf<Pair<EventId, String>>()
     val typingNotices = mutableListOf<Boolean>()
     var canPaginate = false
@@ -183,7 +186,7 @@ class FakeTimeline(
     }
 
     override suspend fun sendVoice(path: String, mimeType: String, durationMs: Long, waveform: List<Float>) {
-        sentVoice += path
+        sentVoiceCalls += SentVoice(path, mimeType, durationMs, waveform)
     }
 
     override suspend fun markRead(eventId: EventId) = Unit

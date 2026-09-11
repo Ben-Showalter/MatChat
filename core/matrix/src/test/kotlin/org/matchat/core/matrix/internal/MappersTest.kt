@@ -33,4 +33,22 @@ class MappersTest {
         val members = mapOf("@other:example.org" to MemberInfo("Other", avatarUrl = null))
         assertEquals("@wayne:example.org", Mappers.resolveSenderName("@wayne:example.org", members))
     }
+
+    // Voice bubble round: MSC3245's waveform is 0..1000 integers; normalizeWaveform
+    // is the pure part of parsing an incoming waveform (the SDK field access
+    // itself, waveformOf, isn't unit-testable here — see its own doc comment).
+    @Test
+    fun `normalizeWaveform maps MSC3245's 0 to 1000 range down to 0f to 1f`() {
+        assertEquals(listOf(0f, 0.5f, 1f), Mappers.normalizeWaveform(listOf(0, 500, 1000)))
+    }
+
+    @Test
+    fun `normalizeWaveform clamps out-of-range values instead of trusting the wire`() {
+        assertEquals(listOf(0f, 1f), Mappers.normalizeWaveform(listOf(-10, 5000)))
+    }
+
+    @Test
+    fun `normalizeWaveform on an empty list is an empty list`() {
+        assertEquals(emptyList<Float>(), Mappers.normalizeWaveform(emptyList()))
+    }
 }
