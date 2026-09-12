@@ -9,25 +9,34 @@ Every screen has three fixed bands:
 
 ```
 ┌────────────────────────────┐  ← 240 wide
-│ Title bar            18 dp │  title left, sync/battery glyphs right
+│ Title bar            24 dp │  title left, sync/battery glyphs right
 ├────────────────────────────┤
 │                            │
-│ Content            282 dp  │  scrolls by focus movement only
+│ Content            270 dp  │  scrolls by focus movement only
 │                            │
 ├────────────────────────────┤
-│ Options | Select |  Back   │  softkey bar, 20 dp
+│ Options | Select |  Back   │  softkey bar, 26 dp
 └────────────────────────────┘
 ```
 
-- Title bar: 14 sp, single line, ellipsized at the end, on the accent surface
-  (`?attr/colorFocusAccent` — the user's chosen accent, Settings > Theme, not
-  the inverse/near-black surface used elsewhere). Right side shows sync state
-  (`⟳` syncing, `!` offline) — nothing else.
-- Softkey bar: three cells, left-aligned / centre / right-aligned, 13 sp (its
+- Title bar: scales with Settings > Text size (§S16) like everything else —
+  18 sp by default (Normal), 14 sp at Small — single line, ellipsized at the
+  end, on the accent surface (`?attr/colorFocusAccent` — the user's chosen
+  accent, Settings > Theme, not the inverse/near-black surface used
+  elsewhere). Right side shows sync state (`⟳` syncing, `!` offline) —
+  nothing else.
+- Softkey bar: three cells, left-aligned / centre / right-aligned, 16 sp (its
   own dedicated size, `text_softkey_label` — not the shared 11 sp metadata
-  floor), on the same accent surface as the title bar so it is never confused
-  with content.
+  floor). Fixed, unlike the title bar — it does NOT scale with Settings >
+  Text size (§S16): a chrome band, not a row, so it stays this one size
+  regardless of the Normal/Small setting, to avoid clipping a band that's
+  already nearly full. On the same accent surface as the title bar so it is
+  never confused with content.
 - Content never scrolls by pixel drag. It scrolls because focus moved.
+  One documented exception (S9, long-message round): a message bubble
+  taller than the visible list area scrolls in small fixed steps (~0.75")
+  per DOWN/UP press before focus moves to the next/previous row — still
+  driven entirely by key presses, never by touch/drag.
 
 ## 2. Key map (global, unchangeable)
 
@@ -42,19 +51,22 @@ Every screen has three fixed bands:
 | CALL | Ignored (never places a call from inside the app). |
 | 0–9 | Text entry when an input is focused; otherwise jump to list item *n*. |
 | `#` (hold) | Next unread room. |
-| `*` (hold) | Toggle large-text mode. |
+| `*` (hold) | Cycle text size (Small → Normal → Large, §S16). |
 
 "Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
 different meaning (AGENTS.md §4) — Options and Back are always exactly one
 softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
-is a separate, global, opt-in exception for hardware whose physical softkeys
-are reversed: it flips which *physical* key produces which *logical* one,
-for every screen at once, not a per-screen reassignment.
+is a separate, global exception, **on by default** (Options on the physical
+right, Back on the left) with the toggle still there for anyone who prefers
+the original left-Options layout or has hardware with reversed physical
+softkeys: it flips which *physical* key produces which *logical* one, for
+every screen at once, not a per-screen reassignment.
 
-**Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`): body 16 sp ·
-interactive labels 14 sp · secondary metadata — timestamps, day separators,
-sender names, field captions — 11 sp; softkey labels 13 sp, their own
-dedicated size (§1). Nothing below 11 sp.
+**Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`), at the Small text
+size — the default (Normal) is larger, §S16: body 16 sp · interactive labels
+14 sp · secondary metadata — timestamps, day separators, sender names, field
+captions — 11 sp; softkey labels 16 sp, their own dedicated, fixed size (§1).
+Nothing below 11 sp.
 
 Focus highlight: a subtle full-row tint (`?attr/colorSurfaceFocused`) plus a
 solid accent bar on the trailing edge (`?attr/colorFocusAccent`,
@@ -270,19 +282,28 @@ Persistent low-priority notification while the sync service runs:
 "MatChat is running." — always on, its own circular-arrows icon, not
 user-configurable (docs/adr/0004).
 
-### S16 — Large-text mode
-Toggled by holding `*` (and from Settings → Text size). Every row grows: room
-name 21 sp, preview 16 sp, row min-height 64 dp — four rooms visible instead of
-six. Timeline body goes to 20 sp. Nothing is removed and no layout reflows into
-a different shape; only the scale changes, which is why row heights are
-`minHeight` and never fixed. The screenshot suite renders every screen in this
-mode as well as normal.
+### S16 — Text size (Small / Normal / Large)
+Normal is the default, the middle of three tiers: room name 21 sp, preview
+16 sp, row min-height 64 dp, timeline body 20 sp — about four room-list rows
+fit the content band at once. Title bar text scales the same way (18 sp,
+§1). Cycled by holding `*`, or from Settings → Text size, down to **Small**:
+room name 16 sp, preview 13 sp, row min-height 44 dp, timeline body 16 sp,
+title bar 14 sp — about six rows fit instead — or up to **Large**: room name
+26 sp, preview 20 sp, row min-height 80 dp, timeline body 25 sp, for anyone
+who wants it bigger still. The softkey bar's own label size is fixed
+regardless of this setting (§1) — it's chrome, not a row. Nothing is removed
+and no layout reflows into a different shape in any of the three states;
+only the scale changes, which is why row heights are `minHeight` and never
+fixed. The screenshot suite renders every screen at Small and Normal (the
+existing font-scale cases) — see the Phase 3 (UI improvement plan) PR notes
+on why Large isn't exercised there the same way.
 
 ### S17 — Landscape (320 × 240)
-On landscape SKUs (DuraXE Epic) the bands are the same height, leaving a 202 dp
-content band — four room-list rows, or roughly three messages plus the input
-strip. Same screens, same focus order; no landscape-only layout exists. Every
-screen must be checked at this size in the screenshot suite.
+On landscape SKUs (DuraXE Epic) the bands are the same height, leaving a
+190 dp content band — three room-list rows at the default Normal text size,
+or roughly two messages plus the input strip. Same screens, same focus
+order; no landscape-only layout exists. Every screen must be checked at this
+size in the screenshot suite.
 
 ### S18 — Invitations
 Reached from the room-list band.
@@ -375,14 +396,22 @@ Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
 (blank) | Select | Back.
 
 ### S25 — Advanced
-Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
-Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
-phone whose hardware Left and Right keys are reversed."). CENTER toggles it
-immediately, same as S24's rows — no separate confirm. The row carries a
-trailing checkmark when on; selection is never conveyed by color alone.
-Takes effect on the very next key press — no recreate, unlike S24 (there's
-no chrome to rebuild, just future key events reading the new preference).
-Focus: the one row. Softkeys: (blank) | Select | Back.
+Reached from Settings → Advanced (docs/adr/0007). First row: "Swap
+Left/Right keys", **on by default**, with an 11 sp subtitle explaining what
+it does ("On: Options on the right, Back on the left. Turn off for Options
+on the left."). CENTER toggles it immediately, same as S24's rows — no
+separate confirm. The row carries a trailing checkmark when on; selection is
+never conveyed by color alone. Takes effect on the very next key press — no
+recreate, unlike S24 (there's no chrome to rebuild, just future key events
+reading the new preference). Second row: "Softkey helper (system setting)",
+with a subtitle explaining what it's for — a predictive-text keyboard on
+some phones that captures the right softkey while composing. CENTER opens
+the system Accessibility settings screen (`ACTION_ACCESSIBILITY_SETTINGS`)
+so the user can grant `MatChatKeyAccessibilityService` there; this is a
+system-level permission the app can neither read nor set for itself, so the
+row is a plain link, not a toggle rendered with its own checked/unchecked
+state. Focus order: swap row → helper row. Softkeys: (blank) | Select |
+Back.
 
 ### S26 — Notifications
 Reached from Settings → Notifications. Two focusable rows, in fixed order:

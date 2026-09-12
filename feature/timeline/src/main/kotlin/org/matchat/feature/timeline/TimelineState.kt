@@ -2,6 +2,7 @@ package org.matchat.feature.timeline
 
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.EventId
+import org.matchat.core.model.MediaKind
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.SendState
@@ -54,11 +55,18 @@ sealed interface TimelineRow {
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
         val isPinned: Boolean = false,
+        /** Send time, carried for the Message info screen (S11) — the
+         *  options menu round gave Image/Attachment the same menu Message
+         *  rows get, which needs this the same way Message.timestampEpochMs
+         *  already does. */
+        val timestampEpochMs: Long = 0L,
     ) : TimelineRow {
         override val stableId: String get() = "img:${eventId.value}"
     }
 
-    /** A file / video / audio / voice attachment; CENTER downloads and opens/plays. */
+    /** A video/file attachment; CENTER downloads and opens externally (VOICE
+     *  and AUDIO get [VoiceBubble] instead — always played in-app, never
+     *  externally, so there's no longer a play/open split here). */
     data class Attachment(
         val eventId: EventId,
         val senderName: String?,
@@ -68,10 +76,48 @@ sealed interface TimelineRow {
         val time: String,
         val isOwn: Boolean,
         val mimeType: String?,
-        val play: Boolean, // true = audio/voice (play in-app), false = open externally
         val isPinned: Boolean = false,
+        /** Options-menu round: Attachment rows now open the same menu
+         *  Message/Image rows do (React/Pin/Message info etc.), which needs
+         *  all three of these the same way Message/Image already carry them. */
+        val reactions: List<ReactionSummary> = emptyList(),
+        val timestampEpochMs: Long = 0L,
+        val senderId: String = "",
     ) : TimelineRow {
         override val stableId: String get() = "att:${eventId.value}"
+    }
+
+    /** A voice/audio message rendered as a proper chat bubble (waveform +
+     *  duration), not the plain glyph row [Attachment] still uses for
+     *  video/file (Voice bubble round). CENTER opens the same message menu
+     *  Attachment rows do — see [Attachment]'s own doc — "Open" plays it
+     *  in-app via AudioPlayback, same as before. */
+    data class VoiceBubble(
+        val eventId: EventId,
+        val senderName: String?,
+        /** "Voice message" for VOICE; the filename for a plain AUDIO file
+         *  (mirrors Attachment's labelFor). */
+        val label: String,
+        val time: String,
+        val isOwn: Boolean,
+        val sendGlyph: String,
+        val mimeType: String?,
+        /** Pre-formatted ("0:12"), same convention as Attachment.sub —
+         *  empty when unknown rather than null, since there's always a
+         *  fixed slot for it next to the waveform. */
+        val duration: String,
+        /** Normalized 0f..1f (Mappers.normalizeWaveform / VoiceRecorder).
+         *  A flat placeholder (not empty) when the kind is AUDIO or the
+         *  sender didn't include one — an empty list would draw no bars at
+         *  all, which reads as broken rather than "no data available". */
+        val waveform: List<Float>,
+        val isPinned: Boolean = false,
+        val reactions: List<ReactionSummary> = emptyList(),
+        val timestampEpochMs: Long = 0L,
+        val senderId: String = "",
+        val senderAvatarUrl: String? = null,
+    ) : TimelineRow {
+        override val stableId: String get() = "voice:${eventId.value}"
     }
 
     data class DaySeparator(val label: String) : TimelineRow {
@@ -86,6 +132,25 @@ sealed interface TimelineRow {
         override val stableId: String get() = "state:$text"
     }
 }
+
+/** A picked/captured attachment staged for sending but not yet uploaded —
+ *  the user can type a caption into `compose_input` before the actual send
+ *  (Attachment staging round). Mirrors exactly the arguments
+ *  [TimelineViewModel.sendMedia]/[TimelineViewModel.sendVoice] already take;
+ *  nothing new is invented on the send path, only when it's called. */
+data class PendingAttachment(
+    val path: String,
+    val mimeType: String,
+    val kind: MediaKind,
+    /** Shown in the attachment preview row — the picked file's display name
+     *  (or a fixed label for a camera capture/voice recording, which have
+     *  none worth showing). */
+    val displayName: String,
+    /** VOICE only — carried through to [TimelineViewModel.sendVoice] at
+     *  send time; null for every other kind. */
+    val durationMs: Long? = null,
+    val waveform: List<Float>? = null,
+)
 
 /**
  * Everything the timeline shows (S9). The unencrypted warning band, loading of
@@ -104,6 +169,10 @@ data class TimelineState(
      *  band's visibility/text and whether the RIGHT-key shortcut does
      *  anything (Pinned messages quick-access round). */
     val pinnedCount: Int = 0,
+    /** A picked photo/file/camera-capture waiting to be sent, or null when
+     *  nothing is staged (Attachment staging round). Drives the attachment
+     *  preview row's visibility above `compose_input`. */
+    val pendingAttachment: PendingAttachment? = null,
 ) {
     val isEmpty: Boolean get() = rows.isEmpty() && !isLoadingEarlier
     val showUnencryptedBand: Boolean get() = !isEncrypted

@@ -12,12 +12,14 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.matchat.core.matrix.Draft
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.policy.Policy
+import org.matchat.core.testing.FakeDraftStore
 import org.matchat.core.testing.FakeMatrixSession
 import org.matchat.core.testing.FakePolicyProvider
 
@@ -26,8 +28,9 @@ class RoomListViewModelTest {
     private val session = FakeMatrixSession()
     private val policy = FakePolicyProvider()
     private val clock = MillisClock { 0L }
+    private val draftStore = FakeDraftStore()
 
-    private fun subject() = RoomListViewModel(session, policy, clock)
+    private fun subject() = RoomListViewModel(session, policy, clock, draftStore)
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
@@ -102,6 +105,29 @@ class RoomListViewModelTest {
         session.roomsFlow.value = listOf(room("!a:server"))
         subject().state.test {
             assertEquals(null, expectMostRecentItem().rooms.single().avatarUrl)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a room with a live draft carries it through to its row`() = runTest {
+        session.roomsFlow.value = listOf(room("!a:server"))
+        draftStore.draftsFlow.value = mapOf("!a:server" to Draft(text = "unfinished thought"))
+        subject().state.test {
+            val row = expectMostRecentItem().rooms.single()
+            assertEquals(Draft(text = "unfinished thought"), row.draft)
+            assertTrue(row.isDraft)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a room with no draft carries a null draft`() = runTest {
+        session.roomsFlow.value = listOf(room("!a:server"))
+        subject().state.test {
+            val row = expectMostRecentItem().rooms.single()
+            assertEquals(null, row.draft)
+            assertFalse(row.isDraft)
             cancelAndIgnoreRemainingEvents()
         }
     }

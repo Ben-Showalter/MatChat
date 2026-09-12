@@ -18,14 +18,14 @@
             style="@style/Widget.MatChat.Row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/text_label"
+            android:textSize="?attr/textSizeLabel"
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusable="false"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextSecondary"
             android:paddingStart="@dimen/content_pad"
             android:paddingEnd="@dimen/content_pad"
@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/notifications_sound"
-            android:textSize="@dimen/text_label"
+            android:textSize="?attr/textSizeLabel"
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
@@ -46,7 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusable="false"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextSecondary"
             android:paddingStart="@dimen/content_pad"
             android:paddingEnd="@dimen/content_pad"

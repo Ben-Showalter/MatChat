@@ -2,6 +2,10 @@ package org.matchat.client
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.matchat.client.notify.MessageNotifier
 import org.matchat.core.ui.prefs.UserPreferences
 import javax.inject.Inject
@@ -22,10 +26,16 @@ class MatChatApp : Application() {
         // stored (Notifications settings round) — ensureChannel is idempotent,
         // so this just confirms the channel exists before the sync service's
         // first notification; it does not create a new version on its own.
-        MessageNotifier.ensureChannel(
-            this,
-            userPreferences.notificationChannelVersion.value,
-            userPreferences.notificationSoundUri.value,
-        )
+        // suspend (Bluetooth wake-up silent lead-in round: channel creation
+        // now does audio decode work, SilentLeadInSound) — fire-and-forget in
+        // a short-lived scope so app cold start is never blocked on it; this
+        // is a non-critical warmup nothing else waits on.
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            MessageNotifier.ensureChannel(
+                this@MatChatApp,
+                userPreferences.notificationChannelVersion.value,
+                userPreferences.notificationSoundUri.value,
+            )
+        }
     }
 }

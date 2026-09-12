@@ -38,4 +38,26 @@
          user's chosen accent (Settings > Theme). -->
     <attr name="colorBubbleReceived" format="color" />
     <attr name="colorBubbleOwn" format="color" />
+
+    <!-- Text size setting (Settings > Text size, Normal/Large — UX-SPEC §S16).
+         Layered at runtime the same way accent is (Theme.MatChat.Size.{Normal,
+         Large}, themes.xml applied via theme.applyStyle after the accent
+         overlay), so the app-wide "Text size" preference scales text, avatars,
+         and row heights together without a per-role dimen switch anywhere
+         else. textSizeSoftkeyLabel is deliberately NOT one of these — the
+         softkey bar is a fixed-height chrome band, not a row, and growing its
+         label risks clipping a band that's already nearly full. -->
+    <attr name="textSizeBody" format="dimension" />
+    <attr name="textSizeLabel" format="dimension" />
+    <attr name="textSizeMeta" format="dimension" />
+    <attr name="textSizeRoomName" format="dimension" />
+    <attr name="textSizeRoomPreview" format="dimension" />
+    <attr name="textSizeAddress" format="dimension" />
+    <attr name="textSizeSender" format="dimension" />
+    <attr name="textSizeHeading" format="dimension" />
+    <attr name="avatarSizeList" format="dimension" />
+    <attr name="avatarSizeSender" format="dimension" />
+    <attr name="avatarSizeSeenBy" format="dimension" />
+    <attr name="rowMinHeight" format="dimension" />
+    <attr name="rowMinHeightCompact" format="dimension" />
 </resources>

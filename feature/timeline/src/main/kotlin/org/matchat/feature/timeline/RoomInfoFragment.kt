@@ -15,6 +15,7 @@ import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.menu.TextPromptSheet
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.theme.themeDimenPx
 
 /** S12 Room Info + basic edits. Everything is in the focusable list (fields open a
  *  text prompt on CENTER, members open a remove menu, actions add/leave). */
@@ -42,7 +43,7 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
      *  source (AvatarFallback round). */
     private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, avatarMaxPx()) { viewModel.loadAvatar(it) }
         }
     }
 
@@ -120,8 +121,13 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
         super.onDestroyView()
     }
 
+    /** Decode-quality cap, ~2x avatarSizeSender — a compile-time literal can't
+     *  respond to the runtime Text size choice, so this is computed from the
+     *  theme attr at bind time instead of a const. */
+    private fun avatarMaxPx(): Int =
+        (requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeSender) * 2).toInt()
+
     private companion object {
         const val MEMBER_REMOVE = "remove"
-        const val AVATAR_MAX_PX = 32 // ~2x avatar_size_sender
     }
 }

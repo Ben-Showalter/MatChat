@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FileProvider paths for handing downloaded attachments to the system viewer. -->
+<!-- FileProvider paths: downloaded attachments handed to the system viewer,
+     and (notification_sounds) silence-prefixed notification sounds handed
+     to NotificationChannel.setSound() (SilentLeadInSound). -->
 <paths>
     <cache-path name="media" path="media/" />
+    <cache-path name="notification_sounds" path="notification_sounds/" />
 </paths>

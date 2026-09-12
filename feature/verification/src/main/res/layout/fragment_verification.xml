@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:text="@string/verify_heading"
             android:textStyle="bold"
-            android:textSize="@dimen/text_heading"
+            android:textSize="?attr/textSizeHeading"
             android:textColor="?attr/colorTextPrimary" />
 
         <TextView
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextSecondary"
             tools:text="Check that the same picture words appear on your other device." />
 
@@ -34,7 +34,7 @@
             android:id="@+id/verify_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorError"
             android:visibility="gone"
             android:text="@string/verify_error" />
@@ -52,7 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/verify_with_device"
-                android:textSize="@dimen/text_label"
+                android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
 
             <TextView
@@ -61,7 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/verify_use_recovery"
-                android:textSize="@dimen/text_label"
+                android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
 
@@ -71,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/verify_waiting"
-            android:textSize="@dimen/text_body"
+            android:textSize="?attr/textSizeBody"
             android:textColor="?attr/colorTextPrimary"
             android:visibility="gone" />
 
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/verify_match"
-                android:textSize="@dimen/text_label"
+                android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
 
             <TextView
@@ -105,7 +105,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/verify_no_match"
-                android:textSize="@dimen/text_label"
+                android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
 
@@ -127,7 +127,7 @@
                 android:inputType="textVisiblePassword"
                 android:importantForAutofill="no"
                 android:hint="@string/verify_recovery_hint"
-                android:textSize="@dimen/text_body"
+                android:textSize="?attr/textSizeBody"
                 android:textColor="?attr/colorTextPrimary" />
 
             <TextView
@@ -137,7 +137,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/verify_continue"
-                android:textSize="@dimen/text_label"
+                android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
     </LinearLayout>

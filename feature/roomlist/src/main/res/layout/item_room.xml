@@ -13,8 +13,8 @@
 
     <ImageView
         android:id="@+id/room_avatar"
-        android:layout_width="@dimen/avatar_size_list"
-        android:layout_height="@dimen/avatar_size_list"
+        android:layout_width="?attr/avatarSizeList"
+        android:layout_height="?attr/avatarSizeList"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="8dp"
@@ -28,7 +28,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM" />
 
@@ -43,9 +43,9 @@
         android:gravity="center"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:background="?attr/colorSurfaceInverse"
+        android:background="?attr/colorFocusAccent"
         android:textColor="?attr/colorTextOnInverse"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:visibility="gone"
         tools:text="3"
         tools:visibility="visible" />
@@ -61,7 +61,7 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textStyle="bold"
-        android:textSize="@dimen/text_room_name"
+        android:textSize="?attr/textSizeRoomName"
         android:textColor="?attr/colorTextOnFocus"
         tools:text="Barn Crew" />
 
@@ -75,7 +75,7 @@
         android:duplicateParentState="true"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textSize="13sp"
+        android:textSize="?attr/textSizeRoomPreview"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="See you at six by the north gate" />
 </RelativeLayout>

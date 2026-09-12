@@ -14,7 +14,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.client.R
 import org.matchat.client.notify.MessageNotifier
+import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.matrix.MatrixSession
+import org.matchat.core.matrix.MatrixSessionStore
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.ui.prefs.UserPreferences
 import javax.inject.Inject
@@ -25,9 +27,13 @@ import javax.inject.Inject
  * so sync is a foreground service with a persistent low-priority notification
  * (PLAN.md §6.6, docs/adr/0004).
  *
- * M0: the service runs and holds the notification so the foreground-service and
- * notification plumbing is real on-device; M1 attaches the SDK SyncService here.
- * The Android 15 dataSync 6h/24h cap fallback to WorkManager is M1 work, tracked
+ * The client/SyncService itself is normally started by MainActivity (sign-in or
+ * its cold-start restore); [ensureSessionRestored] below is this service's own
+ * fallback so a service-only relaunch (after the whole process was killed and
+ * START_STICKY brings just this service back, no Activity involved) restarts
+ * sync too, rather than leaving the "MatChat is running" notification up over
+ * a dead sync loop.
+ * The Android 15 dataSync 6h/24h cap fallback to WorkManager is still tracked
  * in docs/adr/0004 — not a silent gap.
  */
 @AndroidEntryPoint
@@ -44,8 +50,29 @@ class SyncForegroundService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         startForeground(NOTIFICATION_ID, buildNotification())
+        ensureSessionRestored()
         observeRoomsForNotifications()
         return START_STICKY
+    }
+
+    /**
+     * Bug fix: the SDK's sync loop is only ever started from MainActivity
+     * (sign-in, or its own cold-start restore) — this service never started
+     * it itself, only rode the already-live client's [session.rooms] flow.
+     * A low-memory kill takes the whole process, this singleton client
+     * included; START_STICKY then relaunches *this service* without ever
+     * running MainActivity.onCreate(), so the client was never rebuilt and
+     * the persistent "MatChat is running" notification kept showing while
+     * sync had actually died — the on-device "not reliably syncing, won't
+     * show new messages" report. Restoring here too means any process that
+     * gets this service running also has a live sync loop, regardless of
+     * whether an Activity ever ran in it. isActive() guards against
+     * rebuilding a client that's already live (restore() is not a no-op —
+     * it tears down and reconnects).
+     */
+    private fun ensureSessionRestored() {
+        if (session.isActive() || !sessionStore.hasSession()) return
+        lifecycleScope.launch { auth.restoreSession() }
     }
 
     /** Watch joined-room unread counts and raise a per-room notification when one
@@ -59,7 +86,7 @@ class SyncForegroundService : LifecycleService() {
         }
     }
 
-    private fun onRooms(rooms: List<RoomSummary>) {
+    private suspend fun onRooms(rooms: List<RoomSummary>) {
         if (!seeded) {
             rooms.forEach { lastUnread[it.id.value] = it.unreadCount }
             seeded = true

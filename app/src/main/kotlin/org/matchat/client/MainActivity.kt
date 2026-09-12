@@ -2,6 +2,7 @@ package org.matchat.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
@@ -26,6 +27,7 @@ import org.matchat.core.ui.key.KeyMap
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.prefs.AccentColor
+import org.matchat.core.ui.prefs.TextSizePreference
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
@@ -64,6 +66,7 @@ class MainActivity : AppCompatActivity(), Navigator {
         ).userPreferences()
         setTheme(baseStyleFor(userPreferences.themeMode.value))
         theme.applyStyle(accentStyleFor(userPreferences.accentColor.value), true)
+        theme.applyStyle(sizeStyleFor(userPreferences.textSize.value), true)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val host = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
@@ -81,15 +84,20 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun observeThemeChanges() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(userPreferences.themeMode, userPreferences.accentColor, ::Pair)
+                combine(
+                    userPreferences.themeMode,
+                    userPreferences.accentColor,
+                    userPreferences.textSize,
+                    ::Triple,
+                )
                     .drop(1)
                     .collect { recreate() }
             }
         }
     }
 
-    /** The base carries every role that doesn't depend on accent (or, once
-     *  Text size lands, size) — see themes.xml's file header. */
+    /** The base carries every role that doesn't depend on accent or size —
+     *  see themes.xml's file header. */
     private fun baseStyleFor(mode: ThemeMode): Int = when (mode) {
         ThemeMode.LIGHT -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Light
         ThemeMode.DARK -> org.matchat.core.ui.R.style.Theme_MatChat_Base_Dark
@@ -119,6 +127,31 @@ class MainActivity : AppCompatActivity(), Navigator {
         AccentColor.WINE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Wine,
     )
 
+    /** Layered on top of the accent overlay (Settings > Text size, UX-SPEC
+     *  §S16) — also applied via theme.applyStyle(_, force = true). */
+    private fun sizeStyleFor(size: TextSizePreference): Int = when (size) {
+        TextSizePreference.NORMAL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Normal
+        TextSizePreference.SMALL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Small
+        TextSizePreference.LARGE -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Large
+    }
+
+    /** Settings > Text size's own rows set the same preference directly;
+     *  this is also the "Hold * to change text size" shortcut Help promises
+     *  (S14's help_text_size string) — a 3-way cycle rather than Normal's
+     *  old binary toggle, now that Large exists too. Deliberately global
+     *  (any screen), unlike Pinned messages' RIGHT shortcut (TimelineFragment's
+     *  narrow, explicit DirectionalKeyReceiver exception) — Text size isn't
+     *  scoped to one screen, so it's handled here rather than delegated to
+     *  the current screen's LogicalKeyReceiver. */
+    private fun toggleTextSize() {
+        val next = when (userPreferences.textSize.value) {
+            TextSizePreference.SMALL -> TextSizePreference.NORMAL
+            TextSizePreference.NORMAL -> TextSizePreference.LARGE
+            TextSizePreference.LARGE -> TextSizePreference.SMALL
+        }
+        lifecycleScope.launch { userPreferences.setTextSize(next) }
+    }
+
     private val notificationPermission =
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
@@ -137,7 +170,13 @@ class MainActivity : AppCompatActivity(), Navigator {
     // outbound only — there are no peer presence dots.)
     override fun onResume() {
         super.onResume()
+        activeInstance = this
         if (sessionStore.hasSession()) lifecycleScope.launch { session.setPresence(online = true) }
+    }
+
+    override fun onPause() {
+        if (activeInstance === this) activeInstance = null
+        super.onPause()
     }
 
     override fun onStop() {
@@ -177,9 +216,27 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Long-press # / * are power-user shortcuts routed as hold keys.
         if (event.action == KeyEvent.ACTION_DOWN && event.isLongPress) {
-            KeyMap.holdKey(event.keyCode)?.let { return receiver()?.onLogicalKey(it) ?: false }
+            val hold = KeyMap.holdKey(event.keyCode)
+            // Deliberately global (any screen), not delegated to the current
+            // screen's LogicalKeyReceiver — see toggleTextSize()'s doc comment.
+            if (hold == LogicalKey.STAR_HOLD) {
+                toggleTextSize()
+                return true
+            }
+            hold?.let { return receiver()?.onLogicalKey(it) ?: false }
         }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
+
+        // Diagnostic only (on-device report: right softkey doesn't open Options
+        // even with the accessibility-service workaround on, and a competing
+        // app's own key-intercepting accessibility service was ruled out as the
+        // cause by disabling it and retesting) — this line proves whether normal
+        // dispatch ever saw the raw key at all, distinct from the accessibility
+        // path logged in handleAccessibilityKeyEvent below. Left in permanently;
+        // one key event is not meaningful log volume.
+        if (event.keyCode == KeyEvent.KEYCODE_SOFT_RIGHT) {
+            Log.d(SOFTKEY_LOG_TAG, "dispatchKeyEvent: normal dispatch saw raw SOFT_RIGHT")
+        }
 
         val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value)
             ?: return super.dispatchKeyEvent(event)
@@ -200,6 +257,12 @@ class MainActivity : AppCompatActivity(), Navigator {
             return super.dispatchKeyEvent(event)
         }
         val handled = receiver()?.onLogicalKey(logical) ?: false
+        if (logical == LogicalKey.SOFT_LEFT || logical == LogicalKey.SOFT_RIGHT) {
+            Log.d(
+                SOFTKEY_LOG_TAG,
+                "dispatchKeyEvent: logical=$logical handled=$handled receiver=${receiver()?.javaClass?.simpleName}",
+            )
+        }
         // Unhandled hardware call keys must reach the system (so the CALL key still
         // opens the dialer when no call screen consumes it — docs/VOICE.md §6).
         // Other unhandled keys stay swallowed, as before.
@@ -212,6 +275,31 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun receiver(): LogicalKeyReceiver? {
         val host = supportFragmentManager.findFragmentById(R.id.nav_host)
         return host?.childFragmentManager?.primaryNavigationFragment as? LogicalKeyReceiver
+    }
+
+    /** Entry point for
+     *  [org.matchat.client.accessibility.MatChatKeyAccessibilityService] — see
+     *  that class's own doc comment for the full story (a confirmed device
+     *  conflict: the system's predictive-text IME consumes the right softkey
+     *  before dispatchKeyEvent above ever sees it, only while composing).
+     *  Simpler than dispatchKeyEvent: there's no Android dispatch chain to
+     *  fall back to here (returning false just tells the service "didn't
+     *  consume it, let it continue as normal" — the IME still gets a chance
+     *  after that), and only the right softkey ever reaches this (the
+     *  service filters to just that code before calling in; digits/D-pad/
+     *  CENTER/holds/the left softkey never do, so T9 text entry — and every
+     *  other key — is unaffected whether or not the service is enabled). */
+    private fun handleAccessibilityKeyEvent(event: KeyEvent): Boolean {
+        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value) ?: return false
+        val handled = receiver()?.onLogicalKey(logical) ?: false
+        // Diagnostic only — see the matching log line in dispatchKeyEvent. This
+        // one firing at all proves MatChatKeyAccessibilityService.onKeyEvent was
+        // invoked and returned true for the key (it only forwards a raw
+        // SOFT_RIGHT down here to begin with); if it never fires on a device
+        // where the service is enabled, the key never reached MatChat through
+        // either path — a strictly earlier, OS/other-app-level swallow.
+        Log.d(SOFTKEY_LOG_TAG, "handleAccessibilityKeyEvent: logical=$logical handled=$handled")
+        return handled
     }
 
     // --- Navigator ----------------------------------------------------------
@@ -278,6 +366,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toVerification() = navController.navigate(R.id.verificationFragment)
     override fun toSettings() = navController.navigate(R.id.settingsFragment)
     override fun toTheme() = navController.navigate(R.id.themeFragment)
+    override fun toTextSize() = navController.navigate(R.id.textSizeFragment)
     override fun toAdvanced() = navController.navigate(R.id.advancedFragment)
     override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
@@ -292,5 +381,25 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_SENDER_ID = "senderId"
         const val ARG_TIMESTAMP = "timestamp"
         const val ARG_USER_ID = "userId"
+
+        // Diagnostic logging for the right-softkey/Options on-device report —
+        // see the log call sites (dispatchKeyEvent, handleAccessibilityKeyEvent)
+        // and MatChatKeyAccessibilityService's own doc comment for the full story.
+        private const val SOFTKEY_LOG_TAG = "MatChatSoftkey"
+
+        // Set/cleared in onResume/onPause — same process as
+        // MatChatKeyAccessibilityService (no separate android:process declared
+        // for it), so a plain reference is enough; no Binder/IPC needed. Null
+        // whenever this Activity isn't the interactive foreground (matches
+        // "is dispatchKeyEvent even reachable right now" as closely as a
+        // service running independently of the Activity lifecycle can).
+        @Volatile private var activeInstance: MainActivity? = null
+
+        /** Called by the accessibility service when it intercepts the right
+         *  softkey. Returns false (don't consume) if there's no foreground
+         *  MainActivity to hand it to — the key then continues through the
+         *  normal platform pipeline exactly as if this service didn't exist. */
+        fun handleExternalSoftkey(event: KeyEvent): Boolean =
+            activeInstance?.handleAccessibilityKeyEvent(event) ?: false
     }
 }

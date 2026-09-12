@@ -1,5 +1,6 @@
 package org.matchat.feature.newchat
 
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
@@ -14,6 +15,7 @@ import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.newchat.databinding.FragmentNewChatBinding
 import org.matchat.core.ui.R as UiR
 
@@ -99,7 +101,7 @@ class NewChatFragment : SoftkeyFragment() {
         layout.addView(
             TextView(requireContext()).apply {
                 text = primary
-                textSize = BODY_SP
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeBody))
                 isDuplicateParentStateEnabled = true // inherit row focus → text flips
                 setTextColor(requireContext().themeColor(UiR.attr.colorTextOnFocus))
             },
@@ -108,7 +110,7 @@ class NewChatFragment : SoftkeyFragment() {
             layout.addView(
                 TextView(requireContext()).apply {
                     text = secondary
-                    textSize = META_SP
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeMeta))
                     isDuplicateParentStateEnabled = true
                     setTextColor(requireContext().themeColor(UiR.attr.colorTextMetaOnFocus))
                 },
@@ -120,11 +122,5 @@ class NewChatFragment : SoftkeyFragment() {
     override fun onDestroyView() {
         binding = null
         super.onDestroyView()
-    }
-
-    private companion object {
-        const val HEADER_SP = 11f
-        const val BODY_SP = 16f
-        const val META_SP = 11f
     }
 }

@@ -32,7 +32,19 @@
     <string name="timeline_opt_mute">Mute this group</string>
     <string name="timeline_opt_help">Help</string>
 
+    <!-- Attachment staging round: a picked photo/file/camera-capture/voice
+         recording waits here, captioned via compose_input, instead of
+         sending immediately. %1$s is the file's display name. -->
+    <string name="timeline_attachment_preview_format">📎 %1$s — type a message, then send</string>
+    <string name="timeline_opt_remove_attachment">Remove attachment</string>
+    <string name="timeline_attachment_camera_name">Photo</string>
+    <!-- Voice bubble round: %1$s is the elapsed recording time ("0:12"). -->
+    <string name="timeline_attachment_voice_name_format">Voice message (%1$s)</string>
+
     <!-- Message menu (S11). -->
+    <!-- Media rows only (image/attachment) — reaches the same viewer/opener
+         a direct tap used to jump to before media rows got this menu too. -->
+    <string name="timeline_msg_open">Open</string>
     <string name="timeline_msg_reply">Reply</string>
     <string name="timeline_msg_edit">Edit</string>
     <string name="timeline_msg_react">React</string>
@@ -75,7 +87,6 @@
     <string name="timeline_media_failed">Could not download this attachment.</string>
     <string name="timeline_media_no_app">No app on this phone can open this file.</string>
     <string name="timeline_audio_failed">Can\'t play this audio on this phone.</string>
-    <string name="timeline_sending">Sending…</string>
 
     <!-- Image viewer (S9). -->
     <string name="viewer_title">Image</string>

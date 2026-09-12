@@ -13,28 +13,28 @@
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad">
 
-        <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
+        <TextView android:id="@+id/help_softkeys" style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_softkeys"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
         <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_dpad"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
         <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_center"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
-        <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
+        <TextView android:id="@+id/help_back" style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_back"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
         <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_unread"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
         <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="@string/help_large_text"
-            android:textSize="@dimen/text_body" android:textColor="?attr/colorTextOnFocus" />
+            android:layout_height="wrap_content" android:text="@string/help_text_size"
+            android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 </ScrollView>

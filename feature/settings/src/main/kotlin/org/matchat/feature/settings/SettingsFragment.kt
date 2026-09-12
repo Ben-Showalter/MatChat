@@ -32,6 +32,7 @@ class SettingsFragment : SoftkeyFragment() {
         setTitle(getString(R.string.settings_title))
 
         b.settingsEncryption.setOnClickListener { viewModel.onAction(SettingsAction.OpenEncryption) }
+        b.settingsTextSize.setOnClickListener { viewModel.onAction(SettingsAction.OpenTextSize) }
         b.settingsTheme.setOnClickListener { viewModel.onAction(SettingsAction.OpenTheme) }
         b.settingsAdvanced.setOnClickListener { viewModel.onAction(SettingsAction.OpenAdvanced) }
         b.settingsNotifications.setOnClickListener { viewModel.onAction(SettingsAction.OpenNotifications) }
@@ -58,6 +59,7 @@ class SettingsFragment : SoftkeyFragment() {
     private fun navigate(nav: SettingsNav) {
         when (nav) {
             SettingsNav.Encryption -> navigator.toVerification()
+            SettingsNav.TextSize -> navigator.toTextSize()
             SettingsNav.Theme -> navigator.toTheme()
             SettingsNav.Advanced -> navigator.toAdvanced()
             SettingsNav.Notifications -> navigator.toNotifications()

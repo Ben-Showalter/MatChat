@@ -24,8 +24,19 @@ class KeyMapTest {
     }
 
     @Test
+    fun `held CENTER or ENTER maps to CENTER_HOLD`() {
+        assertEquals(LogicalKey.CENTER_HOLD, KeyMap.holdKey(KeyEvent.KEYCODE_DPAD_CENTER))
+        assertEquals(LogicalKey.CENTER_HOLD, KeyMap.holdKey(KeyEvent.KEYCODE_ENTER))
+    }
+
+    @Test
     fun `other codes are not hold actions`() {
-        assertNull(KeyMap.holdKey(KeyEvent.KEYCODE_DPAD_CENTER))
+        assertNull(KeyMap.holdKey(KeyEvent.KEYCODE_UNKNOWN))
+    }
+
+    @Test
+    fun `a plain (non-long) press of CENTER still maps instantly, unaffected by the hold addition`() {
+        assertEquals(LogicalKey.CENTER, KeyMap.map(down(KeyEvent.KEYCODE_DPAD_CENTER), swapped = false))
     }
 
     // --- map(event, swapped) — Phase 6, UI improvement plan (docs/adr/0007) ---

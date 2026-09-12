@@ -44,11 +44,35 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Optional, user-enabled workaround for a device whose predictive-text
+             keyboard consumes the right softkey before this app sees it while
+             composing — see MatChatKeyAccessibilityService's own doc comment.
+             Enabled manually in Settings > Accessibility; inert otherwise.
+             exported="true" matches a confirmed-working sibling app's own
+             accessibility service on this hardware family (TurboText) — the
+             android.permission.BIND_ACCESSIBILITY_SERVICE requirement below
+             is what actually gates binding (only the system holds it), not
+             this attribute, so this isn't a security relaxation. -->
+        <service
+            android:name=".accessibility.MatChatKeyAccessibilityService"
+            android:exported="true"
+            android:label="@string/key_accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice.AccessibilityService"
+                android:resource="@xml/key_accessibility_service_config" />
+        </service>
+
         <!-- Notification action handlers (inline reply, mark as read). -->
         <receiver android:name=".notify.MessageReplyReceiver" android:exported="false" />
         <receiver android:name=".notify.MarkReadReceiver" android:exported="false" />
 
-        <!-- Hands downloaded attachments to the system viewer via content:// URIs. -->
+        <!-- Hands downloaded attachments to the system viewer, and
+             silence-prefixed notification sounds to NotificationManager,
+             via content:// URIs. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

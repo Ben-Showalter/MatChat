@@ -1,5 +1,6 @@
 package org.matchat.feature.roomlist
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -36,7 +37,17 @@ internal class RoomListAdapter(
 
         fun bind(row: RoomRow) {
             binding.roomName.text = row.name
-            binding.roomPreview.text = row.preview
+            val draft = row.draft
+            binding.roomPreview.text = when {
+                draft == null || draft.isEmpty -> row.preview
+                draft.text.isNotBlank() -> binding.root.context.getString(R.string.roomlist_draft_format, draft.text)
+                else -> binding.root.context.getString(R.string.roomlist_draft_attachment)
+            }
+            // A text marker ("Draft: …") already conveys the state (AGENTS.md
+            // — never color/style alone); italicizing on top is just a cheap,
+            // additional visual cue, not the only signal.
+            val previewStyle = if (row.isDraft) Typeface.ITALIC else Typeface.NORMAL
+            binding.roomPreview.setTypeface(binding.roomPreview.typeface, previewStyle)
             binding.roomTime.text = row.time
             binding.roomUnread.text = if (row.unreadCount > 0) row.unreadCount.toString() else ""
             binding.roomUnread.visibility =
