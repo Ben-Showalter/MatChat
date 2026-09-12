@@ -391,10 +391,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     }
 
     /** Opens the device's own Gallery app directly via a bare ACTION_GET_CONTENT
-     *  (image/*) — no `Intent.createChooser` wrapper, so Android launches the
-     *  single matching app directly when exactly one exists (the normal case),
-     *  confirmed on-device: this exact intent shape resolves straight to
-     *  `jp.kyocera.datafolder/jp.kyocera.gallery.GalleryActivity` on the
+     *  (images only) — no `Intent.createChooser` wrapper, so Android launches
+     *  the single matching app directly when exactly one exists (the normal
+     *  case), confirmed on-device: this exact intent shape resolves straight
+     *  to `jp.kyocera.datafolder/jp.kyocera.gallery.GalleryActivity` on the
      *  reference hardware, with no intermediate screen at all. Deliberately
      *  drops `PickVisualMedia`/`isPhotoPickerAvailable` entirely — that check
      *  was found reporting a (modern) Photo Picker as available on this
@@ -404,8 +404,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  DocumentsUI's root browser ("Open from": Images / Recent / Downloads /
      *  SD card / Bug reports) — the on-device report this replaces ("it
      *  should open the gallery directly instead of opening files"). If a
-     *  device genuinely has more than one app registered for GET_CONTENT +
-     *  image/*, Android's own normal disambiguation dialog appears — that's
+     *  device genuinely has more than one app registered for GET_CONTENT and
+     *  images, Android's own normal disambiguation dialog appears — that's
      *  standard implicit-intent behavior, not something to special-case. */
     private fun launchPhotoPicker() {
         val intent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
