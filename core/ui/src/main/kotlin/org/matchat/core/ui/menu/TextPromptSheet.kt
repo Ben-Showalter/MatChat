@@ -61,7 +61,12 @@ object TextPromptSheet {
             dialog.dismiss()
         }
         field.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) { confirm(); true } else false
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                confirm()
+                true
+            } else {
+                false
+            }
         }
 
         val ok = TextView(context).apply {

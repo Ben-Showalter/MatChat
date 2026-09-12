@@ -104,29 +104,28 @@ class VerificationFragment : SoftkeyFragment() {
         }
     }
 
-    private fun emojiCell(emoji: SasEmoji): View =
-        LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
-            setPadding(pad, pad, pad, pad)
-            addView(
-                TextView(requireContext()).apply {
-                    text = emoji.symbol
-                    textSize = EMOJI_SP
-                    gravity = Gravity.CENTER
-                },
-            )
-            addView(
-                TextView(requireContext()).apply {
-                    text = emoji.name
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeMeta))
-                    gravity = Gravity.CENTER
-                    setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
-                },
-            )
-        }
+    private fun emojiCell(emoji: SasEmoji): View = LinearLayout(requireContext()).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER
+        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
+        setPadding(pad, pad, pad, pad)
+        addView(
+            TextView(requireContext()).apply {
+                text = emoji.symbol
+                textSize = EMOJI_SP
+                gravity = Gravity.CENTER
+            },
+        )
+        addView(
+            TextView(requireContext()).apply {
+                text = emoji.name
+                textSize = LABEL_SP
+                gravity = Gravity.CENTER
+                setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
+            },
+        )
+    }
 
     override fun onDestroyView() {
         binding = null

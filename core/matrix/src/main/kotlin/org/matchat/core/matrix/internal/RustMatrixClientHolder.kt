@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.matchat.core.matrix.MatrixDevConfig
@@ -146,33 +145,7 @@ internal class RustMatrixClientHolder @Inject constructor(
         entriesResult = result // keep alive so the stream is not dropped
     }
 
-    /** OFFLINE detection (Online indicator round): the SDK's own sync-loop
-     *  success/failure isn't currently surfaced beyond SYNCING/IDLE here (a
-     *  deeper, SDK-version-sensitive change than device connectivity, left
-     *  for a follow-up), so this uses the device's own network state
-     *  instead — no network at all is the dominant real-world "not
-     *  connected" case, and is a signal we can read with plain Android APIs.
-     *  Registered once per sync session; unregistered in [logout]. */
-    private fun observeConnectivity() {
-        if (networkCallback != null) return
-        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                if (syncState.value == SyncState.OFFLINE) syncState.value = SyncState.SYNCING
-            }
-
-            override fun onLost(network: Network) {
-                // onLost fires per-network; only declare OFFLINE once nothing
-                // else is active (e.g. Wi-Fi drops but mobile data is still up).
-                if (cm.activeNetwork == null) syncState.value = SyncState.OFFLINE
-            }
-        }
-        runCatching { cm.registerDefaultNetworkCallback(callback) }
-            .onSuccess { networkCallback = callback }
-    }
-
-    fun roomFor(roomId: RoomId): Room? =
-        runCatching { roomList?.room(roomId.value) }.getOrNull()
+    fun roomFor(roomId: RoomId): Room? = runCatching { roomList?.room(roomId.value) }.getOrNull()
 
     /** Restore keys from a recovery key so encrypted history can be decrypted. */
     suspend fun recover(recoveryKey: String) = withContext(Dispatchers.IO) {

@@ -34,8 +34,7 @@ internal class RustMatrixAuth @Inject constructor(
     }
 
     // QR sign-in (S4) is a v1.1 candidate; not wired in M1.
-    override fun signInWithQr(): Flow<QrLoginStep> =
-        flowOf(QrLoginStep.Failed(ErrorText(ErrorText.Key.UNKNOWN)))
+    override fun signInWithQr(): Flow<QrLoginStep> = flowOf(QrLoginStep.Failed(ErrorText(ErrorText.Key.UNKNOWN)))
 
     override suspend fun restoreSession(): Result<Unit> =
         if (holder.restore()) Result.success(Unit) else Result.failure(IllegalStateException("no session"))

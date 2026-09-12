@@ -142,25 +142,43 @@ internal object Mappers {
     ): TimelineItem.Media? {
         val (kind, source, filename, caption, mime, size, durationMs, waveform) = when (type) {
             is MessageType.Image -> Media6(
-                MediaKind.IMAGE, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
+                MediaKind.IMAGE,
+                type.content.source,
+                type.content.filename,
+                type.content.caption,
+                type.content.info?.mimetype,
+                type.content.info?.size?.toLong(),
+                null,
             )
             is MessageType.Video -> Media6(
-                MediaKind.VIDEO, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
+                MediaKind.VIDEO,
+                type.content.source,
+                type.content.filename,
+                type.content.caption,
+                type.content.info?.mimetype,
+                type.content.info?.size?.toLong(),
+                null,
             )
             is MessageType.Audio -> Media6(
                 if (type.content.voice != null) MediaKind.VOICE else MediaKind.AUDIO,
-                type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(),
+                type.content.source,
+                type.content.filename,
+                type.content.caption,
+                type.content.info?.mimetype,
+                type.content.info?.size?.toLong(),
                 runCatching {
                     type.content.info?.duration?.toMillis() ?: type.content.audio?.duration?.toMillis()
                 }.getOrNull(),
                 waveformOf(type),
             )
             is MessageType.File -> Media6(
-                MediaKind.FILE, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
+                MediaKind.FILE,
+                type.content.source,
+                type.content.filename,
+                type.content.caption,
+                type.content.info?.mimetype,
+                type.content.info?.size?.toLong(),
+                null,
             )
             else -> return null
         }
@@ -223,6 +241,5 @@ internal object Mappers {
         val waveform: List<Float>?,
     )
 
-    private fun eventIdOf(id: EventOrTransactionId): String =
-        (id as? EventOrTransactionId.EventId)?.eventId.orEmpty()
+    private fun eventIdOf(id: EventOrTransactionId): String = (id as? EventOrTransactionId.EventId)?.eventId.orEmpty()
 }

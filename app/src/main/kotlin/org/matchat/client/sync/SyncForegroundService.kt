@@ -40,8 +40,7 @@ import javax.inject.Inject
 class SyncForegroundService : LifecycleService() {
 
     @Inject lateinit var session: MatrixSession
-    @Inject lateinit var auth: MatrixAuth
-    @Inject lateinit var sessionStore: MatrixSessionStore
+
     @Inject lateinit var userPreferences: UserPreferences
 
     private val lastUnread = HashMap<String, Int>()

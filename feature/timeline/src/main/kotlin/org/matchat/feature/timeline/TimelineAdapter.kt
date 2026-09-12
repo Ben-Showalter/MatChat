@@ -263,7 +263,9 @@ internal class TimelineAdapter(
 
     class SimpleVH(view: View) : RecyclerView.ViewHolder(view) {
         private val text = view as TextView
-        fun bind(label: String) { text.text = label }
+        fun bind(label: String) {
+            text.text = label
+        }
     }
 
     private companion object {
