@@ -78,7 +78,7 @@ class NewChatFragment : SoftkeyFragment() {
 
     private fun header(text: String): TextView = TextView(requireContext()).apply {
         this.text = text.uppercase()
-        textSize = HEADER_SP
+        setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeMeta))
         setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
         isFocusable = false
         val pad = resources.getDimensionPixelSize(UiR.dimen.content_pad)
