@@ -145,6 +145,24 @@ internal class RustMatrixClientHolder @Inject constructor(
         entriesResult = result // keep alive so the stream is not dropped
     }
 
+    private fun observeConnectivity() {
+        if (networkCallback != null) return
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (syncState.value == SyncState.OFFLINE) syncState.value = SyncState.SYNCING
+            }
+
+            override fun onLost(network: Network) {
+                // onLost fires per-network; only declare OFFLINE once nothing
+                // else is active (e.g. Wi-Fi drops but mobile data is still up).
+                if (cm.activeNetwork == null) syncState.value = SyncState.OFFLINE
+            }
+        }
+        runCatching { cm.registerDefaultNetworkCallback(callback) }
+            .onSuccess { networkCallback = callback }
+    }
+
     fun roomFor(roomId: RoomId): Room? = runCatching { roomList?.room(roomId.value) }.getOrNull()
 
     /** Restore keys from a recovery key so encrypted history can be decrypted. */

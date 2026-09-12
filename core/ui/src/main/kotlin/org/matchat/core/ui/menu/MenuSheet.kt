@@ -97,7 +97,7 @@ object MenuSheet {
 
     private fun rowFor(context: Context, item: MenuItem, onClick: () -> Unit): TextView = TextView(context).apply {
         text = item.label
-        textSize = MENU_ROW_TEXT_SP
+        setTextSize(TypedValue.COMPLEX_UNIT_PX, context.themeDimenPx(R.attr.textSizeBody))
         setTextColor(context.themeColor(R.attr.colorTextOnFocus))
         minHeight = context.resources.getDimensionPixelSize(R.dimen.row_min_height_compact)
         gravity = Gravity.CENTER_VERTICAL

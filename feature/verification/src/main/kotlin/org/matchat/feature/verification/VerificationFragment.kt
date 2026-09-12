@@ -120,7 +120,7 @@ class VerificationFragment : SoftkeyFragment() {
         addView(
             TextView(requireContext()).apply {
                 text = emoji.name
-                textSize = LABEL_SP
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, requireContext().themeDimenPx(UiR.attr.textSizeMeta))
                 gravity = Gravity.CENTER
                 setTextColor(requireContext().themeColor(UiR.attr.colorTextSecondary))
             },

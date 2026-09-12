@@ -149,6 +149,7 @@ internal object Mappers {
                 type.content.info?.mimetype,
                 type.content.info?.size?.toLong(),
                 null,
+                null,
             )
             is MessageType.Video -> Media6(
                 MediaKind.VIDEO,
@@ -157,6 +158,7 @@ internal object Mappers {
                 type.content.caption,
                 type.content.info?.mimetype,
                 type.content.info?.size?.toLong(),
+                null,
                 null,
             )
             is MessageType.Audio -> Media6(
@@ -178,6 +180,7 @@ internal object Mappers {
                 type.content.caption,
                 type.content.info?.mimetype,
                 type.content.info?.size?.toLong(),
+                null,
                 null,
             )
             else -> return null

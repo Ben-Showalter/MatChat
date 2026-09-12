@@ -5,7 +5,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, Dev ]
   pull_request:
 
 concurrency:
@@ -26,6 +26,9 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile (fail fast on broken merges)
+        run: ./gradlew compileDebugKotlin compileDebugUnitTestKotlin
 
       - name: Spotless (format check)
         run: ./gradlew spotlessCheck
