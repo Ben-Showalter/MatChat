@@ -426,8 +426,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  D-pad-navigable image browser, and typically only answers the older
      *  GET_CONTENT convention, not the full Storage Access Framework
      *  ACTION_OPEN_DOCUMENT alone would reach. Mirrors the DPAD-Messaging
-     *  approach. Shared by [launchFileChooser] (`*/*`) and, when the system
-     *  Photo Picker isn't available, [launchPhotoPicker] (`image/*`). */
+     *  approach. Shared by [launchFileChooser] (any MIME type) and, when the
+     *  system Photo Picker isn't available, [launchPhotoPicker] (images only). */
     private fun launchAttachmentChooser(mimeType: String) {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
