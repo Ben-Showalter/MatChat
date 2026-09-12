@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
@@ -80,8 +79,9 @@ class RoomListFragment : SoftkeyFragment() {
 
     private fun render(state: RoomListState) {
         val b = binding ?: return
-        setSyncGlyph(if (state.isOffline) SyncState.OFFLINE else SyncState.IDLE)
-
+        // Sync/connection indicator (Online indicator round) is now handled
+        // centrally by SoftkeyFragment — no per-screen call needed. The
+        // offline banner below is separate, in-content UI, unaffected.
         b.offlineBanner.isVisible = state.isOffline
         b.inviteBand.isVisible = state.inviteBand != null
         state.inviteBand?.let {

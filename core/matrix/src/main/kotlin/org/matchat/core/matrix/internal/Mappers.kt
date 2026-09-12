@@ -140,14 +140,14 @@ internal object Mappers {
         reactions: List<ReactionSummary>,
         isPinned: Boolean,
     ): TimelineItem.Media? {
-        val (kind, source, filename, caption, mime, size, durationMs) = when (type) {
+        val (kind, source, filename, caption, mime, size, durationMs, waveform) = when (type) {
             is MessageType.Image -> Media6(
                 MediaKind.IMAGE, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null,
+                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
             )
             is MessageType.Video -> Media6(
                 MediaKind.VIDEO, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null,
+                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
             )
             is MessageType.Audio -> Media6(
                 if (type.content.voice != null) MediaKind.VOICE else MediaKind.AUDIO,
@@ -156,10 +156,11 @@ internal object Mappers {
                 runCatching {
                     type.content.info?.duration?.toMillis() ?: type.content.audio?.duration?.toMillis()
                 }.getOrNull(),
+                waveformOf(type),
             )
             is MessageType.File -> Media6(
                 MediaKind.FILE, type.content.source, type.content.filename, type.content.caption,
-                type.content.info?.mimetype, type.content.info?.size?.toLong(), null,
+                type.content.info?.mimetype, type.content.info?.size?.toLong(), null, null,
             )
             else -> return null
         }
@@ -183,11 +184,34 @@ internal object Mappers {
             seenBy = seenBy,
             reactions = reactions,
             isPinned = isPinned,
+            waveform = waveform,
         )
     }
 
+    /** NOTE: `.waveform`'s exact element type (UShort/UInt/Int, per the
+     *  UniFFI-generated binding for `org.matrix.rustcomponents.sdk`) is
+     *  unverified against a real build in this environment — `.toInt()` is
+     *  used because it's a valid extension on every built-in Kotlin integer
+     *  type, so this compiles regardless of which one it actually is; only
+     *  the property name `content.audio?.waveform` itself needs confirming
+     *  (its sibling `content.audio?.duration` immediately above already
+     *  compiles today, which is strong evidence this same object also
+     *  exposes the spec's other field). The actual normalization math lives
+     *  in [normalizeWaveform], a plain-Int function so it's testable without
+     *  needing an SDK type at all. */
+    private fun waveformOf(type: MessageType.Audio): List<Float>? =
+        runCatching { type.content.audio?.waveform?.map { it.toInt() } }.getOrNull()?.let(::normalizeWaveform)
+
+    /** MSC3245's waveform is a list of integers 0..1000; normalize to the
+     *  same 0f..1f range [org.matchat.feature.timeline.VoiceRecorder] already
+     *  produces on the sending side, so incoming and locally-recorded
+     *  waveforms render through one shared scale. Clamped defensively —
+     *  the spec requires 0..1000, but never trust a value from the wire
+     *  (could be another client's bug, or a hostile homeserver). */
+    internal fun normalizeWaveform(raw: List<Int>): List<Float> = raw.map { it.coerceIn(0, 1000) / 1000f }
+
     /** Small carrier so the media `when` can destructure its columns (a data
-     *  class provides component1..7 automatically). */
+     *  class provides component1..8 automatically). */
     private data class Media6(
         val kind: MediaKind,
         val source: MediaSource,
@@ -196,6 +220,7 @@ internal object Mappers {
         val mime: String?,
         val size: Long?,
         val durationMs: Long?,
+        val waveform: List<Float>?,
     )
 
     private fun eventIdOf(id: EventOrTransactionId): String =

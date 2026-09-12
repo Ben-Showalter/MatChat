@@ -13,7 +13,7 @@
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad">
 
-        <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
+        <TextView android:id="@+id/help_softkeys" style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_softkeys"
             android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
@@ -25,7 +25,7 @@
             android:layout_height="wrap_content" android:text="@string/help_center"
             android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 
-        <TextView style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
+        <TextView android:id="@+id/help_back" style="@style/Widget.MatChat.Row" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:text="@string/help_back"
             android:textSize="?attr/textSizeBody" android:textColor="?attr/colorTextOnFocus" />
 

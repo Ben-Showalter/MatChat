@@ -23,13 +23,13 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val themeModeState = MutableStateFlow(readEnum(KEY_THEME_MODE, ThemeMode.LIGHT))
     override val themeMode: StateFlow<ThemeMode> = themeModeState
 
-    private val accentColorState = MutableStateFlow(readEnum(KEY_ACCENT_COLOR, AccentColor.GREEN))
+    private val accentColorState = MutableStateFlow(readEnum(KEY_ACCENT_COLOR, AccentColor.RUST))
     override val accentColor: StateFlow<AccentColor> = accentColorState
 
     private val textSizeState = MutableStateFlow(readEnum(KEY_TEXT_SIZE, TextSizePreference.NORMAL))
     override val textSize: StateFlow<TextSizePreference> = textSizeState
 
-    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
+    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, true))
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
 
     private val notificationsEnabledState = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true))

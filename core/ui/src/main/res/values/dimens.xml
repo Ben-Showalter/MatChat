@@ -47,6 +47,19 @@
     <dimen name="text_sender_large">15sp</dimen>
     <dimen name="text_heading_large">21sp</dimen>
 
+    <!-- Text size setting: a third, larger-still tier (Theme.MatChat.
+         Size.Large — Settings > Text size), one more ~1.25x step above the
+         _large set (which "Normal" already claims — see that set's own
+         comment on the naming). -->
+    <dimen name="text_body_xlarge">25sp</dimen>
+    <dimen name="text_label_xlarge">22sp</dimen>
+    <dimen name="text_meta_xlarge">17sp</dimen>
+    <dimen name="text_room_name_xlarge">26sp</dimen>
+    <dimen name="text_room_preview_xlarge">20sp</dimen>
+    <dimen name="text_address_xlarge">20sp</dimen>
+    <dimen name="text_sender_xlarge">19sp</dimen>
+    <dimen name="text_heading_xlarge">26sp</dimen>
+
     <!-- Chrome bands (UX-SPEC §1). Grown (from 18/20dp) to fit the bigger
          chrome text: the title bar's own text now defaults to 18sp
          (?attr/textSizeLabel, Size.Normal) and softkey_bar_height needs
@@ -60,6 +73,8 @@
     <dimen name="row_min_height_compact">36dp</dimen>
     <dimen name="row_min_height_large">64dp</dimen>
     <dimen name="row_min_height_compact_large">52dp</dimen>
+    <dimen name="row_min_height_xlarge">80dp</dimen>
+    <dimen name="row_min_height_compact_xlarge">65dp</dimen>
 
     <!-- Focus highlight: trailing-edge accent bar width, no rounded corners
          (UX-SPEC §2). Widened from 3dp after the first pass read as barely
@@ -104,4 +119,9 @@
     <dimen name="avatar_size_list_large">44dp</dimen>
     <dimen name="avatar_size_sender_large">24dp</dimen>
     <dimen name="avatar_size_seen_by_large">20dp</dimen>
+
+    <!-- Text size setting: Large tier's avatar counterparts, same ~1.25x step. -->
+    <dimen name="avatar_size_list_xlarge">55dp</dimen>
+    <dimen name="avatar_size_sender_xlarge">30dp</dimen>
+    <dimen name="avatar_size_seen_by_xlarge">25dp</dimen>
 </resources>

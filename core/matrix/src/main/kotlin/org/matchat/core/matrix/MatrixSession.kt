@@ -11,7 +11,7 @@ import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomSummary
-import org.matchat.core.model.SyncState
+import org.matchat.core.model.SyncStateSource
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 
@@ -20,11 +20,14 @@ import org.matchat.core.model.UserId
  * Everything here returns :core:model types — no SDK type ever crosses this line
  * (AGENTS.md §2). All heavy work happens on Dispatchers.IO inside the
  * implementation; callers just collect Flows and await suspend functions.
+ *
+ * Extends [SyncStateSource] (Online indicator round) so :core:ui can observe
+ * [syncState] via that :core:model-level contract without depending on this
+ * module directly — MatrixModule binds the same implementation both ways.
  */
-interface MatrixSession {
+interface MatrixSession : SyncStateSource {
     val rooms: Flow<List<RoomSummary>> // joined rooms only
     val invites: Flow<List<InviteSummary>> // membership == Invited
-    val syncState: Flow<SyncState>
     val ownDevice: Flow<DeviceTrust>
 
     /** Whether a live SDK client (and its sync loop) exists right now. False

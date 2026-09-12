@@ -1,5 +1,10 @@
 // :core:model — pure Kotlin, the shared vocabulary (ARCHITECTURE.md).
-// Depends on NOTHING: no Android SDK, no Matrix SDK, no coroutines-android.
+// Depends on nothing else: no Android SDK, no Matrix SDK, no coroutines-android.
+// One narrow exception: plain kotlinx-coroutines-core (below), for
+// SyncStateSource's Flow<SyncState> — a small cross-cutting contract
+// :core:ui needs to observe without depending on :core:matrix (Online
+// indicator round). Not coroutines-android: no Dispatchers.Main/Android
+// main-looper dependency, just the platform-agnostic Flow type itself.
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -20,6 +25,8 @@ kotlin {
 }
 
 dependencies {
+    api(libs.kotlinx.coroutines.core)
+
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }

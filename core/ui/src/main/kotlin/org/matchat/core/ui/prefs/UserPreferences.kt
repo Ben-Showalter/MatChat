@@ -18,12 +18,14 @@ enum class AccentColor {
 
 /** Settings > Text size (UX-SPEC §S16): scales text, avatars, and row heights
  *  together app-wide, via the same ?attr indirection + Activity.recreate()
- *  mechanism as [AccentColor] (Theme.MatChat.Size.{Normal,Small}, themes.xml).
- *  NORMAL is the larger, default size — this app's whole point is legibility
- *  on a small screen — with SMALL as the reduced option for anyone who wants
- *  more on screen at once. Also toggled by holding `*` (LogicalKey.STAR_HOLD),
- *  from any screen. */
-enum class TextSizePreference { NORMAL, SMALL }
+ *  mechanism as [AccentColor] (Theme.MatChat.Size.{Normal,Small,Large},
+ *  themes.xml). NORMAL is the default size — this app's whole point is
+ *  legibility on a small screen — with SMALL as the reduced option for
+ *  anyone who wants more on screen at once, and LARGE a step up again for
+ *  anyone who wants it bigger still. Also cycled by holding `*`
+ *  (LogicalKey.STAR_HOLD, Small -> Normal -> Large -> Small), from any
+ *  screen. */
+enum class TextSizePreference { NORMAL, SMALL, LARGE }
 
 /**
  * How the app renders itself. A [StateFlow], not a value read once, so a
@@ -38,11 +40,14 @@ interface UserPreferences {
     val textSize: StateFlow<TextSizePreference>
 
     /** Settings > Advanced > "Swap Left/Right keys" (Phase 6, UI improvement
-     *  plan) — for a device whose hardware softkeys are physically reversed.
-     *  A narrow, explicit exception to "LEFT=Options/RIGHT=Back, always"
-     *  (AGENTS.md §4, docs/adr/0007). Read directly (StateFlow.value, not
-     *  collected) by KeyMap's one caller (MainActivity.dispatchKeyEvent) on
-     *  every key press — swapping takes effect immediately, no recreate. */
+     *  plan) — true by default, so Options sits on the right and Back on the
+     *  left out of the box (docs/adr/0007); originally added for a device
+     *  whose hardware softkeys are physically reversed, the swapped layout
+     *  is now also the shipped default, with the toggle still there for
+     *  anyone who wants the original LEFT=Options/RIGHT=Back layout back.
+     *  Read directly (StateFlow.value, not collected) by KeyMap's one caller
+     *  (MainActivity.dispatchKeyEvent) on every key press — swapping takes
+     *  effect immediately, no recreate. */
     val softkeysSwapped: StateFlow<Boolean>
 
     /** Settings > Notifications — whether the incoming-message notification
