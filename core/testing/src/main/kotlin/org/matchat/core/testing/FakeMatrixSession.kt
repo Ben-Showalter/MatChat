@@ -34,6 +34,9 @@ class FakeMatrixSession(
     override val syncState: Flow<SyncState> = syncFlow
     override val ownDevice: Flow<DeviceTrust> = deviceFlow
 
+    var active: Boolean = true
+    override fun isActive(): Boolean = active
+
     val timelines = mutableMapOf<RoomId, FakeTimeline>()
     var profileResult: (UserId) -> Result<Profile> = { Result.success(Profile(it, null)) }
     var startDirectChatResult: (UserId) -> Result<RoomId> = { Result.success(RoomId("!new:local")) }

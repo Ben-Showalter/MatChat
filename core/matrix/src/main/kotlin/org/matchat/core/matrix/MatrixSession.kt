@@ -27,6 +27,12 @@ interface MatrixSession {
     val syncState: Flow<SyncState>
     val ownDevice: Flow<DeviceTrust>
 
+    /** Whether a live SDK client (and its sync loop) exists right now. False
+     *  right after a process restart until something restores the session —
+     *  callers that can outlive Activity (SyncForegroundService) use this to
+     *  know sync needs re-establishing, not just observing. */
+    fun isActive(): Boolean
+
     fun timeline(roomId: RoomId): RoomTimeline
 
     suspend fun acceptInvite(roomId: RoomId): Result<Unit>

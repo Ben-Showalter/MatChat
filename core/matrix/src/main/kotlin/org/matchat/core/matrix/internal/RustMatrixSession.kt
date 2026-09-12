@@ -43,6 +43,8 @@ internal class RustMatrixSession @Inject constructor(
     override val rooms: Flow<List<RoomSummary>> = holder.rooms
     override val syncState: Flow<SyncState> = holder.syncState
 
+    override fun isActive(): Boolean = holder.isActive()
+
     // FFI follow-up: invites = rooms filtered by Invited membership; device trust
     // arrives with the M4 verification wiring.
     override val invites: Flow<List<InviteSummary>> = flowOf(emptyList())
