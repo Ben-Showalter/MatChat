@@ -39,5 +39,10 @@
     <string name="key_accessibility_service_desc">Lets MatChat\'s own right softkey (Options or Back,
         depending on Settings > Advanced > Swap Left/Right keys) work while typing a message, on
         phones whose predictive-text keyboard would otherwise capture it first. Reads only the right
-        softkey press — nothing else, never your typing, never the screen.</string>
+        softkey press — nothing else, never your typing, never the screen.\n\nStill not working after
+        turning this on? Only one app\'s accessibility service can win a given key press — check
+        Settings > Accessibility for any other keyboard or key-logging service and turn it off too.
+        On Android 13 and up, this switch can also silently fail to take effect for a sideloaded app
+        like this one until you allow it: open Settings > Apps > MatChat, use the overflow menu for
+        \"Allow restricted settings,\" then try turning this on again.</string>
 </resources>

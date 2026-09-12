@@ -2,6 +2,7 @@ package org.matchat.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
@@ -221,6 +222,17 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
+        // Diagnostic only (on-device report: right softkey doesn't open Options
+        // even with the accessibility-service workaround on, and a competing
+        // app's own key-intercepting accessibility service was ruled out as the
+        // cause by disabling it and retesting) — this line proves whether normal
+        // dispatch ever saw the raw key at all, distinct from the accessibility
+        // path logged in handleAccessibilityKeyEvent below. Left in permanently;
+        // one key event is not meaningful log volume.
+        if (event.keyCode == KeyEvent.KEYCODE_SOFT_RIGHT) {
+            Log.d(SOFTKEY_LOG_TAG, "dispatchKeyEvent: normal dispatch saw raw SOFT_RIGHT")
+        }
+
         val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value)
             ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
@@ -240,6 +252,12 @@ class MainActivity : AppCompatActivity(), Navigator {
             return super.dispatchKeyEvent(event)
         }
         val handled = receiver()?.onLogicalKey(logical) ?: false
+        if (logical == LogicalKey.SOFT_LEFT || logical == LogicalKey.SOFT_RIGHT) {
+            Log.d(
+                SOFTKEY_LOG_TAG,
+                "dispatchKeyEvent: logical=$logical handled=$handled receiver=${receiver()?.javaClass?.simpleName}",
+            )
+        }
         // Unhandled hardware call keys must reach the system (so the CALL key still
         // opens the dialer when no call screen consumes it — docs/VOICE.md §6).
         // Other unhandled keys stay swallowed, as before.
@@ -268,7 +286,15 @@ class MainActivity : AppCompatActivity(), Navigator {
      *  other key — is unaffected whether or not the service is enabled). */
     private fun handleAccessibilityKeyEvent(event: KeyEvent): Boolean {
         val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value) ?: return false
-        return receiver()?.onLogicalKey(logical) ?: false
+        val handled = receiver()?.onLogicalKey(logical) ?: false
+        // Diagnostic only — see the matching log line in dispatchKeyEvent. This
+        // one firing at all proves MatChatKeyAccessibilityService.onKeyEvent was
+        // invoked and returned true for the key (it only forwards a raw
+        // SOFT_RIGHT down here to begin with); if it never fires on a device
+        // where the service is enabled, the key never reached MatChat through
+        // either path — a strictly earlier, OS/other-app-level swallow.
+        Log.d(SOFTKEY_LOG_TAG, "handleAccessibilityKeyEvent: logical=$logical handled=$handled")
+        return handled
     }
 
     // --- Navigator ----------------------------------------------------------
@@ -349,6 +375,11 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_SENDER_ID = "senderId"
         const val ARG_TIMESTAMP = "timestamp"
         const val ARG_USER_ID = "userId"
+
+        // Diagnostic logging for the right-softkey/Options on-device report —
+        // see the log call sites (dispatchKeyEvent, handleAccessibilityKeyEvent)
+        // and MatChatKeyAccessibilityService's own doc comment for the full story.
+        private const val SOFTKEY_LOG_TAG = "MatChatSoftkey"
 
         // Set/cleared in onResume/onPause — same process as
         // MatChatKeyAccessibilityService (no separate android:process declared

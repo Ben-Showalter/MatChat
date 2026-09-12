@@ -388,12 +388,27 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     }
 
     /** Opens the system Photo Picker directly — a gallery-style grid, no
-     *  intermediate chooser dialog. Falls back gracefully on devices without
-     *  a Photo Picker (it degrades to a document picker itself on very old
-     *  API levels without Play services); [photoPicker]'s launch is still
-     *  guarded the same way [launchFileChooser] guards its chooser, in case
-     *  no handler exists at all on a locked-down device. */
+     *  intermediate chooser dialog — when one actually exists on this
+     *  device. [PickVisualMedia] itself has no such device the app can ask
+     *  about other than [isPhotoPickerAvailable]; without that guard it
+     *  silently degrades to `ACTION_OPEN_DOCUMENT` on a build with no Photo
+     *  Picker, which only Storage-Access-Framework document providers can
+     *  answer. On a bare AOSP build with no Google apps (this device
+     *  class, ADR 0004: no Play Services, so no Photo Picker backport
+     *  either) the only such provider is DocumentsUI, whose own root
+     *  browser ("Open from": Images / Recent / Downloads / SD card / Bug
+     *  reports) is not a gallery — that was the on-device report ("it
+     *  should open the gallery directly instead of opening files"). Fall
+     *  back to [launchAttachmentChooser] instead, the same GET_CONTENT-
+     *  inclusive path [launchFileChooser] already uses to reach a real
+     *  device Gallery app, scoped to images. */
     private fun launchPhotoPicker() {
+        val available = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+            .isPhotoPickerAvailable(requireContext())
+        if (!available) {
+            launchAttachmentChooser(mimeType = "image/*")
+            return
+        }
         val request = androidx.activity.result.PickVisualMediaRequest(
             androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly,
         )
@@ -402,20 +417,26 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
+    /** Not photo-specific (any file type), so a document chooser is still
+     *  the right shape here — see [launchAttachmentChooser]. */
+    private fun launchFileChooser() = launchAttachmentChooser(mimeType = "*/*")
+
     /** Offer the Documents UI AND the device Gallery (via ACTION_GET_CONTENT
      *  initial intents) — on a feature phone the Gallery is often the only
-     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach.
-     *  Not photo-specific (any file type), so a document chooser is still
-     *  the right shape here — only "Send Photo" moved to [launchPhotoPicker]. */
-    private fun launchFileChooser() {
+     *  D-pad-navigable image browser, and typically only answers the older
+     *  GET_CONTENT convention, not the full Storage Access Framework
+     *  ACTION_OPEN_DOCUMENT alone would reach. Mirrors the DPAD-Messaging
+     *  approach. Shared by [launchFileChooser] (`*/*`) and, when the system
+     *  Photo Picker isn't available, [launchPhotoPicker] (`image/*`). */
+    private fun launchAttachmentChooser(mimeType: String) {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            type = "*/*"
+            type = mimeType
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val getContent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            type = "*/*"
+            type = mimeType
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val chooser = android.content.Intent.createChooser(
