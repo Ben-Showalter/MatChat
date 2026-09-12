@@ -40,6 +40,18 @@ class TimelineViewModel @Inject constructor(
     private val composeFocused = MutableStateFlow(false)
     private val loadingEarlier = MutableStateFlow(false)
 
+    /** userId -> display name, for the typing indicator (RoomInfoViewModel's
+     *  own one-shot `session.roomMembers` fetch, same reasoning: membership
+     *  rarely changes mid-conversation, so this doesn't need to be a Flow
+     *  folded into the state combine below). */
+    private var memberNames: Map<String, String> = emptyMap()
+
+    init {
+        viewModelScope.launch {
+            memberNames = session.roomMembers(roomId).associate { it.userId.value to it.label }
+        }
+    }
+
     /** The staged photo/file/camera-capture, if any (Attachment staging round) —
      *  a separate flow, folded into [state] below via a nested combine since
      *  Kotlin's fixed-arity `combine` tops out at 5 flows. */
@@ -89,12 +101,15 @@ class TimelineViewModel @Inject constructor(
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimelineState())
 
-    /** Localpart-based label; peer display names are a follow-up (S9). */
+    /** Display name when known ([memberNames]), else the raw id's localpart. */
     private fun typingLine(typing: List<org.matchat.core.model.UserId>): String? = when {
         typing.isEmpty() -> null
-        typing.size == 1 -> "${typing.first().value.removePrefix("@").substringBefore(':')} is typing…"
+        typing.size == 1 -> "${typingName(typing.first().value)} is typing…"
         else -> "Several people are typing…"
     }
+
+    private fun typingName(userId: String): String =
+        memberNames[userId] ?: userId.removePrefix("@").substringBefore(':')
 
     private var typingActive = false
     private var typingStopJob: kotlinx.coroutines.Job? = null

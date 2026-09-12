@@ -2,9 +2,11 @@ package org.matchat.core.ui.media
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Shader
 import android.graphics.Typeface
 import android.util.LruCache
 
@@ -26,8 +28,10 @@ object AvatarCache {
     fun get(url: String): Bitmap? = cache.get(url)
 
     /** Decodes [bytes] with an inSampleSize so the result fits within
-     *  [maxPx], caching under [url] before returning it. Returns the cached
-     *  bitmap without re-decoding if [url] is already present. */
+     *  [maxPx], round-crops it (avatars are always round, real photo or
+     *  fallback alike — see [toCircular]), and caches the round result under
+     *  [url] before returning it. Returns the cached bitmap without
+     *  re-decoding if [url] is already present. */
     fun decodeAndCache(url: String, bytes: ByteArray, maxPx: Int): Bitmap? {
         cache.get(url)?.let { return it }
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -41,9 +45,34 @@ object AvatarCache {
             h /= 2
         }
         val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-        val bitmap = runCatching { BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) }.getOrNull()
+        val decoded = runCatching { BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) }.getOrNull()
+        val bitmap = decoded?.let { toCircular(it) }
         if (bitmap != null) cache.put(url, bitmap)
         return bitmap
+    }
+
+    /** Crops [source] to a circle inscribed in its shorter side — a real
+     *  avatar photo may be square (or any aspect ratio); every avatar in the
+     *  app is round, fallback or photo alike, so this is applied once here
+     *  rather than left to each ImageView to clip. Pixels outside the circle
+     *  are fully transparent (ARGB_8888), matching how [fallback] already
+     *  draws a bare circle rather than a square with rounded corners. */
+    private fun toCircular(source: Bitmap): Bitmap {
+        val size = minOf(source.width, source.height)
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        val shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+            // Center the source bitmap's longer dimension so the crop isn't
+            // off-axis for a non-square photo (matches CENTER_CROP framing).
+            val dx = (size - source.width) / 2f
+            val dy = (size - source.height) / 2f
+            val matrix = android.graphics.Matrix().apply { setTranslate(dx, dy) }
+            setLocalMatrix(matrix)
+        }
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
+        val radius = size / 2f
+        canvas.drawCircle(radius, radius, radius, paint)
+        return output
     }
 
     /** The no-avatar fallback (colored circle + initial letter, AvatarFallback

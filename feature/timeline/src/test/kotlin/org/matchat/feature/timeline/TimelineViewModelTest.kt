@@ -15,9 +15,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
+import org.matchat.core.model.Membership
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.SendState
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.TimelineItem
@@ -240,6 +242,33 @@ class TimelineViewModelTest {
         testScheduler.advanceUntilIdle()
         vm.navEvents.test {
             expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `typing indicator shows the member's display name, not the raw id`() = runTest {
+        session.members = listOf(
+            RoomMemberSummary(UserId("@wayne:s"), "Wayne", Membership.JOINED, isSelf = false),
+        )
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        testScheduler.advanceUntilIdle() // let the init-block member fetch land
+        fake.emitTyping(listOf(UserId("@wayne:s")))
+        vm.state.test {
+            assertEquals("Wayne is typing…", expectMostRecentItem().typingText)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `typing indicator falls back to the id's localpart for an unknown member`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        val vm = subject()
+        testScheduler.advanceUntilIdle()
+        fake.emitTyping(listOf(UserId("@stranger:s")))
+        vm.state.test {
+            assertEquals("stranger is typing…", expectMostRecentItem().typingText)
             cancelAndIgnoreRemainingEvents()
         }
     }
