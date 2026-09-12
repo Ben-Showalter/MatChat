@@ -21,6 +21,7 @@ import org.matchat.core.model.Membership
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.SendState
 import org.matchat.core.model.TimelineItem
@@ -37,7 +38,8 @@ class TimelineViewModelTest {
     private val policy = FakePolicyProvider()
     private val draftStore = FakeDraftStore()
 
-    private fun subject() = TimelineViewModel(session, clock, policy, SavedStateHandle(mapOf("roomId" to roomId.value)))
+    private fun subject() =
+        TimelineViewModel(session, clock, policy, draftStore, SavedStateHandle(mapOf("roomId" to roomId.value)))
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
