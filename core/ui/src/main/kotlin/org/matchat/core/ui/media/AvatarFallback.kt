@@ -14,14 +14,22 @@ object AvatarFallback {
     /** A small fixed palette, not theme-driven (see class doc) — picked for
      *  reasonable legibility of a white letter on top, in both themes. */
     private val PALETTE = intArrayOf(
-        0xFF368BD6.toInt(), // blue
-        0xFFAC3BA8.toInt(), // fuchsia
-        0xFF03B381.toInt(), // green
-        0xFFE64F7A.toInt(), // rose
-        0xFFFF812D.toInt(), // orange
-        0xFF2DC2C5.toInt(), // teal
-        0xFF5C56F5.toInt(), // purple
-        0xFF74D12C.toInt(), // lime
+        // blue
+        0xFF368BD6.toInt(),
+        // fuchsia
+        0xFFAC3BA8.toInt(),
+        // green
+        0xFF03B381.toInt(),
+        // rose
+        0xFFE64F7A.toInt(),
+        // orange
+        0xFFFF812D.toInt(),
+        // teal
+        0xFF2DC2C5.toInt(),
+        // purple
+        0xFF5C56F5.toInt(),
+        // lime
+        0xFF74D12C.toInt(),
     )
 
     /** Deterministic: the same [userId] always gets the same color, on any
