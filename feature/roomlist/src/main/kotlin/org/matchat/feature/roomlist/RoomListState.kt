@@ -1,5 +1,6 @@
 package org.matchat.feature.roomlist
 
+import org.matchat.core.matrix.Draft
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.RoomId
 
@@ -12,8 +13,14 @@ data class RoomRow(
     val unreadCount: Int,
     /** An `mxc://` URI, or null for no room avatar set (Avatars round). */
     val avatarUrl: String? = null,
+    /** A live draft for this room (draft messages round), or null. Like
+     *  [avatarUrl], not display-ready on its own — the adapter formats
+     *  "Draft: …" (or "Draft: Attachment") from it and shows that instead
+     *  of [preview] when non-null and non-empty. */
+    val draft: Draft? = null,
 ) {
     val isUnread: Boolean get() = unreadCount > 0
+    val isDraft: Boolean get() = draft != null && !draft.isEmpty
 }
 
 /** The pending-invitation band shown under the title bar (S8). */

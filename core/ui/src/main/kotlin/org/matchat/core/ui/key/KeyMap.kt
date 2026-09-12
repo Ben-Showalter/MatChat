@@ -8,7 +8,12 @@ import android.view.KeyEvent
  * dispatched, and the keys arrive as KEYCODE_MENU / KEYCODE_BACK or an OEM
  * private code (PLAN.md risk table, AGENTS.md §4). This table is per-device data,
  * established by the M0 key-logger spike on real hardware. Nothing outside this
- * file reads a keycode.
+ * file reads a keycode *to decide what it logically means* — the one narrow
+ * exception is `MatChatKeyAccessibilityService` (app/accessibility, docs/adr/0007
+ * addendum), which reads a raw keycode only to decide whether to intercept it
+ * at all (a plain equality check against KEYCODE_SOFT_RIGHT), before handing
+ * any actually-claimed event straight back into [map] for the real
+ * translation — it never derives a [LogicalKey] itself.
  *
  * Long-press (`#`, `*`) is resolved by the caller tracking down/up time; [map]
  * handles the single-press codes and the D-pad.
@@ -78,10 +83,19 @@ object KeyMap {
         else -> null
     }
 
-    /** Codes that a long-press turns into a hold action. */
+    /** Codes that a long-press turns into a hold action. Unlike `#`/`*`
+     *  (absent from [mapRaw], so a short press of those does nothing
+     *  anywhere), CENTER/ENTER are also mapped in [mapRaw] to plain CENTER —
+     *  a long press therefore dispatches both, in order: the initial
+     *  (non-long) DOWN fires plain CENTER first, then this fires CENTER_HOLD
+     *  once the OS's long-press threshold passes. CENTER stays instant
+     *  everywhere by default; only a screen that specifically opts into
+     *  treating CENTER_HOLD as its real "confirm" (and CENTER itself as a
+     *  no-op in that context) sees hold-to-confirm behavior. */
     fun holdKey(keyCode: Int): LogicalKey? = when (keyCode) {
         KeyEvent.KEYCODE_POUND -> LogicalKey.HASH_HOLD
         KeyEvent.KEYCODE_STAR -> LogicalKey.STAR_HOLD
+        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> LogicalKey.CENTER_HOLD
         else -> null
     }
 }

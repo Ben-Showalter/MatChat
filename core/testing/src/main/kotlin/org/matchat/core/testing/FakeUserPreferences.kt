@@ -3,6 +3,7 @@ package org.matchat.core.testing
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.matchat.core.ui.prefs.AccentColor
+import org.matchat.core.ui.prefs.TextSizePreference
 import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 
@@ -10,6 +11,7 @@ import org.matchat.core.ui.prefs.UserPreferences
 class FakeUserPreferences(
     initialThemeMode: ThemeMode = ThemeMode.LIGHT,
     initialAccentColor: AccentColor = AccentColor.GREEN,
+    initialTextSize: TextSizePreference = TextSizePreference.NORMAL,
     initialSoftkeysSwapped: Boolean = false,
     initialNotificationsEnabled: Boolean = true,
     initialNotificationSoundUri: String? = null,
@@ -21,6 +23,9 @@ class FakeUserPreferences(
 
     private val accentColorState = MutableStateFlow(initialAccentColor)
     override val accentColor: StateFlow<AccentColor> = accentColorState
+
+    private val textSizeState = MutableStateFlow(initialTextSize)
+    override val textSize: StateFlow<TextSizePreference> = textSizeState
 
     private val softkeysSwappedState = MutableStateFlow(initialSoftkeysSwapped)
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
@@ -40,6 +45,10 @@ class FakeUserPreferences(
 
     override suspend fun setAccentColor(color: AccentColor) {
         accentColorState.value = color
+    }
+
+    override suspend fun setTextSize(size: TextSizePreference) {
+        textSizeState.value = size
     }
 
     override suspend fun setSoftkeysSwapped(swapped: Boolean) {

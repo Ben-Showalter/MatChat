@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MatChatKeyAccessibilityService's config. Deliberately minimal: no
+     canRetrieveWindowContent (we never read screen content, so Android's
+     "can view screen" consent language never applies to this service), no
+     package filter needed since canRequestFilterKeyEvents already scopes key
+     delivery to whichever app currently has the focused window. accessibility
+     EventTypes is a required field even though this service does nothing
+     with AccessibilityEvents (onAccessibilityEvent is a no-op) — the
+     narrowest legal value, not typeAllMask, so the declared surface stays
+     minimal.
+
+     accessibilityFlags="flagRequestFilterKeyEvents" declares the key-filter
+     flag statically here too, matching a confirmed-working sibling app's
+     own accessibility service config on this hardware family (TurboText) —
+     MatChatKeyAccessibilityService.onServiceConnected() also sets the
+     equivalent runtime flag on AccessibilityServiceInfo (functionally
+     equivalent once connected; re-asserting an already-set flag there is a
+     no-op), kept for its own diagnostic logging value. Not copied from that
+     same sibling config: typeAllMask / flagRetrieveInteractiveWindows /
+     a longer notificationTimeout — those all govern onAccessibilityEvent
+     and window-content retrieval, not key delivery via onKeyEvent, and
+     flagRetrieveInteractiveWindows specifically conflicts with the
+     no-screen-reading stance above (that sibling's own source notes the
+     flag never actually helped it either). -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRequestFilterKeyEvents"
+    android:canRequestFilterKeyEvents="true"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="0"
+    android:description="@string/key_accessibility_service_desc" />

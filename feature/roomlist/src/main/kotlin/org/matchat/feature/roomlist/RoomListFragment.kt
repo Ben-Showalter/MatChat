@@ -11,12 +11,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.roomlist.databinding.FragmentRoomListBinding
 
 /**
@@ -48,7 +48,7 @@ class RoomListFragment : SoftkeyFragment() {
      *  byte fetch. */
     private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, avatarMaxPx()) { viewModel.loadAvatar(it) }
         }
     }
 
@@ -80,8 +80,9 @@ class RoomListFragment : SoftkeyFragment() {
 
     private fun render(state: RoomListState) {
         val b = binding ?: return
-        setSyncGlyph(if (state.isOffline) SyncState.OFFLINE else SyncState.IDLE)
-
+        // Sync/connection indicator (Online indicator round) is now handled
+        // centrally by SoftkeyFragment — no per-screen call needed. The
+        // offline banner below is separate, in-content UI, unaffected.
         b.offlineBanner.isVisible = state.isOffline
         b.inviteBand.isVisible = state.inviteBand != null
         state.inviteBand?.let {
@@ -144,12 +145,17 @@ class RoomListFragment : SoftkeyFragment() {
         super.onDestroyView()
     }
 
+    /** Decode-quality cap, ~2x avatarSizeList — a compile-time literal can't
+     *  respond to the runtime Text size choice, so this is computed from the
+     *  theme attr at bind time instead of a const. */
+    private fun avatarMaxPx(): Int =
+        (requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeList) * 2).toInt()
+
     private companion object {
         const val OPT_NEW = "new"
         const val OPT_READ = "read"
         const val OPT_SETTINGS = "settings"
         const val OPT_HELP = "help"
         const val OPT_SIGNOUT = "signout"
-        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_list
     }
 }

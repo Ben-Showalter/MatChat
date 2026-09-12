@@ -1,5 +1,6 @@
 package org.matchat.feature.timeline
 
+import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -12,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.menu.MenuItem
@@ -21,6 +21,7 @@ import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
+import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.timeline.databinding.FragmentTimelineBinding
 
 /** S9 Timeline. Compose is the initial focus (people come here to reply). */
@@ -60,17 +61,20 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private val adapter = TimelineAdapter(
         onMessageFocused = { viewModel.onAction(TimelineAction.MessageFocused(it)) },
         onFixEncryption = { viewModel.onAction(TimelineAction.FixEncryption(it)) },
-        onMessageActivated = { openMessageMenu(it) },
+        onMessageActivated = { openMessageMenu(menuContextFor(it)) },
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
-        onImageActivated = { navigator.toImageViewer(it) },
-        onAttachmentActivated = { openAttachment(it) },
+        onImageActivated = { openMessageMenu(menuContextFor(it)) },
+        onAttachmentActivated = { openMessageMenu(menuContextFor(it)) },
+        onVoiceBubbleActivated = { openMessageMenu(menuContextFor(it)) },
         onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
 
-    // A chooser (Documents UI + the device Gallery) returns a content Uri via
-    // StartActivityForResult; the picked file's kind is derived from its MIME.
+    // Generic result launcher for both "Send Photo" (a bare GET_CONTENT
+    // intent, launchPhotoPicker) and "Send File" (the Documents UI + device
+    // Gallery chooser, launchFileChooser/launchAttachmentChooser) — the
+    // picked file's kind is derived from its MIME either way.
     private val attachmentPicker =
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -80,7 +84,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             }
         }
 
-    // Camera capture writes into our own cache/media file; on success we send it.
+    // Camera capture writes into our own cache/media file; on success we
+    // stage it (Attachment staging round), same as a gallery/file pick.
     private var pendingCameraFile: java.io.File? = null
     private val cameraCapture =
         registerForActivityResult(
@@ -89,8 +94,14 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = pendingCameraFile
             pendingCameraFile = null
             if (success && file != null && file.length() > 0) {
-                Toast.makeText(requireContext(), R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-                viewModel.sendMedia(file.absolutePath, "image/jpeg", org.matchat.core.model.MediaKind.IMAGE, null)
+                stageAttachment(
+                    PendingAttachment(
+                        file.absolutePath,
+                        "image/jpeg",
+                        org.matchat.core.model.MediaKind.IMAGE,
+                        getString(R.string.timeline_attachment_camera_name),
+                    ),
+                )
             }
         }
 
@@ -115,6 +126,17 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
         b.pinnedBand.setOnClickListener { navigator.toPinnedMessages(roomId()) }
 
+        // Restore a saved draft (on-device report: don't lose a partially
+        // typed message on leaving the room) before attaching the watcher
+        // below, so this doesn't fire onComposeTextChanged/re-persist the
+        // very draft it's restoring. Covers both a fresh open (the
+        // ViewModel just loaded it from disk) and returning here from Room
+        // Info/Pinned Messages/Message Info/Image Viewer (the same
+        // TimelineViewModel instance survived, so composeText.value is
+        // already exactly what the user last typed).
+        b.composeInput.setText(viewModel.composeText.value)
+        b.composeInput.setSelection(b.composeInput.text?.length ?: 0)
+
         b.composeInput.addTextChangedListener { text ->
             viewModel.onComposeTextChanged(text?.toString().orEmpty())
         }
@@ -132,7 +154,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private fun render(state: TimelineState) {
         val b = binding ?: return
         setTitle(state.title)
-        setSyncGlyph(SyncState.IDLE)
+        // Sync/connection indicator (Online indicator round) is now handled
+        // centrally by SoftkeyFragment — no per-screen call needed.
         b.pinnedBand.isVisible = state.pinnedCount > 0
         if (state.pinnedCount > 0) {
             b.pinnedBand.text = resources.getQuantityString(
@@ -144,6 +167,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         b.timelineList.isVisible = !state.isEmpty
         b.typingBar.isVisible = state.typingText != null
         b.typingBar.text = state.typingText.orEmpty()
+        b.attachmentPreview.isVisible = state.pendingAttachment != null
+        state.pendingAttachment?.let {
+            b.attachmentPreview.text = getString(R.string.timeline_attachment_preview_format, it.displayName)
+        }
         adapter.submitList(state.rows)
 
         // Viewing the room clears its unread count (a read receipt on the latest
@@ -186,13 +213,50 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             stopRecordingAndSend()
             return true
         }
-        val b = binding ?: return false
-        if (viewModel.state.value.isComposeFocused) {
-            viewModel.onAction(TimelineAction.Send(b.composeInput.text.toString()))
-            b.composeInput.text?.clear()
-            return true
-        }
+        // Bug fix: sending on a plain CENTER press was too easy to trigger by
+        // accident. A quick press while composing is now swallowed (does
+        // nothing) rather than sending — CENTER_HOLD (below, a genuine
+        // ~500ms hold) is the real "send" while composing. binding == null
+        // still means "swallow, nothing to activate" either way.
+        if (binding != null && viewModel.state.value.isComposeFocused) return true
         return super.onCenter()
+    }
+
+    /** CENTER_HOLD (a held CENTER/ENTER) and the hardware CALL key both send
+     *  while composing — CENTER_HOLD is the deliberate hold-to-confirm
+     *  replacement for the plain-CENTER send [onCenter] used to do; CALL is
+     *  the fast, no-hold alternative (repurposing the phone's physical green
+     *  call button, per explicit request — it still falls through to the
+     *  system dialer when compose isn't focused, unchanged). Neither key
+     *  does anything special on any other screen — CallFragment's own
+     *  onOtherKey handles CALL/END there independently. */
+    override fun onOtherKey(key: LogicalKey): Boolean = when (key) {
+        LogicalKey.CENTER_HOLD -> {
+            if (isRecording) {
+                stopRecordingAndSend()
+                true
+            } else if (viewModel.state.value.isComposeFocused) {
+                sendCompose()
+                true
+            } else {
+                false
+            }
+        }
+        LogicalKey.CALL -> {
+            if (viewModel.state.value.isComposeFocused) {
+                sendCompose()
+                true
+            } else {
+                false
+            }
+        }
+        else -> false
+    }
+
+    private fun sendCompose() {
+        val b = binding ?: return
+        viewModel.onAction(TimelineAction.Send(b.composeInput.text.toString()))
+        b.composeInput.text?.clear()
     }
 
     override fun onBack(): Boolean {
@@ -205,6 +269,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     override fun onOptions(): Boolean {
         val items = buildList {
+            if (viewModel.state.value.pendingAttachment != null) {
+                add(MenuItem(OPT_REMOVE_ATTACHMENT, getString(R.string.timeline_opt_remove_attachment)))
+            }
             if (viewModel.canSendMedia) {
                 add(MenuItem(OPT_SEND_PHOTO, getString(R.string.timeline_opt_send_photo)))
                 if (hasCamera()) add(MenuItem(OPT_TAKE_PHOTO, getString(R.string.timeline_opt_take_photo)))
@@ -219,10 +286,11 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
         MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
-                OPT_SEND_PHOTO -> launchAttachmentChooser(imageOnly = true)
+                OPT_REMOVE_ATTACHMENT -> viewModel.onAction(TimelineAction.ClearPendingAttachment)
+                OPT_SEND_PHOTO -> launchPhotoPicker()
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
-                OPT_SEND_FILE -> launchAttachmentChooser(imageOnly = false)
+                OPT_SEND_FILE -> launchFileChooser()
                 OPT_CALL -> navigator.toCall(roomId(), viewModel.state.value.title, incoming = false)
                 OPT_INFO -> navigator.toRoomInfo(roomId())
                 OPT_HELP -> navigator.toHelp()
@@ -278,6 +346,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
+    /** Stages the recording (Attachment staging round) rather than sending it
+     *  immediately — same treatment as a picked photo/file/camera capture,
+     *  so a caption can be typed first here too. */
     private fun stopRecordingAndSend() {
         val rec = recorder ?: return
         val result = rec.stop()
@@ -291,7 +362,21 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             Toast.makeText(requireContext(), R.string.timeline_record_too_short, Toast.LENGTH_SHORT).show()
             return
         }
-        viewModel.sendVoice(result.file.absolutePath, rec.mimeType, result.durationMs, result.waveform)
+        val secs = result.durationMs / 1000
+        val name = getString(
+            R.string.timeline_attachment_voice_name_format,
+            "%d:%02d".format(secs / 60, secs % 60),
+        )
+        stageAttachment(
+            PendingAttachment(
+                result.file.absolutePath,
+                rec.mimeType,
+                org.matchat.core.model.MediaKind.VOICE,
+                name,
+                durationMs = result.durationMs,
+                waveform = result.waveform,
+            ),
+        )
     }
 
     private fun cancelRecording() {
@@ -307,19 +392,53 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         refreshSoftkeys()
     }
 
+    /** Opens the device's own Gallery app directly via a bare ACTION_GET_CONTENT
+     *  (images only) — no `Intent.createChooser` wrapper, so Android launches
+     *  the single matching app directly when exactly one exists (the normal
+     *  case), confirmed on-device: this exact intent shape resolves straight
+     *  to `jp.kyocera.datafolder/jp.kyocera.gallery.GalleryActivity` on the
+     *  reference hardware, with no intermediate screen at all. Deliberately
+     *  drops `PickVisualMedia`/`isPhotoPickerAvailable` entirely — that check
+     *  was found reporting a (modern) Photo Picker as available on this
+     *  device even though none of the target hardware has one (ADR 0004: no
+     *  Play Services, no Photo Picker backport), so its own internal
+     *  silent-degrade to `ACTION_OPEN_DOCUMENT` ran anyway, landing back on
+     *  DocumentsUI's root browser ("Open from": Images / Recent / Downloads /
+     *  SD card / Bug reports) — the on-device report this replaces ("it
+     *  should open the gallery directly instead of opening files"). If a
+     *  device genuinely has more than one app registered for GET_CONTENT and
+     *  images, Android's own normal disambiguation dialog appears — that's
+     *  standard implicit-intent behavior, not something to special-case. */
+    private fun launchPhotoPicker() {
+        val intent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
+            addCategory(android.content.Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        runCatching { attachmentPicker.launch(intent) }.onFailure {
+            Toast.makeText(requireContext(), R.string.timeline_media_no_app, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** Not photo-specific (any file type), so a document chooser is still
+     *  the right shape here — see [launchAttachmentChooser]. */
+    private fun launchFileChooser() = launchAttachmentChooser(mimeType = "*/*")
+
     /** Offer the Documents UI AND the device Gallery (via ACTION_GET_CONTENT
      *  initial intents) — on a feature phone the Gallery is often the only
-     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach. */
-    private fun launchAttachmentChooser(imageOnly: Boolean) {
-        val type = if (imageOnly) "image/*" else "*/*"
+     *  D-pad-navigable image browser, and typically only answers the older
+     *  GET_CONTENT convention, not the full Storage Access Framework
+     *  ACTION_OPEN_DOCUMENT alone would reach. Mirrors the DPAD-Messaging
+     *  approach. Only [launchFileChooser] uses this now — [launchPhotoPicker]
+     *  above launches its own bare GET_CONTENT intent directly, no chooser. */
+    private fun launchAttachmentChooser(mimeType: String) {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = mimeType
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val getContent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = mimeType
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val chooser = android.content.Intent.createChooser(
@@ -344,8 +463,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** Copy the picked content to the cache (the SDK uploads from a file path) and
-     *  send it, deriving the media kind from the resolved MIME type. */
+    /** Copy the picked content to the cache (the SDK uploads from a file path)
+     *  and stage it (Attachment staging round) rather than sending it right
+     *  away, deriving the media kind from the resolved MIME type. The user
+     *  can then type a caption into compose_input before actually sending. */
     private fun sendPicked(uri: android.net.Uri) {
         val ctx = requireContext()
         val mime = ctx.contentResolver.getType(uri) ?: "application/octet-stream"
@@ -356,67 +477,153 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             else -> org.matchat.core.model.MediaKind.FILE
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // displayName does a ContentResolver query — kept on IO, same as
+            // the original immediate-send code did.
+            val staged = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val name = MediaFiles.displayName(ctx, uri)
                 val bytes = runCatching {
                     ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 }.getOrNull() ?: return@withContext null
-                MediaFiles.writeToCache(ctx, MediaFiles.displayName(ctx, uri), bytes)
+                MediaFiles.writeToCache(ctx, name, bytes)?.let { it to name }
             }
-            if (file == null) {
+            if (staged == null) {
                 Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            Toast.makeText(ctx, R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-            viewModel.sendMedia(file.absolutePath, mime, kind, caption = null)
+            val (file, name) = staged
+            stageAttachment(PendingAttachment(file.absolutePath, mime, kind, name))
         }
     }
 
-    /** S11 message menu, opened with CENTER on a message row. Both this menu and
-     *  the edit prompt it can open are plain Dialogs over the still-alive Fragment
-     *  view (S9 stays the visible screen underneath), so nothing restores focus to
-     *  compose_input on dismiss unless we do it here — one general hook on each
-     *  dialog, not per-branch logic (Phase 9, UI improvement plan; also correctly
-     *  covers the still-TODO MSG_REPLY branch once it lands, since it'll open a
-     *  dialog off this same menu). Navigation-based destinations (toImageViewer,
-     *  toMessageInfo, toRoomInfo) are untouched — those already restore focus
-     *  correctly via Fragment view recreation. */
-    private fun openMessageMenu(row: TimelineRow.Message) {
+    /** Stages [attachment] and moves focus to compose_input so the caption
+     *  hint and the "Send" center label are immediately visible — the same
+     *  focus-restore pattern already used when a menu/dialog dismisses
+     *  (`setOnDismissListener { binding?.composeInput?.requestFocus() }`). */
+    private fun stageAttachment(attachment: PendingAttachment) {
+        viewModel.onAction(TimelineAction.StageAttachment(attachment))
+        binding?.composeInput?.requestFocus()
+    }
+
+    /** S11 message menu, opened with CENTER on a message, image, or attachment
+     *  row alike — media rows used to jump straight to the viewer/opener,
+     *  bypassing this entirely; they now get the same Reply/React/Pin/etc.
+     *  menu a text message does, with "Open" (reaching that same
+     *  viewer/opener) added at the top for media only. [menuContextFor]'s
+     *  three overloads adapt each row type's own fields into one shared
+     *  shape. Both this menu and the edit prompt it can open are plain
+     *  Dialogs over the still-alive Fragment view (S9 stays the visible
+     *  screen underneath), so nothing restores focus to compose_input on
+     *  dismiss unless we do it here — one general hook on each dialog, not
+     *  per-branch logic (Phase 9, UI improvement plan; also correctly
+     *  covers the still-TODO MSG_REPLY branch once it lands, since it'll
+     *  open a dialog off this same menu). Navigation-based destinations
+     *  (toImageViewer, toMessageInfo, toRoomInfo) are untouched — those
+     *  already restore focus correctly via Fragment view recreation. */
+    private fun openMessageMenu(ctx: MessageMenuContext) {
         val items = buildList {
-            add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
-            if (row.isOwn) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            if (ctx.openAction != null) add(MenuItem(MSG_OPEN, getString(R.string.timeline_msg_open)))
             add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
+            add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
             add(
                 MenuItem(
                     MSG_PIN,
-                    getString(if (row.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
+                    getString(if (ctx.isPinned) R.string.timeline_msg_unpin else R.string.timeline_msg_pin),
                 ),
             )
-            add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
+            if (ctx.isOwn && ctx.editAction != null) add(MenuItem(MSG_EDIT, getString(R.string.timeline_msg_edit)))
+            if (ctx.copyText != null) add(MenuItem(MSG_COPY, getString(R.string.timeline_msg_copy)))
             add(MenuItem(MSG_INFO, getString(R.string.timeline_msg_info)))
         }
         val menu = MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
-                MSG_EDIT -> org.matchat.core.ui.menu.TextPromptSheet.show(
-                    requireContext(),
-                    getString(R.string.timeline_edit_title),
-                    row.body,
-                    singleLine = false,
-                ) { viewModel.editMessage(row.eventId, it) }
-                    .setOnDismissListener { binding?.composeInput?.requestFocus() }
-                MSG_REACT -> openReactionPicker(row)
-                MSG_PIN -> viewModel.setPinned(row.eventId, !row.isPinned)
-                MSG_COPY -> copyText(row.body)
+                MSG_OPEN -> ctx.openAction?.invoke()
+                MSG_REACT -> openReactionPicker(ctx.eventId, ctx.reactions)
+                MSG_EDIT -> ctx.editAction?.invoke()
+                MSG_PIN -> viewModel.setPinned(ctx.eventId, !ctx.isPinned)
+                MSG_COPY -> ctx.copyText?.let { copyText(it) }
                 MSG_INFO -> navigator.toMessageInfo(
                     roomId(),
-                    row.eventId,
-                    org.matchat.core.model.UserId(row.senderId),
-                    row.timestampEpochMs,
+                    ctx.eventId,
+                    org.matchat.core.model.UserId(ctx.senderId),
+                    ctx.timestampEpochMs,
                 )
                 else -> Unit // reply lands in a later milestone
             }
         }
         menu.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
+
+    /** What [openMessageMenu] needs, independent of which of the three
+     *  [TimelineRow] subtypes triggered it. [openAction]/[editAction] null
+     *  omits that menu item entirely (Open: text messages aren't "opened";
+     *  Edit: only a message's own text body is editable, never media). */
+    private data class MessageMenuContext(
+        val eventId: org.matchat.core.model.EventId,
+        val senderId: String,
+        val timestampEpochMs: Long,
+        val isOwn: Boolean,
+        val isPinned: Boolean,
+        val reactions: List<org.matchat.core.model.ReactionSummary>,
+        val copyText: String?,
+        val openAction: (() -> Unit)?,
+        val editAction: (() -> Unit)?,
+    )
+
+    private fun menuContextFor(row: TimelineRow.Message) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = row.body,
+        openAction = null,
+        editAction = {
+            org.matchat.core.ui.menu.TextPromptSheet.show(
+                requireContext(),
+                getString(R.string.timeline_edit_title),
+                row.body,
+                singleLine = false,
+            ) { viewModel.editMessage(row.eventId, it) }
+                .setOnDismissListener { binding?.composeInput?.requestFocus() }
+        },
+    )
+
+    private fun menuContextFor(row: TimelineRow.Image) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = row.caption?.takeIf { it.isNotBlank() },
+        openAction = { navigator.toImageViewer(row.eventId) },
+        editAction = null,
+    )
+
+    private fun menuContextFor(row: TimelineRow.Attachment) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = null,
+        openAction = { openAttachment(row) },
+        editAction = null,
+    )
+
+    private fun menuContextFor(row: TimelineRow.VoiceBubble) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = null,
+        openAction = { openVoiceBubble(row) },
+        editAction = null,
+    )
 
     private fun copyText(text: String) {
         val clipboard = requireContext()
@@ -445,9 +652,15 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  (AvatarFallback round). */
     private fun loadAvatarInto(url: String?, name: String, id: String, image: android.widget.ImageView) {
         viewLifecycleOwner.lifecycleScope.launch {
-            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, AVATAR_MAX_PX) { viewModel.loadAvatar(it) }
+            org.matchat.core.ui.media.AvatarBinder.bind(image, url, name, id, avatarMaxPx()) { viewModel.loadAvatar(it) }
         }
     }
+
+    /** Decode-quality cap, ~2x avatarSizeSender — small on purpose. A compile-time
+     *  literal can't respond to the runtime Text size choice, so this is computed
+     *  from the theme attr at bind time instead of a const. */
+    private fun avatarMaxPx(): Int =
+        (requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeSender) * 2).toInt()
 
     /** Populates the "seen by" row with up to [SEEN_BY_MAX] avatars plus a
      *  "+N" overflow label — plain Views built here, not a nested
@@ -458,7 +671,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  container/ring is needed for the stacked look. */
     private fun bindSeenBy(seenBy: List<org.matchat.core.model.SeenBy>, container: android.widget.LinearLayout) {
         container.removeAllViews()
-        val avatarPx = resources.getDimensionPixelSize(org.matchat.core.ui.R.dimen.avatar_size_seen_by)
+        val avatarPx = requireContext().themeDimenPx(org.matchat.core.ui.R.attr.avatarSizeSeenBy).toInt()
         val overlapPx = -(avatarPx / SEEN_BY_OVERLAP_DIVISOR)
         seenBy.take(SEEN_BY_MAX).forEachIndexed { index, entry ->
             val avatar = android.widget.ImageView(requireContext()).apply {
@@ -475,7 +688,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             container.addView(
                 android.widget.TextView(requireContext()).apply {
                     text = "+$overflow"
-                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextSize(
+                        TypedValue.COMPLEX_UNIT_PX,
+                        requireContext().themeDimenPx(org.matchat.core.ui.R.attr.textSizeMeta),
+                    )
                     setTextColor(requireContext().themeColor(org.matchat.core.ui.R.attr.colorTextMetaOnFocus))
                 },
             )
@@ -496,7 +712,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             container.addView(
                 android.widget.TextView(requireContext()).apply {
                     text = "${r.key} ${r.count}"
-                    textSize = SEEN_BY_OVERFLOW_SP
+                    setTextSize(
+                        TypedValue.COMPLEX_UNIT_PX,
+                        requireContext().themeDimenPx(org.matchat.core.ui.R.attr.textSizeMeta),
+                    )
                     setTextColor(
                         requireContext().themeColor(
                             if (r.reactedByMe) {
@@ -513,26 +732,34 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** Opened from the message Options menu (MSG_REACT). Reuses MenuSheet —
-     *  the app's only menu construct — for a 10-choice list (now scrollable,
+    /** Opened from the message Options menu (MSG_REACT), for any of the
+     *  three row types alike — takes just what it needs (eventId +
+     *  reactions) rather than a whole [TimelineRow.Message], since Image and
+     *  Attachment rows react the same way. Reuses MenuSheet — the app's
+     *  only menu construct — for a 10-choice list (now scrollable,
      *  MenuSheet's own Reactions-round change) rather than a new dialog
      *  type. Selecting an already-active reaction removes it (toggleReaction
      *  is itself a toggle). Each choice's toggle key is resolved against the
      *  message's own existing reactions first (resolveReactionKey) — bug
      *  fix: reacting with an emoji visually already on the message must
      *  bump that chip's count, not create a byte-different duplicate. */
-    private fun openReactionPicker(row: TimelineRow.Message) {
+    private fun openReactionPicker(
+        eventId: org.matchat.core.model.EventId,
+        reactions: List<org.matchat.core.model.ReactionSummary>,
+    ) {
         val items = REACTION_CHOICES.map { (key, label) ->
-            val toggleKey = resolveReactionKey(row.reactions, key)
-            val reacted = row.reactions.any { it.key == toggleKey && it.reactedByMe }
+            val toggleKey = resolveReactionKey(reactions, key)
+            val reacted = reactions.any { it.key == toggleKey && it.reactedByMe }
             val text = "$key $label"
             MenuItem(toggleKey, if (reacted) getString(R.string.timeline_row_selected_format, text) else text)
         }
         MenuSheet.show(requireContext(), items) { selected ->
-            viewModel.toggleReaction(row.eventId, selected.id)
+            viewModel.toggleReaction(eventId, selected.id)
         }.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
 
+    /** Attachment rows are video/file only now (VOICE/AUDIO get
+     *  [openVoiceBubble] instead), so this always opens externally. */
     private fun openAttachment(row: TimelineRow.Attachment) {
         viewLifecycleOwner.lifecycleScope.launch {
             val ctx = requireContext()
@@ -544,7 +771,24 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
             }
-            if (row.play) playAudio(file) else openExternally(file, row.mimeType)
+            openExternally(file, row.mimeType)
+        }
+    }
+
+    /** Every VoiceBubble row is playable in-app (unlike Attachment, which also
+     *  covers video/file — those open externally instead). */
+    private fun openVoiceBubble(row: TimelineRow.VoiceBubble) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val ctx = requireContext()
+            val bytes = viewModel.loadMedia(row.eventId)
+            if (bytes == null) {
+                Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
+            }
+            playAudio(file)
         }
     }
 
@@ -590,9 +834,11 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val OPT_TAKE_PHOTO = "take_photo"
         const val OPT_RECORD_VOICE = "record_voice"
         const val OPT_SEND_FILE = "send_file"
+        const val OPT_REMOVE_ATTACHMENT = "remove_attachment"
         const val RECORD_TICK_MS = 200L
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
         const val ARG_ROOM_ID = "roomId"
+        const val MSG_OPEN = "open"
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"
         const val MSG_REACT = "react"
@@ -600,10 +846,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val MSG_COPY = "copy"
         const val MSG_INFO = "msg_info"
         const val MAX_IMAGE_PX = 480 // ~2x the 240 px screen; Coil-free downsample
-        const val AVATAR_MAX_PX = 64 // ~2x avatar_size_sender; small on purpose
         const val SEEN_BY_MAX = 4 // beyond this, show "+N" instead of more circles
         const val SEEN_BY_OVERLAP_DIVISOR = 3 // later avatars overlap ~1/3 of the previous one
-        const val SEEN_BY_OVERFLOW_SP = 11f
         const val REACTION_CHIP_SPACING_PX = 10
 
         // Thumbs up/down + 8 common smileys — ~10 total, per the user's own

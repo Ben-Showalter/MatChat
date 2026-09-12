@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/signin_homeserver_label"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary" />
 
     <EditText
@@ -24,7 +24,7 @@
         android:focusableInTouchMode="true"
         android:inputType="textUri"
         android:importantForAutofill="no"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextPrimary"
         tools:text="chats.carpathianserver.org" />
 
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/signin_username"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary" />
 
     <EditText
@@ -46,7 +46,7 @@
         android:inputType="text"
         android:autofillHints="username"
         android:importantForAutofill="no"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextPrimary"
         android:hint="@string/signin_username" />
 
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="@string/signin_password"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary" />
 
     <EditText
@@ -67,7 +67,7 @@
         android:focusableInTouchMode="true"
         android:inputType="textPassword"
         android:importantForAutofill="no"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextPrimary"
         android:hint="@string/signin_password" />
 
@@ -76,7 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorError"
         android:visibility="gone" />
 
@@ -87,6 +87,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/signin_submit"
-        android:textSize="@dimen/text_label"
+        android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus" />
 </LinearLayout>

@@ -27,6 +27,13 @@ enum class LogicalKey {
     DIGIT_9,
     HASH_HOLD, // next unread room
     STAR_HOLD, // toggle large-text mode
+    /** A held CENTER/ENTER (~500ms). Unlike HASH_HOLD/STAR_HOLD, plain CENTER
+     *  still fires immediately too — this is opt-in, used only where a screen
+     *  wants CENTER itself to require a hold (Timeline: sending a compose
+     *  message, so a quick accidental CENTER press doesn't send). Elsewhere
+     *  it's simply unused; a screen that doesn't check for it sees no change
+     *  in behavior. */
+    CENTER_HOLD,
 
     // Hardware call keys (docs/VOICE.md §6, ADR 0006). The only keys that gain a
     // screen-specific meaning: on an incoming call CALL = Answer, END = Decline;

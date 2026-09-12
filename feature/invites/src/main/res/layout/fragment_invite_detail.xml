@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:textSize="@dimen/text_heading"
+        android:textSize="?attr/textSizeHeading"
         android:textColor="?attr/colorTextPrimary"
         tools:text="Barn Crew" />
 
@@ -21,7 +21,7 @@
         android:id="@+id/detail_invited_by"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary"
         tools:text="Invited by Wayne Zimmerman" />
 
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textSize="13sp"
+        android:textSize="?attr/textSizeAddress"
         android:textColor="?attr/colorTextPrimary"
         tools:text="@wayne:example.org" />
 
@@ -38,7 +38,7 @@
         android:id="@+id/detail_encryption"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorEncrypted"
         tools:text="Encrypted — only members can read this" />
 
@@ -47,7 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:textSize="13sp"
+        android:textSize="?attr/textSizeAddress"
         android:textColor="?attr/colorWarning"
         android:visibility="gone"
         tools:text="Your organization does not allow messages from example.org."
@@ -57,7 +57,7 @@
         android:id="@+id/detail_error"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorError"
         android:visibility="gone" />
 
@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/invite_accept"
-        android:textSize="@dimen/text_label"
+        android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus" />
 
     <TextView
@@ -77,6 +77,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/invite_decline"
-        android:textSize="@dimen/text_label"
+        android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus" />
 </LinearLayout>

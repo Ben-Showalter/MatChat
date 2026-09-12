@@ -42,9 +42,14 @@ class MessageRowScreenshotTest {
     @get:Rule
     val paparazzi = Paparazzi(deviceConfig = config)
 
-    private fun row(isOwn: Boolean, showSender: Boolean = false, focused: Boolean = false): View {
+    private fun row(
+        isOwn: Boolean,
+        showSender: Boolean = false,
+        focused: Boolean = false,
+        body: String = "See you at six by the north gate.",
+    ): View {
         val binding = ItemMessageBinding.inflate(LayoutInflater.from(paparazzi.context))
-        binding.messageBody.text = "See you at six by the north gate."
+        binding.messageBody.text = body
         binding.messageTime.text = "3:42 PM ✓"
         if (showSender) {
             binding.messageSender.text = "Wayne"
@@ -102,5 +107,25 @@ class MessageRowScreenshotTest {
     fun messageRow_own_landscape() {
         paparazzi.unsafeUpdateConfig(deviceConfig = landscapeConfig)
         paparazzi.snapshot(row(isOwn = true))
+    }
+
+    // Long-message round: every other case above uses the same one-line body,
+    // leaving a real gap around a bubble many times taller than the viewport
+    // (the actual on-device report — see TimelineAdapter's onRowKey). This
+    // doesn't exercise the D-pad scroll-step behavior itself (no key-dispatch
+    // harness exists in this repo), only that a long, multi-paragraph body
+    // still inflates and renders at its full, unclamped height rather than
+    // being silently truncated by some layout constraint.
+    @Test
+    fun messageRow_received_longBody() {
+        paparazzi.snapshot(row(isOwn = false, showSender = true, body = LONG_BODY))
+    }
+
+    private companion object {
+        val LONG_BODY = List(8) {
+            "This is a long message meant to stretch well past the visible " +
+                "list area, paragraph ${it + 1} of 8, so the bubble has to " +
+                "grow far taller than the screen to hold it all."
+        }.joinToString("\n\n")
     }
 }

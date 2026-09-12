@@ -30,7 +30,7 @@
     android:orientation="vertical"
     android:focusable="true"
     android:focusableInTouchMode="false"
-    android:minHeight="@dimen/row_min_height_compact"
+    android:minHeight="?attr/rowMinHeightCompact"
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
     android:paddingTop="3dp"
@@ -62,8 +62,8 @@
 
             <ImageView
                 android:id="@+id/message_sender_avatar"
-                android:layout_width="@dimen/avatar_size_sender"
-                android:layout_height="@dimen/avatar_size_sender"
+                android:layout_width="?attr/avatarSizeSender"
+                android:layout_height="?attr/avatarSizeSender"
                 android:layout_marginEnd="4dp"
                 android:src="@drawable/avatar_placeholder"
                 android:contentDescription="@null" />
@@ -74,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:duplicateParentState="true"
                 android:maxWidth="@dimen/bubble_max_width"
-                android:textSize="@dimen/text_sender"
+                android:textSize="?attr/textSizeSender"
                 android:textColor="?attr/colorEncrypted"
                 tools:text="Wayne" />
         </LinearLayout>
@@ -85,7 +85,7 @@
             android:layout_height="wrap_content"
             android:duplicateParentState="true"
             android:maxWidth="@dimen/bubble_max_width"
-            android:textSize="@dimen/text_body"
+            android:textSize="?attr/textSizeBody"
             android:textColor="?attr/colorTextOnFocus"
             tools:text="See you at six by the north gate." />
     </LinearLayout>
@@ -97,7 +97,7 @@
         android:layout_gravity="start"
         android:layout_marginTop="1dp"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM ✓" />
 

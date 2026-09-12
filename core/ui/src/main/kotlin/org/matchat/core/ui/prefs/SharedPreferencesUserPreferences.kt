@@ -23,8 +23,11 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val themeModeState = MutableStateFlow(readEnum(KEY_THEME_MODE, ThemeMode.LIGHT))
     override val themeMode: StateFlow<ThemeMode> = themeModeState
 
-    private val accentColorState = MutableStateFlow(readEnum(KEY_ACCENT_COLOR, AccentColor.GREEN))
+    private val accentColorState = MutableStateFlow(readEnum(KEY_ACCENT_COLOR, AccentColor.RUST))
     override val accentColor: StateFlow<AccentColor> = accentColorState
+
+    private val textSizeState = MutableStateFlow(readEnum(KEY_TEXT_SIZE, TextSizePreference.NORMAL))
+    override val textSize: StateFlow<TextSizePreference> = textSizeState
 
     private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
@@ -47,6 +50,11 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     override suspend fun setAccentColor(color: AccentColor) {
         prefs.edit { putString(KEY_ACCENT_COLOR, color.name) }
         accentColorState.value = color
+    }
+
+    override suspend fun setTextSize(size: TextSizePreference) {
+        prefs.edit { putString(KEY_TEXT_SIZE, size.name) }
+        textSizeState.value = size
     }
 
     override suspend fun setSoftkeysSwapped(swapped: Boolean) {
@@ -78,6 +86,7 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         const val PREFS_NAME = "user_preferences"
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_ACCENT_COLOR = "accent_color"
+        const val KEY_TEXT_SIZE = "text_size"
         const val KEY_SOFTKEYS_SWAPPED = "softkeys_swapped"
         const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val KEY_NOTIFICATION_SOUND_URI = "notification_sound_uri"

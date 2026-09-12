@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/type_address_label"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextSecondary" />
 
         <EditText
@@ -29,21 +29,21 @@
             android:focusableInTouchMode="true"
             android:inputType="textEmailAddress"
             android:importantForAutofill="no"
-            android:textSize="@dimen/text_body"
+            android:textSize="?attr/textSizeBody"
             android:textColor="?attr/colorTextPrimary" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/type_address_hint"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextSecondary" />
 
         <TextView
             android:id="@+id/type_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorError"
             android:visibility="gone"
             tools:text="That does not look like an address." />
@@ -52,7 +52,7 @@
             android:id="@+id/type_blocked"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
+            android:textSize="?attr/textSizeAddress"
             android:textColor="?attr/colorWarning"
             android:visibility="gone"
             tools:text="Your organization does not allow messages to example.org." />
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/type_address_continue"
-            android:textSize="@dimen/text_label"
+            android:textSize="?attr/textSizeLabel"
             android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 
@@ -80,7 +80,7 @@
             android:id="@+id/confirm_prompt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/text_body"
+            android:textSize="?attr/textSizeBody"
             android:textColor="?attr/colorTextPrimary"
             tools:text="Send to Wayne Zimmerman?" />
 
@@ -88,7 +88,7 @@
             android:id="@+id/confirm_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
+            android:textSize="?attr/textSizeAddress"
             android:textColor="?attr/colorTextSecondary"
             tools:text="@wayne:example.org" />
 
@@ -96,7 +96,7 @@
             android:id="@+id/confirm_encryption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorEncrypted"
             android:text="@string/type_address_encrypted" />
 
@@ -107,7 +107,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/type_address_start"
-            android:textSize="@dimen/text_label"
+            android:textSize="?attr/textSizeLabel"
             android:textColor="?attr/colorTextOnFocus" />
 
         <TextView
@@ -116,7 +116,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/type_address_change"
-            android:textSize="@dimen/text_label"
+            android:textSize="?attr/textSizeLabel"
             android:textColor="?attr/colorTextOnFocus" />
     </LinearLayout>
 </LinearLayout>

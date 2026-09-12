@@ -1,5 +1,9 @@
 package org.matchat.core.matrix.internal
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +40,7 @@ import javax.inject.Singleton
 internal class RustMatrixClientHolder @Inject constructor(
     private val store: SessionFileStore,
     private val devConfig: MatrixDevConfig,
+    @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -48,7 +53,15 @@ internal class RustMatrixClientHolder @Inject constructor(
     private val entries = mutableListOf<Room>()
 
     val rooms = MutableStateFlow<List<RoomSummary>>(emptyList())
+
+    /** SYNCING means "session active, sync loop running" in this codebase (set
+     *  once in [startSync], never cleared except by [logout]) — there's no
+     *  finer-grained "caught up" signal from the SDK surfaced here yet, so
+     *  SYNCING is the ordinary connected steady state, not a transient one
+     *  (Online indicator round: SoftkeyFragment shows it as "connected"). */
     val syncState = MutableStateFlow(SyncState.IDLE)
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     fun requireClient(): Client = requireNotNull(client) { "no active Matrix client" }
 
@@ -112,6 +125,7 @@ internal class RustMatrixClientHolder @Inject constructor(
     suspend fun startSync() = withContext(Dispatchers.IO) {
         if (syncService != null) return@withContext
         syncState.value = SyncState.SYNCING
+        observeConnectivity()
         val svc = requireClient().syncService().finish()
         svc.start()
         syncService = svc
@@ -141,6 +155,11 @@ internal class RustMatrixClientHolder @Inject constructor(
     suspend fun logout() = withContext(Dispatchers.IO) {
         runCatching { syncService?.stop() }
         runCatching { requireClient().logout() }
+        networkCallback?.let { cb ->
+            val cm = context.getSystemService(ConnectivityManager::class.java)
+            runCatching { cm?.unregisterNetworkCallback(cb) }
+        }
+        networkCallback = null
         client = null
         syncService = null
         roomList = null

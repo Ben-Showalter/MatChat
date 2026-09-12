@@ -182,6 +182,17 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
 - Lists: `android:descendantFocusability="afterDescendants"`, focus lives on the
   row, the row is the click target.
 - **Never** add `android:clickable="true"` to something that is not focusable.
+- **Never build a custom T9/predictive-text input engine to replace the
+  system IME**, even to work around a device's own IME bugs (e.g. a
+  `getShowingNowFlag`/`InputMethodManager` `NoSuchElementException` some
+  hardware throws, or a competing app's IME swallowing a hardware key).
+  `compose_input` and every other text field stay plain `EditText`s using
+  whatever IME the device provides — explicit decision, not an oversight:
+  the only proven way to fully sidestep that class of bug (see a sibling
+  app's own `NoImeEditText`/`T9InputController` on the same hardware —
+  `onCheckIsTextEditor() = false` so no IME session ever starts) requires
+  reimplementing multi-tap/predictive typing entirely in-app, which is a
+  different product's whole core feature, not a fix-sized change here.
 
 ## 5. UI constraints (2.6″ QVGA, 240×320)
 

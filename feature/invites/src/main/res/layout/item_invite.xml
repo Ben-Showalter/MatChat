@@ -6,7 +6,7 @@
     style="@style/Widget.MatChat.Row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="@dimen/row_min_height_compact"
+    android:minHeight="?attr/rowMinHeightCompact"
     android:paddingTop="4dp"
     android:paddingBottom="4dp">
 
@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorWarning"
         android:text="@string/invites_not_allowed"
         android:visibility="gone"
@@ -31,7 +31,7 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textStyle="bold"
-        android:textSize="@dimen/text_room_name"
+        android:textSize="?attr/textSizeRoomName"
         android:textColor="?attr/colorTextOnFocus"
         tools:text="Barn Crew" />
 
@@ -44,7 +44,7 @@
         android:duplicateParentState="true"
         android:maxLines="1"
         android:ellipsize="start"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="from @wayne:example.org" />
 </RelativeLayout>

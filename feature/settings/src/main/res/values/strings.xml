@@ -14,6 +14,12 @@
     <string name="settings_policy_managed">Policy — Managed by your organization</string>
     <string name="settings_policy_unmanaged">Policy — Not managed</string>
 
+    <!-- Text size (reached from S13 Settings > Text size; UX-SPEC §S16).
+         Normal is the larger, default size; Small is the reduced option. -->
+    <string name="text_size_normal">Normal</string>
+    <string name="text_size_small">Small</string>
+    <string name="text_size_large">Large</string>
+
     <!-- S24 Theme (reached from S13 Settings > Theme). -->
     <string name="theme_title">Theme</string>
     <string name="theme_appearance_header">Appearance</string>
@@ -46,11 +52,18 @@
 
     <!-- Advanced (reached from S13 Settings > Advanced; Phase 6, UI
          improvement plan; docs/adr/0007). A narrow, explicit exception to
-         "LEFT=Options/RIGHT=Back, always" — for a device whose hardware
-         softkeys are physically reversed. -->
+         "LEFT=Options/RIGHT=Back, always" — off by default (Options on the
+         left, the original layout; briefly defaulted on in Phase 4, reverted
+         per docs/adr/0007's Update — see that ADR for why); useful for a
+         device whose hardware softkeys are physically reversed, or for
+         anyone who simply prefers Options on the right. -->
     <string name="advanced_title">Advanced</string>
     <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
-    <string name="advanced_swap_softkeys_sub">For a phone whose hardware Left and Right keys are reversed.</string>
+    <string name="advanced_swap_softkeys_sub">On: Options on the right, Back on the left. Turn off for Options on the left.</string>
+    <string name="advanced_accessibility_row">Softkey helper (system setting)</string>
+    <string name="advanced_accessibility_row_sub">On some phones the predictive-text keyboard captures
+        the right softkey while typing a message. Opens system Accessibility settings to turn on the
+        MatChat softkey helper, if you need it.</string>
 
     <!-- S26 Notifications (reached from S13 Settings > Notifications). -->
     <string name="notifications_title">Notifications</string>
@@ -77,9 +90,11 @@
     <!-- S14 Help. -->
     <string name="help_title">Help</string>
     <string name="help_softkeys">Left key opens Options. Right key goes Back.</string>
+    <string name="help_softkeys_swapped">Right key opens Options. Left key goes Back.</string>
     <string name="help_dpad">Up and Down move between items.</string>
     <string name="help_center">Center key opens or sends the item in focus.</string>
     <string name="help_back">Right key or Back returns to the previous screen.</string>
+    <string name="help_back_swapped">Left key or Back returns to the previous screen.</string>
     <string name="help_unread">Hold # to jump to the next unread group.</string>
-    <string name="help_large_text">Hold * to make text larger.</string>
+    <string name="help_text_size">Hold * to change text size.</string>
 </resources>

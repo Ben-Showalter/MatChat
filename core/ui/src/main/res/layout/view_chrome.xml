@@ -30,7 +30,20 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="?attr/colorTextOnInverse"
-            android:textSize="@dimen/text_label" />
+            android:textSize="?attr/textSizeLabel" />
+
+        <!-- Online indicator round: a small colored dot alongside the sync/
+             offline glyph — green (connected), red (offline/error), hidden
+             with no active session (IDLE). Color is set in code
+             (SoftkeyFragment.renderSyncState), never conveyed by color
+             alone (AGENTS.md) — the glyph text stays the primary cue. -->
+        <View
+            android:id="@+id/chrome_connection_dot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="4dp"
+            android:visibility="gone"
+            android:contentDescription="@null" />
 
         <!-- Sync/offline glyph only (UX-SPEC §1): ⟳ syncing, ! offline. -->
         <TextView
@@ -40,7 +53,7 @@
             android:paddingStart="4dp"
             android:paddingEnd="@dimen/content_pad"
             android:textColor="?attr/colorTextOnInverse"
-            android:textSize="@dimen/text_meta" />
+            android:textSize="?attr/textSizeMeta" />
     </LinearLayout>
 
     <FrameLayout

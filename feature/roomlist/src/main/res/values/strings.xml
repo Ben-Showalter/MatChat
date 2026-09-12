@@ -13,6 +13,12 @@
         <item quantity="other">%d invitations</item>
     </plurals>
 
+    <!-- A room's preview line when it has an unsent draft (text and/or a
+         staged attachment), replacing its real last message so the room is
+         visibly different, not just silently restorable. -->
+    <string name="roomlist_draft_format">Draft: %1$s</string>
+    <string name="roomlist_draft_attachment">Draft: Attachment</string>
+
     <!-- Options menu. -->
     <string name="roomlist_opt_new_message">New message</string>
     <string name="roomlist_opt_mark_read">Mark all as read</string>

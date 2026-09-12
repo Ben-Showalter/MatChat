@@ -12,8 +12,8 @@
         style="@style/Widget.MatChat.Row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="@dimen/row_min_height_compact"
-        android:textSize="@dimen/text_label"
+        android:minHeight="?attr/rowMinHeightCompact"
+        android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus"
         android:visibility="gone"
         tools:text="1 invitation"
@@ -29,7 +29,7 @@
         android:paddingStart="@dimen/content_pad"
         android:paddingEnd="@dimen/content_pad"
         android:background="?attr/colorDivider"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextSecondary"
         android:text="@string/roomlist_offline"
         android:visibility="gone" />
@@ -50,7 +50,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:padding="@dimen/content_pad"
-        android:textSize="@dimen/text_body"
+        android:textSize="?attr/textSizeBody"
         android:textColor="?attr/colorTextSecondary"
         android:text="@string/roomlist_empty"
         android:visibility="gone" />

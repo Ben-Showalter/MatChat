@@ -10,7 +10,7 @@
     android:background="@drawable/focus_selector"
     android:focusable="true"
     android:focusableInTouchMode="false"
-    android:minHeight="@dimen/row_min_height"
+    android:minHeight="?attr/rowMinHeight"
     android:paddingStart="@dimen/content_pad"
     android:paddingEnd="@dimen/content_pad"
     android:paddingTop="4dp"
@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:duplicateParentState="true"
-            android:textSize="@dimen/text_sender"
+            android:textSize="?attr/textSizeSender"
             android:textColor="?attr/colorEncrypted"
             android:visibility="gone"
             tools:text="Wayne"
@@ -48,7 +48,7 @@
             android:duplicateParentState="true"
             android:maxLines="1"
             android:ellipsize="middle"
-            android:textSize="@dimen/text_body"
+            android:textSize="?attr/textSizeBody"
             android:textColor="?attr/colorTextOnFocus"
             tools:text="Voice message" />
 
@@ -57,7 +57,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:duplicateParentState="true"
-            android:textSize="@dimen/text_meta"
+            android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorTextMetaOnFocus"
             tools:text="0:12" />
     </LinearLayout>
@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:duplicateParentState="true"
-        android:textSize="@dimen/text_meta"
+        android:textSize="?attr/textSizeMeta"
         android:textColor="?attr/colorTextMetaOnFocus"
         tools:text="3:42 PM" />
 </LinearLayout>
