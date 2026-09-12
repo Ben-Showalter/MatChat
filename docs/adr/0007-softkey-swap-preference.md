@@ -20,7 +20,7 @@ with no visual cue why.
 ## Decision
 
 Add one user preference, `Settings > Advanced > "Swap Left/Right keys"`
-(`UserPreferences.softkeysSwapped`, `core/ui`), off by default. When on:
+(`UserPreferences.softkeysSwapped`, `core/ui`). When on:
 
 - `KeyMap.map(event, swapped)` flips `LogicalKey.SOFT_LEFT`/`SOFT_RIGHT` after
   its normal per-device keycode table, so a physical-left press yields
@@ -58,6 +58,19 @@ softkey and Back via the other; only which *physical* key produces which
   collected/cached: the swap takes effect on the very next key press, no
   Activity recreate needed (unlike the theme preferences, which do recreate
   — this one has no visual chrome to rebuild, just future key events).
+
+## Update (UI improvement plan, Phase 4) — the swapped layout is now the default
+
+Shipped default flipped from off to **on**: `softkeysSwapped` now defaults to
+`true`, so a fresh install has Options on the physical right and Back on the
+left. This is a distinct decision from the one above — the original
+rationale (unconfigured/unreversed hardware) doesn't apply to most devices,
+this is simply the preferred default layout going forward, independent of
+any particular hardware's wiring. The toggle itself, `KeyMap`'s swap
+mechanism, the `KEYCODE_BACK` exemption, and the mirrored on-screen labels
+are all unchanged — anyone who prefers the original LEFT=Options/RIGHT=Back
+layout flips the same "Swap Left/Right keys" row back off in Settings >
+Advanced.
 
 ## Addendum — an AccessibilityService workaround for one class of hardware
 
