@@ -51,7 +51,7 @@ Every screen has three fixed bands:
 | CALL | Ignored (never places a call from inside the app). |
 | 0–9 | Text entry when an input is focused; otherwise jump to list item *n*. |
 | `#` (hold) | Next unread room. |
-| `*` (hold) | Toggle text size (Normal/Small, §S16). |
+| `*` (hold) | Cycle text size (Small → Normal → Large, §S16). |
 
 "Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
 different meaning (AGENTS.md §4) — Options and Back are always exactly one
@@ -280,17 +280,21 @@ Persistent low-priority notification while the sync service runs:
 "MatChat is running." — always on, its own circular-arrows icon, not
 user-configurable (docs/adr/0004).
 
-### S16 — Text size (Normal / Small)
-Normal is the default and the larger of the two: room name 21 sp, preview
+### S16 — Text size (Small / Normal / Large)
+Normal is the default, the middle of three tiers: room name 21 sp, preview
 16 sp, row min-height 64 dp, timeline body 20 sp — about four room-list rows
 fit the content band at once. Title bar text scales the same way (18 sp,
-§1). Toggled by holding `*`, or from Settings → Text size, down to **Small**:
+§1). Cycled by holding `*`, or from Settings → Text size, down to **Small**:
 room name 16 sp, preview 13 sp, row min-height 44 dp, timeline body 16 sp,
-title bar 14 sp — about six rows fit instead. The softkey bar's own label
-size is fixed regardless of this setting (§1) — it's chrome, not a row.
-Nothing is removed and no layout reflows into a different shape in either
-state; only the scale changes, which is why row heights are `minHeight` and
-never fixed. The screenshot suite renders every screen at both sizes.
+title bar 14 sp — about six rows fit instead — or up to **Large**: room name
+26 sp, preview 20 sp, row min-height 80 dp, timeline body 25 sp, for anyone
+who wants it bigger still. The softkey bar's own label size is fixed
+regardless of this setting (§1) — it's chrome, not a row. Nothing is removed
+and no layout reflows into a different shape in any of the three states;
+only the scale changes, which is why row heights are `minHeight` and never
+fixed. The screenshot suite renders every screen at Small and Normal (the
+existing font-scale cases) — see the Phase 3 (UI improvement plan) PR notes
+on why Large isn't exercised there the same way.
 
 ### S17 — Landscape (320 × 240)
 On landscape SKUs (DuraXE Epic) the bands are the same height, leaving a

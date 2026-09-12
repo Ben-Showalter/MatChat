@@ -51,4 +51,15 @@ class TextSizeViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `selecting Large updates the fake and the state`() = runTest {
+        val vm = subject()
+        vm.onAction(TextSizeAction.SelectLarge)
+        vm.state.test {
+            assertEquals(TextSizePreference.LARGE, expectMostRecentItem().size)
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(TextSizePreference.LARGE, prefs.textSize.value)
+    }
 }
