@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.matchat.core.matrix.Draft
+import org.matchat.core.matrix.DraftAttachment
+import org.matchat.core.matrix.DraftStore
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
@@ -31,11 +34,19 @@ class TimelineViewModel @Inject constructor(
     private val session: MatrixSession,
     private val clock: MillisClock,
     private val policyProvider: PolicyProvider,
+    private val draftStore: DraftStore,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val roomId = RoomId(requireNotNull(savedStateHandle["roomId"]))
     private val timeline = session.timeline(roomId)
+
+    // Save a partially-drafted message (text and/or a staged attachment) so
+    // leaving this room doesn't silently lose it (on-device report). Loaded
+    // once here, at construction — the same instant "reopening this room"
+    // means a brand-new TimelineViewModel (MainActivity.toRoom() has no
+    // popUpTo, so a fresh instance is created on every visit).
+    private val initialDraft = draftStore.getDraft(roomId)
 
     private val composeFocused = MutableStateFlow(false)
     private val loadingEarlier = MutableStateFlow(false)
@@ -54,8 +65,20 @@ class TimelineViewModel @Inject constructor(
 
     /** The staged photo/file/camera-capture, if any (Attachment staging round) —
      *  a separate flow, folded into [state] below via a nested combine since
-     *  Kotlin's fixed-arity `combine` tops out at 5 flows. */
-    private val pendingAttachment = MutableStateFlow<PendingAttachment?>(null)
+     *  Kotlin's fixed-arity `combine` tops out at 5 flows. Seeded from a
+     *  restored draft's attachment half, if any, instead of always starting
+     *  null. */
+    private val pendingAttachment = MutableStateFlow(initialDraft?.attachment?.toPendingAttachment())
+
+    /** The compose box's unsent text, restored from [initialDraft] on open.
+     *  Deliberately NOT folded into [state]/the combine chain below: doing
+     *  so would recompute [TimelineState.rows] — the whole message-list
+     *  mapping — on every keystroke, and the Fragment already owns the live
+     *  EditText once created, so the ViewModel only needs a `.value`
+     *  snapshot at view-creation time, not a stream it keeps pushing text
+     *  into (which would fight the user's own typing/cursor position). */
+    private val composeTextState = MutableStateFlow(initialDraft?.text.orEmpty())
+    val composeText: StateFlow<String> = composeTextState
 
     /** Whether attaching media is permitted on this (possibly managed) device. */
     val canSendMedia: Boolean get() = policyProvider.policy.value.mediaSend
@@ -122,8 +145,29 @@ class TimelineViewModel @Inject constructor(
             is TimelineAction.FixEncryption -> emit(TimelineNav.Verification)
             is TimelineAction.MessageFocused -> Unit // focus tracking only
             TimelineAction.MarkRead -> markRead()
-            is TimelineAction.StageAttachment -> pendingAttachment.value = action.attachment
-            TimelineAction.ClearPendingAttachment -> pendingAttachment.value = null
+            is TimelineAction.StageAttachment -> {
+                pendingAttachment.value = action.attachment
+                persistDraft()
+            }
+            TimelineAction.ClearPendingAttachment -> {
+                pendingAttachment.value = null
+                persistDraft()
+            }
+        }
+    }
+
+    /** Writes the current text + staged attachment to [draftStore] (or clears
+     *  it, once both are empty) — called from every place either half of the
+     *  draft changes. No debounce, deliberately: a debounce timer living in
+     *  [viewModelScope] risks being cancelled by [onCleared] before it fires
+     *  if the user types/stages then immediately backs out, silently losing
+     *  the exact draft this exists to save. `SharedPreferences.apply()` is
+     *  already an async, non-blocking write, so there's no performance
+     *  reason to debounce a short record for a chat app's typing cadence. */
+    private fun persistDraft() {
+        val draft = Draft(composeTextState.value, pendingAttachment.value?.toDraftAttachment())
+        viewModelScope.launch {
+            if (draft.isEmpty) draftStore.clearDraft(roomId) else draftStore.setDraft(roomId, draft)
         }
     }
 
@@ -145,6 +189,8 @@ class TimelineViewModel @Inject constructor(
         if (pending != null) {
             stopTyping()
             pendingAttachment.value = null
+            composeTextState.value = ""
+            persistDraft() // both halves are now empty, so this clears the store
             if (pending.kind == MediaKind.VOICE) {
                 // sendVoice has no caption slot (MSC3245 voice messages don't
                 // carry one) — rather than silently discard typed text, send
@@ -158,12 +204,17 @@ class TimelineViewModel @Inject constructor(
         }
         if (text.isEmpty()) return // empty send is a no-op, not an error (S10)
         stopTyping()
+        composeTextState.value = ""
+        persistDraft() // clears the store now that the compose box is empty
         viewModelScope.launch { timeline.send(text) }
     }
 
     /** Called on every compose edit: start a typing notice on the first keystroke
-     *  and refresh a 4s auto-stop so a paused user stops appearing as typing. */
+     *  and refresh a 4s auto-stop so a paused user stops appearing as typing.
+     *  Also keeps the draft (this room's saved unsent text) up to date. */
     fun onComposeTextChanged(text: String) {
+        composeTextState.value = text
+        persistDraft()
         if (text.isBlank()) {
             stopTyping()
             return
@@ -419,3 +470,12 @@ fun resolveReactionKey(existing: List<org.matchat.core.model.ReactionSummary>, c
 /** Strips variation selectors (U+FE0F "emoji presentation", U+FE0E "text
  *  presentation") so two otherwise-identical emoji compare equal. */
 fun normalizeReactionKey(key: String): String = key.replace("\uFE0F", "").replace("\uFE0E", "")
+
+/** [DraftAttachment] mirrors [PendingAttachment] field-for-field (see that
+ *  class's own doc comment for why they're two separate types); these two
+ *  are a plain 1:1 copy across the boundary. */
+private fun PendingAttachment.toDraftAttachment(): DraftAttachment =
+    DraftAttachment(path, mimeType, kind, displayName, durationMs, waveform)
+
+private fun DraftAttachment.toPendingAttachment(): PendingAttachment =
+    PendingAttachment(path, mimeType, kind, displayName, durationMs, waveform)

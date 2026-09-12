@@ -72,6 +72,28 @@ are all unchanged — anyone who prefers the original LEFT=Options/RIGHT=Back
 layout flips the same "Swap Left/Right keys" row back off in Settings >
 Advanced.
 
+## Update — the swapped default is reverted; Options is on the left again
+
+On-device testing after the Addendum's `AccessibilityService` workaround
+shipped showed the physical right softkey still not reliably opening
+Options, even with that service enabled — and the workaround itself
+requires the user to grant it in system Accessibility settings, which per
+user report doesn't reliably take effect on every phone (e.g. Android 13+'s
+"restricted settings" protection can silently block a sideloaded app's
+toggle). Reachable Options mattered more than the cosmetic preference for a
+default layout, so `softkeysSwapped` is reverted to defaulting **off**:
+Options is back on the left, Back on the right, out of the box. This
+sidesteps the underlying conflict entirely for anyone on the default — the
+contested key (`KEYCODE_SOFT_RIGHT`) no longer needs to mean Options at
+all, so whatever is or isn't intercepting it stops mattering for a fresh
+install.
+
+The toggle, `KeyMap`'s swap mechanism, the `KEYCODE_BACK` exemption, the
+mirrored on-screen labels, and the `AccessibilityService` workaround
+(Addendum, below) are all unchanged and still available — this only flips
+which layout ships unconfigured. Anyone who explicitly turned the swap on
+already has that choice persisted and is unaffected either way.
+
 ## Addendum — an AccessibilityService workaround for one class of hardware
 
 Diagnosed together with the user via adb logcat on real hardware: on some

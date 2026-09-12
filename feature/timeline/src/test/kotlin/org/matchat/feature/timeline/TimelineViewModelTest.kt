@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.matchat.core.matrix.Draft
+import org.matchat.core.matrix.DraftAttachment
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Membership
@@ -24,6 +26,7 @@ import org.matchat.core.model.SendState
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
+import org.matchat.core.testing.FakeDraftStore
 import org.matchat.core.testing.FakeMatrixSession
 import org.matchat.core.testing.FakePolicyProvider
 
@@ -33,9 +36,10 @@ class TimelineViewModelTest {
     private val roomId = RoomId("!room:server")
     private val clock = MillisClock { 0L }
     private val policy = FakePolicyProvider()
+    private val draftStore = FakeDraftStore()
 
     private fun subject() =
-        TimelineViewModel(session, clock, policy, SavedStateHandle(mapOf("roomId" to roomId.value)))
+        TimelineViewModel(session, clock, policy, draftStore, SavedStateHandle(mapOf("roomId" to roomId.value)))
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
     @AfterEach fun tearDown() = Dispatchers.resetMain()
@@ -355,5 +359,73 @@ class TimelineViewModelTest {
         testScheduler.advanceUntilIdle()
         assertEquals(1, fake.sentVoiceCalls.size)
         assertEquals(listOf("also this"), fake.sent) // sent as its own message, not a caption
+    }
+
+    @Test
+    fun `a saved draft's text is restored into composeText on open`() = runTest {
+        draftStore.draftsFlow.value = mapOf(roomId.value to Draft(text = "unfinished thought"))
+        assertEquals("unfinished thought", subject().composeText.value)
+    }
+
+    @Test
+    fun `a saved draft's attachment is restored as the pending attachment on open`() = runTest {
+        val attachment = DraftAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        draftStore.draftsFlow.value = mapOf(roomId.value to Draft(attachment = attachment))
+        subject().state.test {
+            val pending = expectMostRecentItem().pendingAttachment
+            assertEquals("/cache/photo.jpg", pending?.path)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `typing persists a draft, clearing the box clears it`() = runTest {
+        val vm = subject()
+        vm.onComposeTextChanged("hello")
+        testScheduler.advanceUntilIdle()
+        assertEquals(Draft(text = "hello"), draftStore.getDraft(roomId))
+
+        vm.onComposeTextChanged("")
+        testScheduler.advanceUntilIdle()
+        assertNull(draftStore.getDraft(roomId))
+    }
+
+    @Test
+    fun `staging an attachment persists it as a draft`() = runTest {
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        testScheduler.advanceUntilIdle()
+        val draft = draftStore.getDraft(roomId)
+        assertEquals("/cache/photo.jpg", draft?.attachment?.path)
+    }
+
+    @Test
+    fun `ClearPendingAttachment clears the attachment from the persisted draft too`() = runTest {
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        vm.onAction(TimelineAction.ClearPendingAttachment)
+        testScheduler.advanceUntilIdle()
+        assertNull(draftStore.getDraft(roomId)) // no text either, so the whole draft is gone
+    }
+
+    @Test
+    fun `sending a plain message clears the persisted draft`() = runTest {
+        val vm = subject()
+        vm.onComposeTextChanged("hello")
+        vm.onAction(TimelineAction.Send("hello"))
+        testScheduler.advanceUntilIdle()
+        assertNull(draftStore.getDraft(roomId))
+    }
+
+    @Test
+    fun `sending a staged attachment clears the persisted draft`() = runTest {
+        val vm = subject()
+        val attachment = PendingAttachment("/cache/photo.jpg", "image/jpeg", MediaKind.IMAGE, "photo.jpg")
+        vm.onAction(TimelineAction.StageAttachment(attachment))
+        vm.onAction(TimelineAction.Send("caption"))
+        testScheduler.advanceUntilIdle()
+        assertNull(draftStore.getDraft(roomId))
     }
 }

@@ -40,14 +40,19 @@ interface UserPreferences {
     val textSize: StateFlow<TextSizePreference>
 
     /** Settings > Advanced > "Swap Left/Right keys" (Phase 6, UI improvement
-     *  plan) — true by default, so Options sits on the right and Back on the
-     *  left out of the box (docs/adr/0007); originally added for a device
-     *  whose hardware softkeys are physically reversed, the swapped layout
-     *  is now also the shipped default, with the toggle still there for
-     *  anyone who wants the original LEFT=Options/RIGHT=Back layout back.
-     *  Read directly (StateFlow.value, not collected) by KeyMap's one caller
-     *  (MainActivity.dispatchKeyEvent) on every key press — swapping takes
-     *  effect immediately, no recreate. */
+     *  plan) — false by default, so Options sits on the left and Back on the
+     *  right out of the box (docs/adr/0007), the original layout; added for
+     *  a device whose hardware softkeys are physically reversed, or for
+     *  anyone who simply prefers Options on the right. (The swapped layout
+     *  was briefly the shipped default; reverted — on real hardware the
+     *  physical right softkey can be unreliable for Options while composing,
+     *  see docs/adr/0007's Addendum, and the compensating
+     *  AccessibilityService workaround doesn't reliably enable on every
+     *  phone, so defaulting Options back onto the uncontested left key
+     *  avoids the problem entirely for anyone who doesn't explicitly opt
+     *  into the swap.) Read directly (StateFlow.value, not collected) by
+     *  KeyMap's one caller (MainActivity.dispatchKeyEvent) on every key
+     *  press — swapping takes effect immediately, no recreate. */
     val softkeysSwapped: StateFlow<Boolean>
 
     /** Settings > Notifications — whether the incoming-message notification

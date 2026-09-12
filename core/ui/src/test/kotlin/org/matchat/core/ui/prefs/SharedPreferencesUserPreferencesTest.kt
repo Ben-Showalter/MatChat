@@ -17,12 +17,12 @@ class SharedPreferencesUserPreferencesTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `defaults are light, rust, Normal, and swapped`() {
+    fun `defaults are light, rust, Normal, and unswapped`() {
         val prefs = SharedPreferencesUserPreferences(context)
         assertEquals(ThemeMode.LIGHT, prefs.themeMode.value)
         assertEquals(AccentColor.RUST, prefs.accentColor.value)
         assertEquals(TextSizePreference.NORMAL, prefs.textSize.value)
-        assertEquals(true, prefs.softkeysSwapped.value)
+        assertEquals(false, prefs.softkeysSwapped.value)
         assertEquals(true, prefs.notificationsEnabled.value)
         assertEquals(null, prefs.notificationSoundUri.value)
         assertEquals(0, prefs.notificationChannelVersion.value)
@@ -69,13 +69,13 @@ class SharedPreferencesUserPreferencesTest {
     }
 
     @Test
-    fun `toggling softkeys-swapped off still works, even though it's the default`() = runTest {
+    fun `toggling softkeys-swapped on still works, even though off is the default`() = runTest {
         val prefs = SharedPreferencesUserPreferences(context)
-        prefs.setSoftkeysSwapped(false)
-        assertEquals(false, prefs.softkeysSwapped.value)
+        prefs.setSoftkeysSwapped(true)
+        assertEquals(true, prefs.softkeysSwapped.value)
 
         val reloaded = SharedPreferencesUserPreferences(context)
-        assertEquals(false, reloaded.softkeysSwapped.value)
+        assertEquals(true, reloaded.softkeysSwapped.value)
     }
 
     @Test

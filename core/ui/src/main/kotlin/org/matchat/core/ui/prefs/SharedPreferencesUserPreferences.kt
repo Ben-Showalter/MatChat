@@ -29,7 +29,7 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val textSizeState = MutableStateFlow(readEnum(KEY_TEXT_SIZE, TextSizePreference.NORMAL))
     override val textSize: StateFlow<TextSizePreference> = textSizeState
 
-    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, true))
+    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
 
     private val notificationsEnabledState = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true))

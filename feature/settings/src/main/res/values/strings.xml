@@ -52,9 +52,11 @@
 
     <!-- Advanced (reached from S13 Settings > Advanced; Phase 6, UI
          improvement plan; docs/adr/0007). A narrow, explicit exception to
-         "LEFT=Options/RIGHT=Back, always" — on by default (Options on the
-         right, Phase 4 of the UI improvement plan); also useful for a
-         device whose hardware softkeys are physically reversed. -->
+         "LEFT=Options/RIGHT=Back, always" — off by default (Options on the
+         left, the original layout; briefly defaulted on in Phase 4, reverted
+         per docs/adr/0007's Update — see that ADR for why); useful for a
+         device whose hardware softkeys are physically reversed, or for
+         anyone who simply prefers Options on the right. -->
     <string name="advanced_title">Advanced</string>
     <string name="advanced_swap_softkeys">Swap Left/Right keys</string>
     <string name="advanced_swap_softkeys_sub">On: Options on the right, Back on the left. Turn off for Options on the left.</string>

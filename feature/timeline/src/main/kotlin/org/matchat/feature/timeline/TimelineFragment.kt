@@ -69,18 +69,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
 
-    // "Send Photo" opens the system Photo Picker directly — a gallery-style
-    // grid, no intermediate "complete action using" chooser dialog, and no
-    // runtime storage permission needed (Options-round; previously routed
-    // through the same document chooser as "Send File" below).
-    private val photoPicker =
-        registerForActivityResult(
-            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
-        ) { uri -> uri?.let { sendPicked(it) } }
-
-    // "Send File" keeps the Documents UI + device Gallery chooser (not
-    // photo-specific, so a document chooser is still the right shape); the
-    // picked file's kind is derived from its MIME.
+    // Generic result launcher for both "Send Photo" (a bare GET_CONTENT
+    // intent, launchPhotoPicker) and "Send File" (the Documents UI + device
+    // Gallery chooser, launchFileChooser/launchAttachmentChooser) — the
+    // picked file's kind is derived from its MIME either way.
     private val attachmentPicker =
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -131,6 +123,17 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
 
         b.pinnedBand.setOnClickListener { navigator.toPinnedMessages(roomId()) }
+
+        // Restore a saved draft (on-device report: don't lose a partially
+        // typed message on leaving the room) before attaching the watcher
+        // below, so this doesn't fire onComposeTextChanged/re-persist the
+        // very draft it's restoring. Covers both a fresh open (the
+        // ViewModel just loaded it from disk) and returning here from Room
+        // Info/Pinned Messages/Message Info/Image Viewer (the same
+        // TimelineViewModel instance survived, so composeText.value is
+        // already exactly what the user last typed).
+        b.composeInput.setText(viewModel.composeText.value)
+        b.composeInput.setSelection(b.composeInput.text?.length ?: 0)
 
         b.composeInput.addTextChangedListener { text ->
             viewModel.onComposeTextChanged(text?.toString().orEmpty())
@@ -387,32 +390,29 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         refreshSoftkeys()
     }
 
-    /** Opens the system Photo Picker directly — a gallery-style grid, no
-     *  intermediate chooser dialog — when one actually exists on this
-     *  device. [PickVisualMedia] itself has no such device the app can ask
-     *  about other than [isPhotoPickerAvailable]; without that guard it
-     *  silently degrades to `ACTION_OPEN_DOCUMENT` on a build with no Photo
-     *  Picker, which only Storage-Access-Framework document providers can
-     *  answer. On a bare AOSP build with no Google apps (this device
-     *  class, ADR 0004: no Play Services, so no Photo Picker backport
-     *  either) the only such provider is DocumentsUI, whose own root
-     *  browser ("Open from": Images / Recent / Downloads / SD card / Bug
-     *  reports) is not a gallery — that was the on-device report ("it
-     *  should open the gallery directly instead of opening files"). Fall
-     *  back to [launchAttachmentChooser] instead, the same GET_CONTENT-
-     *  inclusive path [launchFileChooser] already uses to reach a real
-     *  device Gallery app, scoped to images. */
+    /** Opens the device's own Gallery app directly via a bare ACTION_GET_CONTENT
+     *  (image/*) — no `Intent.createChooser` wrapper, so Android launches the
+     *  single matching app directly when exactly one exists (the normal case),
+     *  confirmed on-device: this exact intent shape resolves straight to
+     *  `jp.kyocera.datafolder/jp.kyocera.gallery.GalleryActivity` on the
+     *  reference hardware, with no intermediate screen at all. Deliberately
+     *  drops `PickVisualMedia`/`isPhotoPickerAvailable` entirely — that check
+     *  was found reporting a (modern) Photo Picker as available on this
+     *  device even though none of the target hardware has one (ADR 0004: no
+     *  Play Services, no Photo Picker backport), so its own internal
+     *  silent-degrade to `ACTION_OPEN_DOCUMENT` ran anyway, landing back on
+     *  DocumentsUI's root browser ("Open from": Images / Recent / Downloads /
+     *  SD card / Bug reports) — the on-device report this replaces ("it
+     *  should open the gallery directly instead of opening files"). If a
+     *  device genuinely has more than one app registered for GET_CONTENT +
+     *  image/*, Android's own normal disambiguation dialog appears — that's
+     *  standard implicit-intent behavior, not something to special-case. */
     private fun launchPhotoPicker() {
-        val available = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-            .isPhotoPickerAvailable(requireContext())
-        if (!available) {
-            launchAttachmentChooser(mimeType = "image/*")
-            return
+        val intent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
+            addCategory(android.content.Intent.CATEGORY_OPENABLE)
+            type = "image/*"
         }
-        val request = androidx.activity.result.PickVisualMediaRequest(
-            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly,
-        )
-        runCatching { photoPicker.launch(request) }.onFailure {
+        runCatching { attachmentPicker.launch(intent) }.onFailure {
             Toast.makeText(requireContext(), R.string.timeline_media_no_app, Toast.LENGTH_SHORT).show()
         }
     }
@@ -426,8 +426,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  D-pad-navigable image browser, and typically only answers the older
      *  GET_CONTENT convention, not the full Storage Access Framework
      *  ACTION_OPEN_DOCUMENT alone would reach. Mirrors the DPAD-Messaging
-     *  approach. Shared by [launchFileChooser] (any MIME type) and, when the
-     *  system Photo Picker isn't available, [launchPhotoPicker] (images only). */
+     *  approach. Only [launchFileChooser] uses this now — [launchPhotoPicker]
+     *  above launches its own bare GET_CONTENT intent directly, no chooser. */
     private fun launchAttachmentChooser(mimeType: String) {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)

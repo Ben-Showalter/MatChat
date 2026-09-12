@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.matchat.core.matrix.Draft
+import org.matchat.core.matrix.DraftStore
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MillisClock
@@ -32,27 +34,46 @@ class RoomListViewModel @Inject constructor(
     private val session: MatrixSession,
     policyProvider: PolicyProvider,
     private val clock: MillisClock,
+    private val draftStore: DraftStore,
 ) : ViewModel() {
 
     private val focusedIndex = MutableStateFlow(0)
     private val navChannel = Channel<RoomListNav>(Channel.BUFFERED)
     val navEvents: Flow<RoomListNav> = navChannel.receiveAsFlow()
 
+    /** Everything [state] needs except [DraftStore.drafts] — its own type
+     *  purely so the two combine steps below stay readable (Kotlin's
+     *  fixed-arity `combine` tops out at 5 flows, and this room-related
+     *  group already uses all 5; mirrors TimelineViewModel's own
+     *  ComposeContext/pendingAttachment nesting for exactly this reason). */
+    private data class RoomListContext(
+        val rooms: List<RoomSummary>,
+        val invites: List<InviteSummary>,
+        val sync: SyncState,
+        val allowDirectChat: Boolean,
+        val focus: Int,
+    )
+
     val state: StateFlow<RoomListState> =
         combine(
-            session.rooms,
-            session.invites,
-            session.syncState,
-            policyProvider.policy,
-            focusedIndex,
-        ) { rooms, invites, sync, policy, focus ->
+            combine(
+                session.rooms,
+                session.invites,
+                session.syncState,
+                policyProvider.policy,
+                focusedIndex,
+            ) { rooms, invites, sync, policy, focus ->
+                RoomListContext(rooms, invites, sync, policy.allowDirectChat, focus)
+            },
+            draftStore.drafts,
+        ) { ctx, drafts ->
             RoomListState(
-                isLoading = sync == SyncState.SYNCING && rooms.isEmpty(),
-                rooms = rooms.map { it.toRow() },
-                inviteBand = invites.toBand(),
-                isOffline = sync == SyncState.OFFLINE || sync == SyncState.ERROR,
-                focusedIndex = focus,
-                newMessageEnabled = policy.allowDirectChat,
+                isLoading = ctx.sync == SyncState.SYNCING && ctx.rooms.isEmpty(),
+                rooms = ctx.rooms.map { it.toRow(drafts[it.id.value]) },
+                inviteBand = ctx.invites.toBand(),
+                isOffline = ctx.sync == SyncState.OFFLINE || ctx.sync == SyncState.ERROR,
+                focusedIndex = ctx.focus,
+                newMessageEnabled = ctx.allowDirectChat,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), RoomListState())
 
@@ -82,13 +103,19 @@ class RoomListViewModel @Inject constructor(
         viewModelScope.launch { navChannel.send(nav) }
     }
 
-    private fun RoomSummary.toRow() = RoomRow(
+    /** [draft] is this room's live draft, if any (draft messages round) — a
+     *  plain passthrough of the domain data; the Fragment/Adapter (which
+     *  already own every `getString`/resource call in this module — the
+     *  ViewModel has none) decide the actual "Draft: …" display text and
+     *  styling from it, same boundary as everywhere else here. */
+    private fun RoomSummary.toRow(draft: Draft?) = RoomRow(
         id = id,
         name = name,
         preview = lastMessage.orEmpty(),
         time = lastActivityEpochMs?.let { RelativeTime.roomListLabel(it, clock.now()) }.orEmpty(),
         unreadCount = unreadCount,
         avatarUrl = avatarUrl,
+        draft = draft,
     )
 
     /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
