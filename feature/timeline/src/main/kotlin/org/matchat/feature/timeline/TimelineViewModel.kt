@@ -19,7 +19,9 @@ import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.TimelineItem
+import org.matchat.core.model.UserId
 import org.matchat.core.model.format.RelativeTime
 import org.matchat.core.policy.PolicyProvider
 import javax.inject.Inject
@@ -50,31 +52,52 @@ class TimelineViewModel @Inject constructor(
         }
     }
 
+    /** The staged photo/file/camera-capture, if any (Attachment staging round) —
+     *  a separate flow, folded into [state] below via a nested combine since
+     *  Kotlin's fixed-arity `combine` tops out at 5 flows. */
+    private val pendingAttachment = MutableStateFlow<PendingAttachment?>(null)
+
     /** Whether attaching media is permitted on this (possibly managed) device. */
     val canSendMedia: Boolean get() = policyProvider.policy.value.mediaSend
 
     private val navChannel = Channel<TimelineNav>(Channel.BUFFERED)
     val navEvents: Flow<TimelineNav> = navChannel.receiveAsFlow()
 
+    /** Everything [state] needs except [pendingAttachment] — its own type
+     *  purely so the two combine steps below stay readable; not shown to
+     *  any UI directly. */
+    private data class ComposeContext(
+        val items: List<TimelineItem>,
+        val rooms: List<RoomSummary>,
+        val composing: Boolean,
+        val loading: Boolean,
+        val typing: List<UserId>,
+    )
+
     val state: StateFlow<TimelineState> =
         combine(
-            timeline.items,
-            session.rooms,
-            composeFocused,
-            loadingEarlier,
-            timeline.typing,
-        ) { items, rooms, composing, loading, typing ->
-            val room = rooms.firstOrNull { it.id == roomId }
+            combine(
+                timeline.items,
+                session.rooms,
+                composeFocused,
+                loadingEarlier,
+                timeline.typing,
+                ::ComposeContext,
+            ),
+            pendingAttachment,
+        ) { ctx, pending ->
+            val room = ctx.rooms.firstOrNull { it.id == roomId }
             TimelineState(
                 title = room?.name.orEmpty(),
-                rows = items.toRows(),
+                rows = ctx.items.toRows(),
                 isEncrypted = room?.isEncrypted ?: true,
-                isComposeFocused = composing,
-                isLoadingEarlier = loading,
-                typingText = typingLine(typing),
-                pinnedCount = items.count {
+                isComposeFocused = ctx.composing,
+                isLoadingEarlier = ctx.loading,
+                typingText = typingLine(ctx.typing),
+                pinnedCount = ctx.items.count {
                     (it is TimelineItem.Message && it.isPinned) || (it is TimelineItem.Media && it.isPinned)
                 },
+                pendingAttachment = pending,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimelineState())
 
@@ -99,6 +122,8 @@ class TimelineViewModel @Inject constructor(
             is TimelineAction.FixEncryption -> emit(TimelineNav.Verification)
             is TimelineAction.MessageFocused -> Unit // focus tracking only
             TimelineAction.MarkRead -> markRead()
+            is TimelineAction.StageAttachment -> pendingAttachment.value = action.attachment
+            TimelineAction.ClearPendingAttachment -> pendingAttachment.value = null
         }
     }
 
@@ -108,8 +133,29 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { runCatching { timeline.markRead(EventId("")) } }
     }
 
+    /** Plain text, or — when an attachment is staged (Attachment staging
+     *  round) — that attachment with [body] as its caption instead, via the
+     *  same [sendMedia] every other caller already goes through (policy
+     *  re-check included), just called from here instead of immediately on
+     *  pick/capture. An attachment can be sent with an empty caption; plain
+     *  text still can't be empty (S10). */
     private fun send(body: String) {
         val text = body.trim()
+        val pending = pendingAttachment.value
+        if (pending != null) {
+            stopTyping()
+            pendingAttachment.value = null
+            if (pending.kind == MediaKind.VOICE) {
+                // sendVoice has no caption slot (MSC3245 voice messages don't
+                // carry one) — rather than silently discard typed text, send
+                // it as its own follow-up message right after.
+                sendVoice(pending.path, pending.mimeType, pending.durationMs ?: 0L, pending.waveform ?: emptyList())
+                if (text.isNotEmpty()) viewModelScope.launch { timeline.send(text) }
+            } else {
+                sendMedia(pending.path, pending.mimeType, pending.kind, text.ifBlank { null })
+            }
+            return
+        }
         if (text.isEmpty()) return // empty send is a no-op, not an error (S10)
         stopTyping()
         viewModelScope.launch { timeline.send(text) }
@@ -276,6 +322,28 @@ class TimelineViewModel @Inject constructor(
                 timestampEpochMs = item.timestampEpochMs,
             )
         }
+        // VOICE and AUDIO both play in-app via the same AudioPlayback, so they
+        // share one bubble UI (Voice bubble round) rather than each getting a
+        // different look for functionally identical playback; AUDIO just gets
+        // a flat placeholder waveform since it never carries real samples.
+        if (item.kind == MediaKind.VOICE || item.kind == MediaKind.AUDIO) {
+            return TimelineRow.VoiceBubble(
+                eventId = item.eventId,
+                senderName = senderName,
+                label = labelFor(item),
+                time = time,
+                isOwn = item.isOwn,
+                sendGlyph = glyph,
+                mimeType = item.mimeType,
+                duration = item.durationMs?.let(::formatDuration).orEmpty(),
+                waveform = item.waveform ?: FLAT_WAVEFORM,
+                isPinned = item.isPinned,
+                reactions = item.reactions,
+                timestampEpochMs = item.timestampEpochMs,
+                senderId = item.sender.value,
+                senderAvatarUrl = item.senderAvatarUrl,
+            )
+        }
         return TimelineRow.Attachment(
             eventId = item.eventId,
             senderName = senderName,
@@ -285,7 +353,6 @@ class TimelineViewModel @Inject constructor(
             time = time,
             isOwn = item.isOwn,
             mimeType = item.mimeType,
-            play = item.kind == MediaKind.AUDIO || item.kind == MediaKind.VOICE,
             isPinned = item.isPinned,
             reactions = item.reactions,
             timestampEpochMs = item.timestampEpochMs,
@@ -293,9 +360,9 @@ class TimelineViewModel @Inject constructor(
         )
     }
 
+    // VOICE/AUDIO never reach here (routed to VoiceBubble above) — only
+    // VIDEO/FILE still use the plain glyph row.
     private fun glyphFor(kind: MediaKind): String = when (kind) {
-        MediaKind.VOICE -> "🎤"
-        MediaKind.AUDIO -> "🎧"
         MediaKind.VIDEO -> "🎬"
         else -> "📎"
     }
@@ -325,6 +392,12 @@ class TimelineViewModel @Inject constructor(
         const val STOP_TIMEOUT_MS = 5_000L
         const val TYPING_IDLE_MS = 4_000L // stop the typing notice after a pause
         const val READ_GLYPH = "✓✓" // own message read by another member
+
+        // A flat, "no data" waveform for an AUDIO file (never carries real
+        // samples) or a VOICE message from a client that omitted one — same
+        // bar count VoiceRecorder.WAVEFORM_BARS uses, so it fills the same
+        // width as a real one instead of looking truncated.
+        val FLAT_WAVEFORM = List(30) { 0.15f }
     }
 }
 
