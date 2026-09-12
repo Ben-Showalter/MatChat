@@ -69,8 +69,18 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
 
-    // A chooser (Documents UI + the device Gallery) returns a content Uri via
-    // StartActivityForResult; the picked file's kind is derived from its MIME.
+    // "Send Photo" opens the system Photo Picker directly — a gallery-style
+    // grid, no intermediate "complete action using" chooser dialog, and no
+    // runtime storage permission needed (Options-round; previously routed
+    // through the same document chooser as "Send File" below).
+    private val photoPicker =
+        registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+        ) { uri -> uri?.let { sendPicked(it) } }
+
+    // "Send File" keeps the Documents UI + device Gallery chooser (not
+    // photo-specific, so a document chooser is still the right shape); the
+    // picked file's kind is derived from its MIME.
     private val attachmentPicker =
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -256,10 +266,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
         MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
-                OPT_SEND_PHOTO -> launchAttachmentChooser(imageOnly = true)
+                OPT_SEND_PHOTO -> launchPhotoPicker()
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
-                OPT_SEND_FILE -> launchAttachmentChooser(imageOnly = false)
+                OPT_SEND_FILE -> launchFileChooser()
                 OPT_CALL -> navigator.toCall(roomId(), viewModel.state.value.title, incoming = false)
                 OPT_INFO -> navigator.toRoomInfo(roomId())
                 OPT_HELP -> navigator.toHelp()
@@ -344,19 +354,35 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         refreshSoftkeys()
     }
 
+    /** Opens the system Photo Picker directly — a gallery-style grid, no
+     *  intermediate chooser dialog. Falls back gracefully on devices without
+     *  a Photo Picker (it degrades to a document picker itself on very old
+     *  API levels without Play services); [photoPicker]'s launch is still
+     *  guarded the same way [launchFileChooser] guards its chooser, in case
+     *  no handler exists at all on a locked-down device. */
+    private fun launchPhotoPicker() {
+        val request = androidx.activity.result.PickVisualMediaRequest(
+            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly,
+        )
+        runCatching { photoPicker.launch(request) }.onFailure {
+            Toast.makeText(requireContext(), R.string.timeline_media_no_app, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** Offer the Documents UI AND the device Gallery (via ACTION_GET_CONTENT
      *  initial intents) — on a feature phone the Gallery is often the only
-     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach. */
-    private fun launchAttachmentChooser(imageOnly: Boolean) {
-        val type = if (imageOnly) "image/*" else "*/*"
+     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach.
+     *  Not photo-specific (any file type), so a document chooser is still
+     *  the right shape here — only "Send Photo" moved to [launchPhotoPicker]. */
+    private fun launchFileChooser() {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = "*/*"
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val getContent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = "*/*"
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val chooser = android.content.Intent.createChooser(
