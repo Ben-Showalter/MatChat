@@ -131,6 +131,31 @@ Accessibility-permission grant and a real (or simulated) T9 IME actually
 swallowing the key — can only be verified with manual on-device QA, which is
 called out explicitly rather than claimed as covered by the test suite.
 
+### Update — TurboText ruled out; a real DOWN/UP consumption bug found and fixed
+
+A sibling app on the same hardware family, TurboText (com.turbotext.app),
+was suspected as a competing cause after its own accessibility-based key
+service showed up reacting to `KEYCODE_SOFT_RIGHT` in an on-device logcat
+capture. Reading its own source (`KeyButtonAccessibilityService`, in its
+repo) settled it: that service only ever consumes the key while *Kyocera's
+own home screen* is in the foreground, to fix a broken OEM shortcut —
+every other foreground app, MatChat included, falls through untouched.
+It still logs on every SOFT_RIGHT press system-wide for its own
+diagnostics, which is why its lines appeared in the capture; it never
+actually intercepts here. Ruled out by design, not just by the earlier,
+inconclusive on/off retest.
+
+Comparing the two implementations did turn up a real, previously-unnoticed
+bug in `MatChatKeyAccessibilityService`: it consumed a claimed key's DOWN
+but unconditionally returned `false` for its matching UP, leaving that UP
+orphaned (no DOWN was ever delivered anywhere for it) — TurboText's own
+doc comment describes the platform mishandling exactly this on this
+hardware family ("Cancelling event due to no window focus"). Fixed the
+same way TurboText does: track whether the DOWN was consumed and consume
+the matching UP too. Still unconfirmed whether this was the actual cause
+of Options not responding — needs the next on-device capture with the
+existing `MatChatSoftkey` logging to say for certain.
+
 ## Consequences
 
 - `AGENTS.md` §4 carries a named-exception note pointing here.

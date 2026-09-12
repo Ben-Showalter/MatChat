@@ -16,26 +16,37 @@ import org.matchat.client.MainActivity
  * but ONLY while an EditText/IME is active — outside of composing, the
  * normal dispatch path already works fine.
  *
- * UNRESOLVED as of the latest on-device report (right softkey still doesn't
- * open Options with this service enabled): a separate app, TurboText, also
- * runs its own accessibility-based key service (com.turbotext.app /
- * TurboTextKeyService) on the diagnosed device. An earlier capture judged it
- * a "red herring" — its own log output appeared to show it observing, not
- * consuming, the key. A fresh capture then showed that same service
- * actively reacting to KEYCODE_SOFT_RIGHT, gated on which app is in the
- * foreground; but disabling TurboText's accessibility service entirely and
- * retesting did NOT fix the symptom either, so it is not (solely) the
- * cause. Neither test result should be treated as settled — there was, and
- * still is, no logging anywhere in this class or MainActivity's key-dispatch
- * path to actually confirm what this service itself sees or returns. That
- * logging now exists (SOFTKEY_LOG_TAG = "MatChatSoftkey" in MainActivity,
- * and below) specifically so the next on-device logcat capture can show,
- * unambiguously, whether onKeyEvent below is even being invoked at all —
- * needed before guessing at an actual fix again. One other platform
- * behavior worth ruling out on the next pass: since Android 13, a sideloaded
- * app's Accessibility toggle (this app always sideloads on this device
- * class — ADR 0004, no Play Store) can be silently blocked by the OS's
- * "restricted settings" protection until the user explicitly allows it
+ * TurboText RULED OUT (read its own source, com.turbotext.app's
+ * KeyButtonAccessibilityService, on the diagnosed device — same maker's
+ * flip phones share this key-conflict-prone platform, and its author had
+ * already written up the exact same class of AccessibilityService/hardware
+ * quirks): that service only ever consumes KEYCODE_SOFT_RIGHT while the
+ * *Kyocera home screen itself* is in the foreground (`foregroundClass ==
+ * "jp.kyocera.kyocerahome.HomeScreenActivity"`), to fix a broken OEM
+ * shortcut — every other foreground app, MatChat included, falls through to
+ * `return false` unconditionally, untouched. Its `currentForeground()`
+ * check still runs (and logs) on every SOFT_RIGHT press system-wide purely
+ * for its own diagnostics, which is why its log lines showed up at all
+ * while MatChat was in the foreground — but `foregroundClass` was never its
+ * home-screen constant, so it never intercepts here. Confirmed innocent by
+ * design, not just by the inconclusive on/off retest that preceded this.
+ *
+ * That same source turned up a real bug in this class, since fixed: it only
+ * ever checked `event.action != ACTION_DOWN -> return false`, meaning a
+ * consumed DOWN's matching UP was *never* consumed — left as an orphaned
+ * event with no DOWN ever delivered anywhere, which TurboText's own doc
+ * comment describes the platform mishandling ("Cancelling event due to no
+ * window focus") on this exact hardware family. [onKeyEvent] now tracks and
+ * consumes the matching UP the same way TurboText does.
+ *
+ * Still unconfirmed: whether that DOWN/UP fix is what was actually blocking
+ * Options, or whether something else is (this needs the next on-device
+ * logcat capture, using the logging below and in MainActivity —
+ * SOFTKEY_LOG_TAG = "MatChatSoftkey" — to say for certain). One other
+ * platform behavior worth ruling out on that pass: since Android 13, a
+ * sideloaded app's Accessibility toggle (this app always sideloads on this
+ * device class — ADR 0004, no Play Store) can be silently blocked by the
+ * OS's "restricted settings" protection until the user explicitly allows it
  * (device Settings > Apps > MatChat > overflow menu > "Allow restricted
  * settings," then re-enable Accessibility) — the toggle can visually read
  * "on" while the service was never actually granted the flag below.
@@ -66,6 +77,18 @@ import org.matchat.client.MainActivity
  */
 class MatChatKeyAccessibilityService : AccessibilityService() {
 
+    // Tracks whether we consumed the DOWN half of the current SOFT_RIGHT
+    // press, so the matching UP gets consumed too. Found by comparing this
+    // class against a sibling app's own accessibility-based key service on
+    // the same hardware family (TurboText's KeyButtonAccessibilityService,
+    // which hit this exact issue): consuming only DOWN and always returning
+    // false for UP leaves the UP orphaned — no DOWN was ever delivered to
+    // whatever ends up with focus next, so the system keeps trying to
+    // redeliver it, logged there as "Cancelling event due to no window
+    // focus." This class had exactly that asymmetry (`if (event.action !=
+    // ACTION_DOWN) return false` unconditionally covered UP too) until now.
+    private var interceptedDown = false
+
     override fun onServiceConnected() {
         serviceInfo = serviceInfo?.apply {
             flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
@@ -79,9 +102,16 @@ class MatChatKeyAccessibilityService : AccessibilityService() {
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN) return false
         if (!isInterceptedSoftkey(event.keyCode)) return false
+        if (event.action == KeyEvent.ACTION_UP) {
+            if (!interceptedDown) return false
+            interceptedDown = false
+            Log.d(LOG_TAG, "onKeyEvent: consuming the UP matching a consumed DOWN")
+            return true
+        }
+        if (event.action != KeyEvent.ACTION_DOWN) return false
         val consumed = MainActivity.handleExternalSoftkey(event)
+        interceptedDown = consumed
         Log.d(LOG_TAG, "onKeyEvent: keyCode=${event.keyCode} consumed=$consumed")
         return consumed
     }
