@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.matchat.core.model.EventId
 import org.matchat.core.model.ReactionSummary
 import org.matchat.core.model.SeenBy
+import org.matchat.core.ui.theme.themeColor
 import org.matchat.core.ui.R as UiR
 
 /** S9 bubble alignment: own messages trail (right), others lead (left) — the
@@ -50,6 +51,7 @@ internal class TimelineAdapter(
     private val onImageBind: (EventId, ImageView) -> Unit,
     private val onImageActivated: (TimelineRow.Image) -> Unit,
     private val onAttachmentActivated: (TimelineRow.Attachment) -> Unit,
+    private val onVoiceBubbleActivated: (TimelineRow.VoiceBubble) -> Unit,
     /** Binds a sender avatar (Avatars round): url, name, user id, target —
      *  the name/id are the no-avatar-fallback's color+initial source
      *  (AvatarFallback round). */
@@ -65,6 +67,7 @@ internal class TimelineAdapter(
         is TimelineRow.Message -> TYPE_MESSAGE
         is TimelineRow.Image -> TYPE_IMAGE
         is TimelineRow.Attachment -> TYPE_ATTACHMENT
+        is TimelineRow.VoiceBubble -> TYPE_VOICE
         is TimelineRow.DaySeparator -> TYPE_DAY
         is TimelineRow.UnableToDecrypt -> TYPE_UTD
         is TimelineRow.State -> TYPE_STATE
@@ -76,6 +79,7 @@ internal class TimelineAdapter(
             TYPE_MESSAGE -> MessageVH(inflater.inflate(R.layout.item_message, parent, false))
             TYPE_IMAGE -> ImageVH(inflater.inflate(R.layout.item_message_image, parent, false))
             TYPE_ATTACHMENT -> AttachmentVH(inflater.inflate(R.layout.item_attachment, parent, false))
+            TYPE_VOICE -> VoiceBubbleVH(inflater.inflate(R.layout.item_voice_bubble, parent, false))
             TYPE_DAY -> SimpleVH(inflater.inflate(R.layout.item_day, parent, false))
             TYPE_UTD -> UtdVH(inflater.inflate(R.layout.item_utd, parent, false))
             else -> SimpleVH(inflater.inflate(R.layout.item_state, parent, false))
@@ -133,6 +137,7 @@ internal class TimelineAdapter(
             is TimelineRow.Message -> (holder as MessageVH).bind(row)
             is TimelineRow.Image -> (holder as ImageVH).bind(row)
             is TimelineRow.Attachment -> (holder as AttachmentVH).bind(row)
+            is TimelineRow.VoiceBubble -> (holder as VoiceBubbleVH).bind(row)
             is TimelineRow.DaySeparator -> (holder as SimpleVH).bind(row.label)
             is TimelineRow.UnableToDecrypt -> (holder as UtdVH).bind(row)
             is TimelineRow.State -> (holder as SimpleVH).bind(row.text)
@@ -221,6 +226,35 @@ internal class TimelineAdapter(
         }
     }
 
+    inner class VoiceBubbleVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val bubble: LinearLayout = view.findViewById(R.id.voice_bubble)
+        private val senderRow: View = view.findViewById(R.id.voice_sender_row)
+        private val senderAvatar: ImageView = view.findViewById(R.id.voice_sender_avatar)
+        private val sender: TextView = view.findViewById(R.id.voice_sender)
+        private val waveform: WaveformView = view.findViewById(R.id.voice_waveform)
+        private val duration: TextView = view.findViewById(R.id.voice_duration)
+        private val time: TextView = view.findViewById(R.id.voice_time)
+        private val reactions: LinearLayout = view.findViewById(R.id.voice_reactions)
+
+        fun bind(row: TimelineRow.VoiceBubble) {
+            senderRow.isVisible = row.senderName != null
+            sender.text = row.senderName.orEmpty()
+            sender.setTextColor(org.matchat.core.ui.media.AvatarFallback.colorFor(row.senderId))
+            if (row.senderName != null) {
+                onAvatarBind(row.senderAvatarUrl, row.senderName, row.senderId, senderAvatar)
+            }
+            waveform.setValues(row.waveform)
+            waveform.setBarColor(itemView.context.themeColor(UiR.attr.colorTextOnFocus))
+            duration.text = row.duration
+            val timeText = if (row.sendGlyph.isEmpty()) row.time else "${row.time} ${row.sendGlyph}"
+            time.text = withPinPrefix(row.isPinned, timeText)
+            bindBubbleSide(bubble, time, row.isOwn)
+            reactions.isVisible = row.reactions.isNotEmpty()
+            if (reactions.isVisible) onReactionsBind(row.reactions, reactions)
+            itemView.setOnClickListener { onVoiceBubbleActivated(row) }
+        }
+    }
+
     inner class UtdVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(row: TimelineRow.UnableToDecrypt) {
             itemView.setOnClickListener { onFixEncryption(row.eventId) }
@@ -239,6 +273,7 @@ internal class TimelineAdapter(
         const val TYPE_STATE = 3
         const val TYPE_IMAGE = 4
         const val TYPE_ATTACHMENT = 5
+        const val TYPE_VOICE = 6
 
         // Long-message round: how far a focused oversized row scrolls per
         // DOWN/UP press, per the user's own "like .75 inches" ask.

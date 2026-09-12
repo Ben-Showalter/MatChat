@@ -18,12 +18,14 @@ enum class AccentColor {
 
 /** Settings > Text size (UX-SPEC §S16): scales text, avatars, and row heights
  *  together app-wide, via the same ?attr indirection + Activity.recreate()
- *  mechanism as [AccentColor] (Theme.MatChat.Size.{Normal,Small}, themes.xml).
- *  NORMAL is the larger, default size — this app's whole point is legibility
- *  on a small screen — with SMALL as the reduced option for anyone who wants
- *  more on screen at once. Also toggled by holding `*` (LogicalKey.STAR_HOLD),
- *  from any screen. */
-enum class TextSizePreference { NORMAL, SMALL }
+ *  mechanism as [AccentColor] (Theme.MatChat.Size.{Normal,Small,Large},
+ *  themes.xml). NORMAL is the default size — this app's whole point is
+ *  legibility on a small screen — with SMALL as the reduced option for
+ *  anyone who wants more on screen at once, and LARGE a step up again for
+ *  anyone who wants it bigger still. Also cycled by holding `*`
+ *  (LogicalKey.STAR_HOLD, Small -> Normal -> Large -> Small), from any
+ *  screen. */
+enum class TextSizePreference { NORMAL, SMALL, LARGE }
 
 /**
  * How the app renders itself. A [StateFlow], not a value read once, so a

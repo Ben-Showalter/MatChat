@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MatChatKeyAccessibilityService's config. Deliberately minimal: no
+     canRetrieveWindowContent (we never read screen content, so Android's
+     "can view screen" consent language never applies to this service), no
+     package filter needed since canRequestFilterKeyEvents already scopes key
+     delivery to whichever app currently has the focused window. accessibility
+     EventTypes is a required field even though this service does nothing
+     with AccessibilityEvents (onAccessibilityEvent is a no-op) — the
+     narrowest legal value, not typeAllMask, so the declared surface stays
+     minimal. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRequestFilterKeyEvents="true"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="0"
+    android:description="@string/key_accessibility_service_desc" />

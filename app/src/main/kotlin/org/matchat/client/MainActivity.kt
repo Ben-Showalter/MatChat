@@ -129,19 +129,22 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun sizeStyleFor(size: TextSizePreference): Int = when (size) {
         TextSizePreference.NORMAL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Normal
         TextSizePreference.SMALL -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Small
+        TextSizePreference.LARGE -> org.matchat.core.ui.R.style.Theme_MatChat_Size_Large
     }
 
-    /** Settings > Text size's own row toggles the same preference; this is
-     *  also the "Hold * to change text size" shortcut Help promises (S14's
-     *  help_text_size string). Deliberately global (any screen), unlike
-     *  Pinned messages' RIGHT shortcut (TimelineFragment's narrow, explicit
-     *  DirectionalKeyReceiver exception) — Text size isn't scoped to one
-     *  screen, so it's handled here rather than delegated to the current
-     *  screen's LogicalKeyReceiver. */
+    /** Settings > Text size's own rows set the same preference directly;
+     *  this is also the "Hold * to change text size" shortcut Help promises
+     *  (S14's help_text_size string) — a 3-way cycle rather than Normal's
+     *  old binary toggle, now that Large exists too. Deliberately global
+     *  (any screen), unlike Pinned messages' RIGHT shortcut (TimelineFragment's
+     *  narrow, explicit DirectionalKeyReceiver exception) — Text size isn't
+     *  scoped to one screen, so it's handled here rather than delegated to
+     *  the current screen's LogicalKeyReceiver. */
     private fun toggleTextSize() {
         val next = when (userPreferences.textSize.value) {
-            TextSizePreference.NORMAL -> TextSizePreference.SMALL
             TextSizePreference.SMALL -> TextSizePreference.NORMAL
+            TextSizePreference.NORMAL -> TextSizePreference.LARGE
+            TextSizePreference.LARGE -> TextSizePreference.SMALL
         }
         lifecycleScope.launch { userPreferences.setTextSize(next) }
     }
@@ -164,7 +167,13 @@ class MainActivity : AppCompatActivity(), Navigator {
     // outbound only — there are no peer presence dots.)
     override fun onResume() {
         super.onResume()
+        activeInstance = this
         if (sessionStore.hasSession()) lifecycleScope.launch { session.setPresence(online = true) }
+    }
+
+    override fun onPause() {
+        if (activeInstance === this) activeInstance = null
+        super.onPause()
     }
 
     override fun onStop() {
@@ -245,6 +254,23 @@ class MainActivity : AppCompatActivity(), Navigator {
         return host?.childFragmentManager?.primaryNavigationFragment as? LogicalKeyReceiver
     }
 
+    /** Entry point for
+     *  [org.matchat.client.accessibility.MatChatKeyAccessibilityService] — see
+     *  that class's own doc comment for the full story (a confirmed device
+     *  conflict: the system's predictive-text IME consumes the right softkey
+     *  before dispatchKeyEvent above ever sees it, only while composing).
+     *  Simpler than dispatchKeyEvent: there's no Android dispatch chain to
+     *  fall back to here (returning false just tells the service "didn't
+     *  consume it, let it continue as normal" — the IME still gets a chance
+     *  after that), and only the right softkey ever reaches this (the
+     *  service filters to just that code before calling in; digits/D-pad/
+     *  CENTER/holds/the left softkey never do, so T9 text entry — and every
+     *  other key — is unaffected whether or not the service is enabled). */
+    private fun handleAccessibilityKeyEvent(event: KeyEvent): Boolean {
+        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value) ?: return false
+        return receiver()?.onLogicalKey(logical) ?: false
+    }
+
     // --- Navigator ----------------------------------------------------------
 
     override fun toSignIn() = navController.navigate(R.id.signInFragment)
@@ -323,5 +349,20 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_SENDER_ID = "senderId"
         const val ARG_TIMESTAMP = "timestamp"
         const val ARG_USER_ID = "userId"
+
+        // Set/cleared in onResume/onPause — same process as
+        // MatChatKeyAccessibilityService (no separate android:process declared
+        // for it), so a plain reference is enough; no Binder/IPC needed. Null
+        // whenever this Activity isn't the interactive foreground (matches
+        // "is dispatchKeyEvent even reachable right now" as closely as a
+        // service running independently of the Activity lifecycle can).
+        @Volatile private var activeInstance: MainActivity? = null
+
+        /** Called by the accessibility service when it intercepts the right
+         *  softkey. Returns false (don't consume) if there's no foreground
+         *  MainActivity to hand it to — the key then continues through the
+         *  normal platform pipeline exactly as if this service didn't exist. */
+        fun handleExternalSoftkey(event: KeyEvent): Boolean =
+            activeInstance?.handleAccessibilityKeyEvent(event) ?: false
     }
 }

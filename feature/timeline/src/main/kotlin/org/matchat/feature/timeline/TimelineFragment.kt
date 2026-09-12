@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.menu.MenuItem
@@ -64,13 +63,24 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         onImageBind = { eventId, image -> loadImageInto(eventId, image) },
         onImageActivated = { openMessageMenu(menuContextFor(it)) },
         onAttachmentActivated = { openMessageMenu(menuContextFor(it)) },
+        onVoiceBubbleActivated = { openMessageMenu(menuContextFor(it)) },
         onAvatarBind = { url, name, id, image -> loadAvatarInto(url, name, id, image) },
         onSeenByBind = { seenBy, container -> bindSeenBy(seenBy, container) },
         onReactionsBind = { reactions, container -> bindReactions(reactions, container) },
     )
 
-    // A chooser (Documents UI + the device Gallery) returns a content Uri via
-    // StartActivityForResult; the picked file's kind is derived from its MIME.
+    // "Send Photo" opens the system Photo Picker directly — a gallery-style
+    // grid, no intermediate "complete action using" chooser dialog, and no
+    // runtime storage permission needed (Options-round; previously routed
+    // through the same document chooser as "Send File" below).
+    private val photoPicker =
+        registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+        ) { uri -> uri?.let { sendPicked(it) } }
+
+    // "Send File" keeps the Documents UI + device Gallery chooser (not
+    // photo-specific, so a document chooser is still the right shape); the
+    // picked file's kind is derived from its MIME.
     private val attachmentPicker =
         registerForActivityResult(
             androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
@@ -80,7 +90,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             }
         }
 
-    // Camera capture writes into our own cache/media file; on success we send it.
+    // Camera capture writes into our own cache/media file; on success we
+    // stage it (Attachment staging round), same as a gallery/file pick.
     private var pendingCameraFile: java.io.File? = null
     private val cameraCapture =
         registerForActivityResult(
@@ -89,8 +100,14 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = pendingCameraFile
             pendingCameraFile = null
             if (success && file != null && file.length() > 0) {
-                Toast.makeText(requireContext(), R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-                viewModel.sendMedia(file.absolutePath, "image/jpeg", org.matchat.core.model.MediaKind.IMAGE, null)
+                stageAttachment(
+                    PendingAttachment(
+                        file.absolutePath,
+                        "image/jpeg",
+                        org.matchat.core.model.MediaKind.IMAGE,
+                        getString(R.string.timeline_attachment_camera_name),
+                    ),
+                )
             }
         }
 
@@ -132,7 +149,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private fun render(state: TimelineState) {
         val b = binding ?: return
         setTitle(state.title)
-        setSyncGlyph(SyncState.IDLE)
+        // Sync/connection indicator (Online indicator round) is now handled
+        // centrally by SoftkeyFragment — no per-screen call needed.
         b.pinnedBand.isVisible = state.pinnedCount > 0
         if (state.pinnedCount > 0) {
             b.pinnedBand.text = resources.getQuantityString(
@@ -144,6 +162,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         b.timelineList.isVisible = !state.isEmpty
         b.typingBar.isVisible = state.typingText != null
         b.typingBar.text = state.typingText.orEmpty()
+        b.attachmentPreview.isVisible = state.pendingAttachment != null
+        state.pendingAttachment?.let {
+            b.attachmentPreview.text = getString(R.string.timeline_attachment_preview_format, it.displayName)
+        }
         adapter.submitList(state.rows)
 
         // Viewing the room clears its unread count (a read receipt on the latest
@@ -242,6 +264,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     override fun onOptions(): Boolean {
         val items = buildList {
+            if (viewModel.state.value.pendingAttachment != null) {
+                add(MenuItem(OPT_REMOVE_ATTACHMENT, getString(R.string.timeline_opt_remove_attachment)))
+            }
             if (viewModel.canSendMedia) {
                 add(MenuItem(OPT_SEND_PHOTO, getString(R.string.timeline_opt_send_photo)))
                 if (hasCamera()) add(MenuItem(OPT_TAKE_PHOTO, getString(R.string.timeline_opt_take_photo)))
@@ -256,10 +281,11 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
         MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
-                OPT_SEND_PHOTO -> launchAttachmentChooser(imageOnly = true)
+                OPT_REMOVE_ATTACHMENT -> viewModel.onAction(TimelineAction.ClearPendingAttachment)
+                OPT_SEND_PHOTO -> launchPhotoPicker()
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
-                OPT_SEND_FILE -> launchAttachmentChooser(imageOnly = false)
+                OPT_SEND_FILE -> launchFileChooser()
                 OPT_CALL -> navigator.toCall(roomId(), viewModel.state.value.title, incoming = false)
                 OPT_INFO -> navigator.toRoomInfo(roomId())
                 OPT_HELP -> navigator.toHelp()
@@ -315,6 +341,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
+    /** Stages the recording (Attachment staging round) rather than sending it
+     *  immediately — same treatment as a picked photo/file/camera capture,
+     *  so a caption can be typed first here too. */
     private fun stopRecordingAndSend() {
         val rec = recorder ?: return
         val result = rec.stop()
@@ -328,7 +357,21 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             Toast.makeText(requireContext(), R.string.timeline_record_too_short, Toast.LENGTH_SHORT).show()
             return
         }
-        viewModel.sendVoice(result.file.absolutePath, rec.mimeType, result.durationMs, result.waveform)
+        val secs = result.durationMs / 1000
+        val name = getString(
+            R.string.timeline_attachment_voice_name_format,
+            "%d:%02d".format(secs / 60, secs % 60),
+        )
+        stageAttachment(
+            PendingAttachment(
+                result.file.absolutePath,
+                rec.mimeType,
+                org.matchat.core.model.MediaKind.VOICE,
+                name,
+                durationMs = result.durationMs,
+                waveform = result.waveform,
+            ),
+        )
     }
 
     private fun cancelRecording() {
@@ -344,19 +387,35 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         refreshSoftkeys()
     }
 
+    /** Opens the system Photo Picker directly — a gallery-style grid, no
+     *  intermediate chooser dialog. Falls back gracefully on devices without
+     *  a Photo Picker (it degrades to a document picker itself on very old
+     *  API levels without Play services); [photoPicker]'s launch is still
+     *  guarded the same way [launchFileChooser] guards its chooser, in case
+     *  no handler exists at all on a locked-down device. */
+    private fun launchPhotoPicker() {
+        val request = androidx.activity.result.PickVisualMediaRequest(
+            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly,
+        )
+        runCatching { photoPicker.launch(request) }.onFailure {
+            Toast.makeText(requireContext(), R.string.timeline_media_no_app, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** Offer the Documents UI AND the device Gallery (via ACTION_GET_CONTENT
      *  initial intents) — on a feature phone the Gallery is often the only
-     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach. */
-    private fun launchAttachmentChooser(imageOnly: Boolean) {
-        val type = if (imageOnly) "image/*" else "*/*"
+     *  D-pad-navigable image browser. Mirrors the DPAD-Messaging approach.
+     *  Not photo-specific (any file type), so a document chooser is still
+     *  the right shape here — only "Send Photo" moved to [launchPhotoPicker]. */
+    private fun launchFileChooser() {
         val openDocument = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = "*/*"
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val getContent = android.content.Intent(android.content.Intent.ACTION_GET_CONTENT).apply {
             addCategory(android.content.Intent.CATEGORY_OPENABLE)
-            this.type = type
+            type = "*/*"
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val chooser = android.content.Intent.createChooser(
@@ -381,8 +440,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** Copy the picked content to the cache (the SDK uploads from a file path) and
-     *  send it, deriving the media kind from the resolved MIME type. */
+    /** Copy the picked content to the cache (the SDK uploads from a file path)
+     *  and stage it (Attachment staging round) rather than sending it right
+     *  away, deriving the media kind from the resolved MIME type. The user
+     *  can then type a caption into compose_input before actually sending. */
     private fun sendPicked(uri: android.net.Uri) {
         val ctx = requireContext()
         val mime = ctx.contentResolver.getType(uri) ?: "application/octet-stream"
@@ -393,19 +454,31 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             else -> org.matchat.core.model.MediaKind.FILE
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // displayName does a ContentResolver query — kept on IO, same as
+            // the original immediate-send code did.
+            val staged = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val name = MediaFiles.displayName(ctx, uri)
                 val bytes = runCatching {
                     ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 }.getOrNull() ?: return@withContext null
-                MediaFiles.writeToCache(ctx, MediaFiles.displayName(ctx, uri), bytes)
+                MediaFiles.writeToCache(ctx, name, bytes)?.let { it to name }
             }
-            if (file == null) {
+            if (staged == null) {
                 Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            Toast.makeText(ctx, R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-            viewModel.sendMedia(file.absolutePath, mime, kind, caption = null)
+            val (file, name) = staged
+            stageAttachment(PendingAttachment(file.absolutePath, mime, kind, name))
         }
+    }
+
+    /** Stages [attachment] and moves focus to compose_input so the caption
+     *  hint and the "Send" center label are immediately visible — the same
+     *  focus-restore pattern already used when a menu/dialog dismisses
+     *  (`setOnDismissListener { binding?.composeInput?.requestFocus() }`). */
+    private fun stageAttachment(attachment: PendingAttachment) {
+        viewModel.onAction(TimelineAction.StageAttachment(attachment))
+        binding?.composeInput?.requestFocus()
     }
 
     /** S11 message menu, opened with CENTER on a message, image, or attachment
@@ -514,6 +587,18 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         reactions = row.reactions,
         copyText = null,
         openAction = { openAttachment(row) },
+        editAction = null,
+    )
+
+    private fun menuContextFor(row: TimelineRow.VoiceBubble) = MessageMenuContext(
+        eventId = row.eventId,
+        senderId = row.senderId,
+        timestampEpochMs = row.timestampEpochMs,
+        isOwn = row.isOwn,
+        isPinned = row.isPinned,
+        reactions = row.reactions,
+        copyText = null,
+        openAction = { openVoiceBubble(row) },
         editAction = null,
     )
 
@@ -647,6 +732,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }.setOnDismissListener { binding?.composeInput?.requestFocus() }
     }
 
+    /** Attachment rows are video/file only now (VOICE/AUDIO get
+     *  [openVoiceBubble] instead), so this always opens externally. */
     private fun openAttachment(row: TimelineRow.Attachment) {
         viewLifecycleOwner.lifecycleScope.launch {
             val ctx = requireContext()
@@ -658,7 +745,24 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
             }
-            if (row.play) playAudio(file) else openExternally(file, row.mimeType)
+            openExternally(file, row.mimeType)
+        }
+    }
+
+    /** Every VoiceBubble row is playable in-app (unlike Attachment, which also
+     *  covers video/file — those open externally instead). */
+    private fun openVoiceBubble(row: TimelineRow.VoiceBubble) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val ctx = requireContext()
+            val bytes = viewModel.loadMedia(row.eventId)
+            if (bytes == null) {
+                Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                MediaFiles.writeToCache(ctx, MediaFiles.ensureExtension(row.label, row.mimeType), bytes)
+            }
+            playAudio(file)
         }
     }
 
@@ -704,6 +808,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val OPT_TAKE_PHOTO = "take_photo"
         const val OPT_RECORD_VOICE = "record_voice"
         const val OPT_SEND_FILE = "send_file"
+        const val OPT_REMOVE_ATTACHMENT = "remove_attachment"
         const val RECORD_TICK_MS = 200L
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
         const val ARG_ROOM_ID = "roomId"

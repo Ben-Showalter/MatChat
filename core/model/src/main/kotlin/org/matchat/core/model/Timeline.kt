@@ -53,6 +53,10 @@ sealed interface TimelineItem {
         val seenBy: List<SeenBy> = emptyList(),
         val reactions: List<ReactionSummary> = emptyList(),
         val isPinned: Boolean = false,
+        /** MSC3245 waveform, normalized to 0f..1f — VOICE only (AUDIO/VIDEO/
+         *  FILE never carry one). Null when the sender didn't include one
+         *  (an older client, or a non-MatChat client). */
+        val waveform: List<Float>? = null,
     ) : TimelineItem
 
     data class DaySeparator(val label: String) : TimelineItem

@@ -27,6 +27,7 @@ class TextSizeViewModel @Inject constructor(
             when (action) {
                 TextSizeAction.SelectNormal -> userPreferences.setTextSize(TextSizePreference.NORMAL)
                 TextSizeAction.SelectSmall -> userPreferences.setTextSize(TextSizePreference.SMALL)
+                TextSizeAction.SelectLarge -> userPreferences.setTextSize(TextSizePreference.LARGE)
             }
         }
     }

@@ -183,11 +183,13 @@
     <!-- Size overlays (parent="" — same standalone shape as the accent
          overlays above; layered on top of those via a second applyStyle()
          call, MainActivity.onCreate()). Settings > Text size (UX-SPEC §S16)
-         switches between these two — every dimension role that scales with
-         it lives here, nowhere else. Normal is the larger, default set (the
+         switches between these three — every dimension role that scales
+         with it lives here, nowhere else. Normal is the default set (the
          `_large` dimens — this app's whole point is legibility on a small
          screen, so "normal" should already read comfortably); Small is the
-         reduced option, for anyone who wants more on screen at once. -->
+         reduced option, for anyone who wants more on screen at once; Large
+         is a further step up (the `_xlarge` dimens) for anyone who wants it
+         bigger still. -->
     <style name="Theme.MatChat.Size.Normal" parent="">
         <item name="textSizeBody">@dimen/text_body_large</item>
         <item name="textSizeLabel">@dimen/text_label_large</item>
@@ -218,14 +220,30 @@
         <item name="rowMinHeight">@dimen/row_min_height</item>
         <item name="rowMinHeightCompact">@dimen/row_min_height_compact</item>
     </style>
+    <style name="Theme.MatChat.Size.Large" parent="">
+        <item name="textSizeBody">@dimen/text_body_xlarge</item>
+        <item name="textSizeLabel">@dimen/text_label_xlarge</item>
+        <item name="textSizeMeta">@dimen/text_meta_xlarge</item>
+        <item name="textSizeRoomName">@dimen/text_room_name_xlarge</item>
+        <item name="textSizeRoomPreview">@dimen/text_room_preview_xlarge</item>
+        <item name="textSizeAddress">@dimen/text_address_xlarge</item>
+        <item name="textSizeSender">@dimen/text_sender_xlarge</item>
+        <item name="textSizeHeading">@dimen/text_heading_xlarge</item>
+        <item name="avatarSizeList">@dimen/avatar_size_list_xlarge</item>
+        <item name="avatarSizeSender">@dimen/avatar_size_sender_xlarge</item>
+        <item name="avatarSizeSeenBy">@dimen/avatar_size_seen_by_xlarge</item>
+        <item name="rowMinHeight">@dimen/row_min_height_xlarge</item>
+        <item name="rowMinHeightCompact">@dimen/row_min_height_compact_xlarge</item>
+    </style>
 
     <!-- Manifest default / fallback — see the file header. Baked with the
-         Normal (large) size set, matching the default preference. -->
+         Normal (large) size set and the Rust accent, matching the default
+         preferences (SharedPreferencesUserPreferences). -->
     <style name="Theme.MatChat" parent="Theme.MatChat.Base.Light">
-        <item name="colorFocusAccent">@color/accent_green</item>
+        <item name="colorFocusAccent">@color/accent_rust</item>
         <item name="colorAccent">?attr/colorFocusAccent</item>
-        <item name="colorSurfaceFocused">@color/accent_green_tint</item>
-        <item name="colorBubbleOwn">@color/accent_green_tint</item>
+        <item name="colorSurfaceFocused">@color/accent_rust_tint</item>
+        <item name="colorBubbleOwn">@color/accent_rust_tint</item>
         <item name="textSizeBody">@dimen/text_body_large</item>
         <item name="textSizeLabel">@dimen/text_label_large</item>
         <item name="textSizeMeta">@dimen/text_meta_large</item>
