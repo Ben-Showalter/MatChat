@@ -130,7 +130,15 @@ class TimelineViewModel @Inject constructor(
         if (pending != null) {
             stopTyping()
             pendingAttachment.value = null
-            sendMedia(pending.path, pending.mimeType, pending.kind, text.ifBlank { null })
+            if (pending.kind == MediaKind.VOICE) {
+                // sendVoice has no caption slot (MSC3245 voice messages don't
+                // carry one) — rather than silently discard typed text, send
+                // it as its own follow-up message right after.
+                sendVoice(pending.path, pending.mimeType, pending.durationMs ?: 0L, pending.waveform ?: emptyList())
+                if (text.isNotEmpty()) viewModelScope.launch { timeline.send(text) }
+            } else {
+                sendMedia(pending.path, pending.mimeType, pending.kind, text.ifBlank { null })
+            }
             return
         }
         if (text.isEmpty()) return // empty send is a no-op, not an error (S10)
@@ -299,6 +307,28 @@ class TimelineViewModel @Inject constructor(
                 timestampEpochMs = item.timestampEpochMs,
             )
         }
+        // VOICE and AUDIO both play in-app via the same AudioPlayback, so they
+        // share one bubble UI (Voice bubble round) rather than each getting a
+        // different look for functionally identical playback; AUDIO just gets
+        // a flat placeholder waveform since it never carries real samples.
+        if (item.kind == MediaKind.VOICE || item.kind == MediaKind.AUDIO) {
+            return TimelineRow.VoiceBubble(
+                eventId = item.eventId,
+                senderName = senderName,
+                label = labelFor(item),
+                time = time,
+                isOwn = item.isOwn,
+                sendGlyph = glyph,
+                mimeType = item.mimeType,
+                duration = item.durationMs?.let(::formatDuration).orEmpty(),
+                waveform = item.waveform ?: FLAT_WAVEFORM,
+                isPinned = item.isPinned,
+                reactions = item.reactions,
+                timestampEpochMs = item.timestampEpochMs,
+                senderId = item.sender.value,
+                senderAvatarUrl = item.senderAvatarUrl,
+            )
+        }
         return TimelineRow.Attachment(
             eventId = item.eventId,
             senderName = senderName,
@@ -308,7 +338,6 @@ class TimelineViewModel @Inject constructor(
             time = time,
             isOwn = item.isOwn,
             mimeType = item.mimeType,
-            play = item.kind == MediaKind.AUDIO || item.kind == MediaKind.VOICE,
             isPinned = item.isPinned,
             reactions = item.reactions,
             timestampEpochMs = item.timestampEpochMs,
@@ -316,9 +345,9 @@ class TimelineViewModel @Inject constructor(
         )
     }
 
+    // VOICE/AUDIO never reach here (routed to VoiceBubble above) — only
+    // VIDEO/FILE still use the plain glyph row.
     private fun glyphFor(kind: MediaKind): String = when (kind) {
-        MediaKind.VOICE -> "🎤"
-        MediaKind.AUDIO -> "🎧"
         MediaKind.VIDEO -> "🎬"
         else -> "📎"
     }
@@ -348,6 +377,12 @@ class TimelineViewModel @Inject constructor(
         const val STOP_TIMEOUT_MS = 5_000L
         const val TYPING_IDLE_MS = 4_000L // stop the typing notice after a pause
         const val READ_GLYPH = "✓✓" // own message read by another member
+
+        // A flat, "no data" waveform for an AUDIO file (never carries real
+        // samples) or a VOICE message from a client that omitted one — same
+        // bar count VoiceRecorder.WAVEFORM_BARS uses, so it fills the same
+        // width as a real one instead of looking truncated.
+        val FLAT_WAVEFORM = List(30) { 0.15f }
     }
 }
 
