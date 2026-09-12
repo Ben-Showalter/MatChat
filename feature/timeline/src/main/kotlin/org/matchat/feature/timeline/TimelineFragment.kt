@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.matchat.core.model.SyncState
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.key.LogicalKey
 import org.matchat.core.ui.menu.MenuItem
@@ -150,7 +149,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private fun render(state: TimelineState) {
         val b = binding ?: return
         setTitle(state.title)
-        setSyncGlyph(SyncState.IDLE)
+        // Sync/connection indicator (Online indicator round) is now handled
+        // centrally by SoftkeyFragment — no per-screen call needed.
         b.pinnedBand.isVisible = state.pinnedCount > 0
         if (state.pinnedCount > 0) {
             b.pinnedBand.text = resources.getQuantityString(

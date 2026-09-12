@@ -1,5 +1,9 @@
 package org.matchat.core.matrix.internal
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,6 +41,7 @@ import javax.inject.Singleton
 internal class RustMatrixClientHolder @Inject constructor(
     private val store: SessionFileStore,
     private val devConfig: MatrixDevConfig,
+    @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -49,7 +54,15 @@ internal class RustMatrixClientHolder @Inject constructor(
     private val entries = mutableListOf<Room>()
 
     val rooms = MutableStateFlow<List<RoomSummary>>(emptyList())
+
+    /** SYNCING means "session active, sync loop running" in this codebase (set
+     *  once in [startSync], never cleared except by [logout]) — there's no
+     *  finer-grained "caught up" signal from the SDK surfaced here yet, so
+     *  SYNCING is the ordinary connected steady state, not a transient one
+     *  (Online indicator round: SoftkeyFragment shows it as "connected"). */
     val syncState = MutableStateFlow(SyncState.IDLE)
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     fun requireClient(): Client = requireNotNull(client) { "no active Matrix client" }
 
@@ -113,6 +126,7 @@ internal class RustMatrixClientHolder @Inject constructor(
     suspend fun startSync() = withContext(Dispatchers.IO) {
         if (syncService != null) return@withContext
         syncState.value = SyncState.SYNCING
+        observeConnectivity()
         val svc = requireClient().syncService().finish()
         svc.start()
         syncService = svc
@@ -132,6 +146,31 @@ internal class RustMatrixClientHolder @Inject constructor(
         entriesResult = result // keep alive so the stream is not dropped
     }
 
+    /** OFFLINE detection (Online indicator round): the SDK's own sync-loop
+     *  success/failure isn't currently surfaced beyond SYNCING/IDLE here (a
+     *  deeper, SDK-version-sensitive change than device connectivity, left
+     *  for a follow-up), so this uses the device's own network state
+     *  instead — no network at all is the dominant real-world "not
+     *  connected" case, and is a signal we can read with plain Android APIs.
+     *  Registered once per sync session; unregistered in [logout]. */
+    private fun observeConnectivity() {
+        if (networkCallback != null) return
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (syncState.value == SyncState.OFFLINE) syncState.value = SyncState.SYNCING
+            }
+
+            override fun onLost(network: Network) {
+                // onLost fires per-network; only declare OFFLINE once nothing
+                // else is active (e.g. Wi-Fi drops but mobile data is still up).
+                if (cm.activeNetwork == null) syncState.value = SyncState.OFFLINE
+            }
+        }
+        runCatching { cm.registerDefaultNetworkCallback(callback) }
+            .onSuccess { networkCallback = callback }
+    }
+
     fun roomFor(roomId: RoomId): Room? =
         runCatching { roomList?.room(roomId.value) }.getOrNull()
 
@@ -143,6 +182,11 @@ internal class RustMatrixClientHolder @Inject constructor(
     suspend fun logout() = withContext(Dispatchers.IO) {
         runCatching { syncService?.stop() }
         runCatching { requireClient().logout() }
+        networkCallback?.let { cb ->
+            val cm = context.getSystemService(ConnectivityManager::class.java)
+            runCatching { cm?.unregisterNetworkCallback(cb) }
+        }
+        networkCallback = null
         client = null
         syncService = null
         roomList = null
