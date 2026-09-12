@@ -47,10 +47,15 @@
         <!-- Optional, user-enabled workaround for a device whose predictive-text
              keyboard consumes the right softkey before this app sees it while
              composing — see MatChatKeyAccessibilityService's own doc comment.
-             Enabled manually in Settings > Accessibility; inert otherwise. -->
+             Enabled manually in Settings > Accessibility; inert otherwise.
+             exported="true" matches a confirmed-working sibling app's own
+             accessibility service on this hardware family (TurboText) — the
+             android.permission.BIND_ACCESSIBILITY_SERVICE requirement below
+             is what actually gates binding (only the system holds it), not
+             this attribute, so this isn't a security relaxation. -->
         <service
             android:name=".accessibility.MatChatKeyAccessibilityService"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/key_accessibility_service_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

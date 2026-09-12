@@ -39,17 +39,27 @@ import org.matchat.client.MainActivity
  * window focus") on this exact hardware family. [onKeyEvent] now tracks and
  * consumes the matching UP the same way TurboText does.
  *
- * Still unconfirmed: whether that DOWN/UP fix is what was actually blocking
- * Options, or whether something else is (this needs the next on-device
- * logcat capture, using the logging below and in MainActivity —
- * SOFTKEY_LOG_TAG = "MatChatSoftkey" — to say for certain). One other
- * platform behavior worth ruling out on that pass: since Android 13, a
- * sideloaded app's Accessibility toggle (this app always sideloads on this
- * device class — ADR 0004, no Play Store) can be silently blocked by the
- * OS's "restricted settings" protection until the user explicitly allows it
- * (device Settings > Apps > MatChat > overflow menu > "Allow restricted
- * settings," then re-enable Accessibility) — the toggle can visually read
- * "on" while the service was never actually granted the flag below.
+ * The Android 13+ "restricted settings" theory (a sideloaded app's
+ * Accessibility toggle silently not taking effect) is RULED OUT too: an
+ * on-device capture showed `onServiceConnected: flags=32` — the service
+ * connects and is granted FLAG_REQUEST_FILTER_KEY_EVENTS (32) correctly.
+ *
+ * Config parity with TurboText, beyond the DOWN/UP fix above: comparing the
+ * two services' manifest/XML declarations (not just their Kotlin) turned up
+ * two more real differences, now matched — `android:exported="true"` on
+ * the `<service>` entry (AndroidManifest.xml) and
+ * `android:accessibilityFlags="flagRequestFilterKeyEvents"` declared
+ * statically in `key_accessibility_service_config.xml` (that file's own
+ * comment has the detail on what was and wasn't copied, and why).
+ *
+ * Still unconfirmed: whether any of this is what was actually blocking
+ * Options, or whether something else is — the one on-device capture taken
+ * so far was on Settings/room-list screens, where the key already worked
+ * fine via normal dispatch; the actual originally-diagnosed conflict (the
+ * T9 IME swallowing the key) only happens while composing on the
+ * thread/timeline screen, not captured yet. That capture — using the
+ * logging below and in MainActivity, SOFTKEY_LOG_TAG = "MatChatSoftkey" —
+ * is the next real test.
  *
  * A service requesting FLAG_REQUEST_FILTER_KEY_EVENTS receives hardware key
  * events earlier in the platform's input pipeline than IME processing does

@@ -152,9 +152,25 @@ orphaned (no DOWN was ever delivered anywhere for it) — TurboText's own
 doc comment describes the platform mishandling exactly this on this
 hardware family ("Cancelling event due to no window focus"). Fixed the
 same way TurboText does: track whether the DOWN was consumed and consume
-the matching UP too. Still unconfirmed whether this was the actual cause
-of Options not responding — needs the next on-device capture with the
-existing `MatChatSoftkey` logging to say for certain.
+the matching UP too.
+
+A follow-up on-device capture confirmed the service does connect and is
+granted `FLAG_REQUEST_FILTER_KEY_EVENTS` (`onServiceConnected: flags=32`)
+— ruling out the Android 13+ "restricted settings" theory too — but also
+showed the right softkey already working correctly via *normal* dispatch
+on the Settings and room-list screens (`SOFT_RIGHT`/Back, `handled=true`),
+which was never in question; the actual T9-IME-while-composing conflict
+this ADR is about hasn't been captured yet. Per the user's direction, two
+more manifest/config differences from TurboText's confirmed-working
+service were matched for full mechanism parity: `android:exported="true"`
+on the `<service>` entry, and `android:accessibilityFlags=
+"flagRequestFilterKeyEvents"` declared statically in the XML config
+(`key_accessibility_service_config.xml`'s own comment has the detail on
+what was deliberately not copied and why). Still unconfirmed whether any
+of this is the actual cause of Options not responding while composing —
+needs an on-device capture taken specifically on the thread screen with
+the IME up, using the existing `MatChatSoftkey` logging, to say for
+certain.
 
 ## Consequences
 
