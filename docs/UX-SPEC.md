@@ -394,14 +394,21 @@ Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
 (blank) | Select | Back.
 
 ### S25 — Advanced
-Reached from Settings → Advanced (docs/adr/0007). One focusable row: "Swap
+Reached from Settings → Advanced (docs/adr/0007). First row: "Swap
 Left/Right keys", with an 11 sp subtitle explaining why it exists ("For a
 phone whose hardware Left and Right keys are reversed."). CENTER toggles it
 immediately, same as S24's rows — no separate confirm. The row carries a
 trailing checkmark when on; selection is never conveyed by color alone.
 Takes effect on the very next key press — no recreate, unlike S24 (there's
 no chrome to rebuild, just future key events reading the new preference).
-Focus: the one row. Softkeys: (blank) | Select | Back.
+Second row: "Softkey helper (system setting)", with a subtitle explaining
+what it's for — a predictive-text keyboard on some phones that captures the
+right softkey while composing. CENTER opens the system Accessibility
+settings screen (`ACTION_ACCESSIBILITY_SETTINGS`) so the user can grant
+`MatChatKeyAccessibilityService` there; this is a system-level permission
+the app can neither read nor set for itself, so the row is a plain link, not
+a toggle rendered with its own checked/unchecked state. Focus order: swap
+row → helper row. Softkeys: (blank) | Select | Back.
 
 ### S26 — Notifications
 Reached from Settings → Notifications. Two focusable rows, in fixed order:

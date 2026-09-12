@@ -44,6 +44,23 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Optional, user-enabled workaround for a device whose predictive-text
+             keyboard consumes the right softkey before this app sees it while
+             composing — see MatChatKeyAccessibilityService's own doc comment.
+             Enabled manually in Settings > Accessibility; inert otherwise. -->
+        <service
+            android:name=".accessibility.MatChatKeyAccessibilityService"
+            android:exported="false"
+            android:label="@string/key_accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice.AccessibilityService"
+                android:resource="@xml/key_accessibility_service_config" />
+        </service>
+
         <!-- Notification action handlers (inline reply, mark as read). -->
         <receiver android:name=".notify.MessageReplyReceiver" android:exported="false" />
         <receiver android:name=".notify.MarkReadReceiver" android:exported="false" />
