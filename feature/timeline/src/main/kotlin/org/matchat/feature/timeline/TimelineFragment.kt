@@ -90,7 +90,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             }
         }
 
-    // Camera capture writes into our own cache/media file; on success we send it.
+    // Camera capture writes into our own cache/media file; on success we
+    // stage it (Attachment staging round), same as a gallery/file pick.
     private var pendingCameraFile: java.io.File? = null
     private val cameraCapture =
         registerForActivityResult(
@@ -99,8 +100,14 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             val file = pendingCameraFile
             pendingCameraFile = null
             if (success && file != null && file.length() > 0) {
-                Toast.makeText(requireContext(), R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-                viewModel.sendMedia(file.absolutePath, "image/jpeg", org.matchat.core.model.MediaKind.IMAGE, null)
+                stageAttachment(
+                    PendingAttachment(
+                        file.absolutePath,
+                        "image/jpeg",
+                        org.matchat.core.model.MediaKind.IMAGE,
+                        getString(R.string.timeline_attachment_camera_name),
+                    ),
+                )
             }
         }
 
@@ -154,6 +161,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         b.timelineList.isVisible = !state.isEmpty
         b.typingBar.isVisible = state.typingText != null
         b.typingBar.text = state.typingText.orEmpty()
+        b.attachmentPreview.isVisible = state.pendingAttachment != null
+        state.pendingAttachment?.let {
+            b.attachmentPreview.text = getString(R.string.timeline_attachment_preview_format, it.displayName)
+        }
         adapter.submitList(state.rows)
 
         // Viewing the room clears its unread count (a read receipt on the latest
@@ -252,6 +263,9 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
 
     override fun onOptions(): Boolean {
         val items = buildList {
+            if (viewModel.state.value.pendingAttachment != null) {
+                add(MenuItem(OPT_REMOVE_ATTACHMENT, getString(R.string.timeline_opt_remove_attachment)))
+            }
             if (viewModel.canSendMedia) {
                 add(MenuItem(OPT_SEND_PHOTO, getString(R.string.timeline_opt_send_photo)))
                 if (hasCamera()) add(MenuItem(OPT_TAKE_PHOTO, getString(R.string.timeline_opt_take_photo)))
@@ -266,6 +280,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
         MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
+                OPT_REMOVE_ATTACHMENT -> viewModel.onAction(TimelineAction.ClearPendingAttachment)
                 OPT_SEND_PHOTO -> launchPhotoPicker()
                 OPT_TAKE_PHOTO -> launchCamera()
                 OPT_RECORD_VOICE -> startRecording()
@@ -407,8 +422,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
     }
 
-    /** Copy the picked content to the cache (the SDK uploads from a file path) and
-     *  send it, deriving the media kind from the resolved MIME type. */
+    /** Copy the picked content to the cache (the SDK uploads from a file path)
+     *  and stage it (Attachment staging round) rather than sending it right
+     *  away, deriving the media kind from the resolved MIME type. The user
+     *  can then type a caption into compose_input before actually sending. */
     private fun sendPicked(uri: android.net.Uri) {
         val ctx = requireContext()
         val mime = ctx.contentResolver.getType(uri) ?: "application/octet-stream"
@@ -419,19 +436,31 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
             else -> org.matchat.core.model.MediaKind.FILE
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // displayName does a ContentResolver query — kept on IO, same as
+            // the original immediate-send code did.
+            val staged = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val name = MediaFiles.displayName(ctx, uri)
                 val bytes = runCatching {
                     ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 }.getOrNull() ?: return@withContext null
-                MediaFiles.writeToCache(ctx, MediaFiles.displayName(ctx, uri), bytes)
+                MediaFiles.writeToCache(ctx, name, bytes)?.let { it to name }
             }
-            if (file == null) {
+            if (staged == null) {
                 Toast.makeText(ctx, R.string.timeline_media_failed, Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            Toast.makeText(ctx, R.string.timeline_sending, Toast.LENGTH_SHORT).show()
-            viewModel.sendMedia(file.absolutePath, mime, kind, caption = null)
+            val (file, name) = staged
+            stageAttachment(PendingAttachment(file.absolutePath, mime, kind, name))
         }
+    }
+
+    /** Stages [attachment] and moves focus to compose_input so the caption
+     *  hint and the "Send" center label are immediately visible — the same
+     *  focus-restore pattern already used when a menu/dialog dismisses
+     *  (`setOnDismissListener { binding?.composeInput?.requestFocus() }`). */
+    private fun stageAttachment(attachment: PendingAttachment) {
+        viewModel.onAction(TimelineAction.StageAttachment(attachment))
+        binding?.composeInput?.requestFocus()
     }
 
     /** S11 message menu, opened with CENTER on a message, image, or attachment
@@ -730,6 +759,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val OPT_TAKE_PHOTO = "take_photo"
         const val OPT_RECORD_VOICE = "record_voice"
         const val OPT_SEND_FILE = "send_file"
+        const val OPT_REMOVE_ATTACHMENT = "remove_attachment"
         const val RECORD_TICK_MS = 200L
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
         const val ARG_ROOM_ID = "roomId"

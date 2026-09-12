@@ -19,7 +19,9 @@ import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.TimelineItem
+import org.matchat.core.model.UserId
 import org.matchat.core.model.format.RelativeTime
 import org.matchat.core.policy.PolicyProvider
 import javax.inject.Inject
@@ -38,31 +40,52 @@ class TimelineViewModel @Inject constructor(
     private val composeFocused = MutableStateFlow(false)
     private val loadingEarlier = MutableStateFlow(false)
 
+    /** The staged photo/file/camera-capture, if any (Attachment staging round) —
+     *  a separate flow, folded into [state] below via a nested combine since
+     *  Kotlin's fixed-arity `combine` tops out at 5 flows. */
+    private val pendingAttachment = MutableStateFlow<PendingAttachment?>(null)
+
     /** Whether attaching media is permitted on this (possibly managed) device. */
     val canSendMedia: Boolean get() = policyProvider.policy.value.mediaSend
 
     private val navChannel = Channel<TimelineNav>(Channel.BUFFERED)
     val navEvents: Flow<TimelineNav> = navChannel.receiveAsFlow()
 
+    /** Everything [state] needs except [pendingAttachment] — its own type
+     *  purely so the two combine steps below stay readable; not shown to
+     *  any UI directly. */
+    private data class ComposeContext(
+        val items: List<TimelineItem>,
+        val rooms: List<RoomSummary>,
+        val composing: Boolean,
+        val loading: Boolean,
+        val typing: List<UserId>,
+    )
+
     val state: StateFlow<TimelineState> =
         combine(
-            timeline.items,
-            session.rooms,
-            composeFocused,
-            loadingEarlier,
-            timeline.typing,
-        ) { items, rooms, composing, loading, typing ->
-            val room = rooms.firstOrNull { it.id == roomId }
+            combine(
+                timeline.items,
+                session.rooms,
+                composeFocused,
+                loadingEarlier,
+                timeline.typing,
+                ::ComposeContext,
+            ),
+            pendingAttachment,
+        ) { ctx, pending ->
+            val room = ctx.rooms.firstOrNull { it.id == roomId }
             TimelineState(
                 title = room?.name.orEmpty(),
-                rows = items.toRows(),
+                rows = ctx.items.toRows(),
                 isEncrypted = room?.isEncrypted ?: true,
-                isComposeFocused = composing,
-                isLoadingEarlier = loading,
-                typingText = typingLine(typing),
-                pinnedCount = items.count {
+                isComposeFocused = ctx.composing,
+                isLoadingEarlier = ctx.loading,
+                typingText = typingLine(ctx.typing),
+                pinnedCount = ctx.items.count {
                     (it is TimelineItem.Message && it.isPinned) || (it is TimelineItem.Media && it.isPinned)
                 },
+                pendingAttachment = pending,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimelineState())
 
@@ -84,6 +107,8 @@ class TimelineViewModel @Inject constructor(
             is TimelineAction.FixEncryption -> emit(TimelineNav.Verification)
             is TimelineAction.MessageFocused -> Unit // focus tracking only
             TimelineAction.MarkRead -> markRead()
+            is TimelineAction.StageAttachment -> pendingAttachment.value = action.attachment
+            TimelineAction.ClearPendingAttachment -> pendingAttachment.value = null
         }
     }
 
@@ -93,8 +118,21 @@ class TimelineViewModel @Inject constructor(
         viewModelScope.launch { runCatching { timeline.markRead(EventId("")) } }
     }
 
+    /** Plain text, or — when an attachment is staged (Attachment staging
+     *  round) — that attachment with [body] as its caption instead, via the
+     *  same [sendMedia] every other caller already goes through (policy
+     *  re-check included), just called from here instead of immediately on
+     *  pick/capture. An attachment can be sent with an empty caption; plain
+     *  text still can't be empty (S10). */
     private fun send(body: String) {
         val text = body.trim()
+        val pending = pendingAttachment.value
+        if (pending != null) {
+            stopTyping()
+            pendingAttachment.value = null
+            sendMedia(pending.path, pending.mimeType, pending.kind, text.ifBlank { null })
+            return
+        }
         if (text.isEmpty()) return // empty send is a no-op, not an error (S10)
         stopTyping()
         viewModelScope.launch { timeline.send(text) }
