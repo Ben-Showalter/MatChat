@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Recording voice notes (S9); the mic is optional hardware. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Call audio routing (earpiece/speaker) for LiveKit voice calls (ADR 0006). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Keep sync alive on idle; some carrier builds refuse it (PLAN.md §6.6). -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
