@@ -43,7 +43,12 @@ class CallFragment : SoftkeyFragment() {
         val incoming = args.getBoolean(ARG_INCOMING, false)
         val roomId = args.getString(ARG_ROOM_ID).orEmpty()
         val peerName = args.getString(ARG_PEER_NAME)
-        if (!incoming && roomId.isNotEmpty()) viewModel.placeOnce(RoomId(roomId), peerName)
+        if (!incoming && roomId.isNotEmpty()) {
+            viewModel.placeOnce(RoomId(roomId), peerName)
+        } else if (incoming && args.getBoolean(ARG_ANSWER, false)) {
+            // Opened via the notification's Answer action — accept immediately.
+            viewModel.answer()
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -127,5 +132,6 @@ class CallFragment : SoftkeyFragment() {
         const val ARG_ROOM_ID = "roomId"
         const val ARG_PEER_NAME = "peerName"
         const val ARG_INCOMING = "incoming"
+        const val ARG_ANSWER = "answer"
     }
 }
