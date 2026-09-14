@@ -17,6 +17,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://jitpack.io")
+            content {
+                // audioswitch, pulled in transitively by io.livekit:livekit-android.
+                includeGroup("com.github.davidliu")
+            }
+        }
     }
 }
 
