@@ -1,7 +1,9 @@
 package org.matchat.core.rtc.internal
 
 import android.content.Context
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.os.Build
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.livekit.android.LiveKit
@@ -37,8 +39,11 @@ internal class LiveKitAudioTransport @Inject constructor(
     override suspend fun connect(config: TransportConfig): Boolean = runCatching {
         val r = room ?: LiveKit.create(context.applicationContext).also { room = it }
         r.connect(config.livekitUrl, config.token)
-        r.localParticipant.setMicrophoneEnabled(true)
         _connected.value = true
+        // Mic is best-effort: if RECORD_AUDIO was denied the call still connects
+        // receive-only rather than dropping the whole call (docs/VOICE.md §6).
+        runCatching { r.localParticipant.setMicrophoneEnabled(true) }
+            .onFailure { Log.w(TAG, "mic publish failed: ${it.message}") }
         true
     }.getOrElse {
         Log.w(TAG, "LiveKit connect failed: ${it.message}")
@@ -63,9 +68,18 @@ internal class LiveKitAudioTransport @Inject constructor(
         val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
         runCatching {
             am.mode = AudioManager.MODE_IN_COMMUNICATION
-            @Suppress("DEPRECATION")
-            am.isSpeakerphoneOn = on
-        }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // isSpeakerphoneOn is a no-op from API 31; the communication-device
+                // API is the supported route control.
+                val type =
+                    if (on) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
+                val device = am.availableCommunicationDevices.firstOrNull { it.type == type }
+                if (device != null) am.setCommunicationDevice(device) else am.clearCommunicationDevice()
+            } else {
+                @Suppress("DEPRECATION")
+                am.isSpeakerphoneOn = on
+            }
+        }.onFailure { Log.w(TAG, "speaker route failed: ${it.message}") }
     }
 
     private companion object { const val TAG = "LiveKitAudioTransport" }

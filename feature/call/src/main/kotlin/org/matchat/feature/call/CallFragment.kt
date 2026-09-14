@@ -37,6 +37,21 @@ class CallFragment : SoftkeyFragment() {
     private val navigator: Navigator get() = requireActivity() as Navigator
     private var binding: FragmentCallBinding? = null
 
+    /** Deferred place/answer, run once the mic permission result is in. */
+    private var pendingCallStart: (() -> Unit)? = null
+
+    // A call needs the mic. RECORD_AUDIO is a runtime permission, so it must be
+    // granted before we publish audio — declaring it in the manifest is not
+    // enough. Denial still lets the call connect receive-only rather than
+    // failing (docs/VOICE.md §6).
+    private val recordPermission =
+        registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        ) {
+            pendingCallStart?.invoke()
+            pendingCallStart = null
+        }
+
     override fun onContentViewCreated(content: View) {
         binding = FragmentCallBinding.bind(content)
         val args = requireArguments()
@@ -44,10 +59,10 @@ class CallFragment : SoftkeyFragment() {
         val roomId = args.getString(ARG_ROOM_ID).orEmpty()
         val peerName = args.getString(ARG_PEER_NAME)
         if (!incoming && roomId.isNotEmpty()) {
-            viewModel.placeOnce(RoomId(roomId), peerName)
+            withMic { viewModel.placeOnce(RoomId(roomId), peerName) }
         } else if (incoming && args.getBoolean(ARG_ANSWER, false)) {
             // Opened via the notification's Answer action — accept immediately.
-            viewModel.answer()
+            withMic { viewModel.answer() }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -86,9 +101,23 @@ class CallFragment : SoftkeyFragment() {
         else -> getString(R.string.call_hint_end)
     }
 
+    /** Run [start] once we hold RECORD_AUDIO, requesting it first if needed. */
+    private fun withMic(start: () -> Unit) {
+        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+            requireContext(),
+            android.Manifest.permission.RECORD_AUDIO,
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            start()
+        } else {
+            pendingCallStart = start
+            recordPermission.launch(android.Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     override fun onOtherKey(key: LogicalKey): Boolean = when (key) {
         LogicalKey.CALL -> {
-            if (viewModel.session.value.phase == CallPhase.RINGING) viewModel.answer()
+            if (viewModel.session.value.phase == CallPhase.RINGING) withMic { viewModel.answer() }
             true
         }
         LogicalKey.END -> {
