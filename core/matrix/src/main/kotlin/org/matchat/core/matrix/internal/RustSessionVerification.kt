@@ -54,12 +54,15 @@ internal class RustSessionVerification @Inject constructor(
         }
 
         override fun didFinish() {
+            android.util.Log.i(TAG, "verification finished (success)")
             _state.value = SasState.Success
         }
         override fun didFail() {
+            android.util.Log.w(TAG, "verification didFail (SAS/MAC rejected by the SDK)")
             _state.value = SasState.Cancelled
         }
         override fun didCancel() {
+            android.util.Log.w(TAG, "verification didCancel (cancelled by a side or timed out)")
             _state.value = SasState.Cancelled
         }
     }
@@ -74,13 +77,16 @@ internal class RustSessionVerification @Inject constructor(
         }.onFailure {
             // Surface the failure instead of hanging on "waiting for device" forever
             // (the ViewModel swallows start() so the cause would otherwise be silent).
-            android.util.Log.w("SessionVerify", "verification request failed: ${it.message}", it)
+            android.util.Log.w(TAG, "verification request failed: ${it.message}", it)
             _state.value = SasState.Cancelled
         }
     }
 
     override suspend fun approve() {
+        // Don't swallow the approve error: if approveVerification() throws (wrong
+        // state, keys), we want it in the log, not a silent later "cancel".
         runCatching { controller?.approveVerification() }
+            .onFailure { android.util.Log.w(TAG, "approveVerification failed: ${it.message}", it) }
     }
 
     override suspend fun decline() {
@@ -97,5 +103,9 @@ internal class RustSessionVerification @Inject constructor(
         controller?.setDelegate(null)
         controller = null
         _state.value = SasState.Idle
+    }
+
+    private companion object {
+        const val TAG = "SessionVerify"
     }
 }
