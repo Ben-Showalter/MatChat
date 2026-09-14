@@ -65,11 +65,18 @@ internal class RustSessionVerification @Inject constructor(
     }
 
     override suspend fun start() {
-        val c = holder.requireClient().getSessionVerificationController()
-        controller = c
-        c.setDelegate(delegate)
-        _state.value = SasState.Requested
-        c.requestDeviceVerification()
+        runCatching {
+            val c = holder.requireClient().getSessionVerificationController()
+            controller = c
+            c.setDelegate(delegate)
+            _state.value = SasState.Requested
+            c.requestDeviceVerification()
+        }.onFailure {
+            // Surface the failure instead of hanging on "waiting for device" forever
+            // (the ViewModel swallows start() so the cause would otherwise be silent).
+            android.util.Log.w("SessionVerify", "verification request failed: ${it.message}", it)
+            _state.value = SasState.Cancelled
+        }
     }
 
     override suspend fun approve() {

@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.matchat.core.matrix.MatrixDevConfig
 import org.matchat.core.model.RoomId
@@ -63,6 +65,12 @@ internal class RustMatrixClientHolder @Inject constructor(
 
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
+    // Serializes restore so two callers (MainActivity's cold-start restore and the
+    // sync service's ensureSessionRestored) can't build two clients against the
+    // same crypto store at once — that race corrupts the olm/verification state
+    // (messaging survives it; device verification does not).
+    private val restoreMutex = Mutex()
+
     fun requireClient(): Client = requireNotNull(client) { "no active Matrix client" }
 
     fun isActive(): Boolean = client != null
@@ -110,9 +118,12 @@ internal class RustMatrixClientHolder @Inject constructor(
      * Returns false — routing the app to Welcome — when there is nothing to
      * restore or restoration fails (self-healing: the next login resets the store).
      */
-    suspend fun restore(): Boolean {
-        val blob = store.load() ?: return false
-        return runCatching {
+    suspend fun restore(): Boolean = restoreMutex.withLock {
+        // Already restored (e.g. the other caller won the race) — don't rebuild the
+        // client, which would tear down a live sync loop and crypto session.
+        if (client != null) return@withLock true
+        val blob = store.load() ?: return@withLock false
+        runCatching {
             val session = SessionCodec.decode(blob)
             buildClient(session.homeserverUrl, resetStore = false)
             requireClient().restoreSession(session)
