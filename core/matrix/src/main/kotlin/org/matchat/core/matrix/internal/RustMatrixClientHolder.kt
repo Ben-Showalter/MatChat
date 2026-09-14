@@ -85,6 +85,12 @@ internal class RustMatrixClientHolder @Inject constructor(
     suspend fun buildClient(homeserver: String, resetStore: Boolean = true): Client =
         // All SDK + file work is on IO, never the main thread (ARCHITECTURE.md).
         withContext(Dispatchers.IO) {
+            // Close any live SDK objects (and their native SQLite handles) BEFORE we
+            // touch the store. Without this, a leftover Client from a prior build or
+            // a crashed session still holds the store's DB files open; deleting the
+            // directory (resetStore) and recreating a DB at the same path then fails
+            // migrations with "disk I/O error" — the login failure we saw on device.
+            teardownClient()
             val path = if (resetStore) store.resetSdkStore() else store.sdkStorePath
             // FFI: sessionPaths(dataPath, cachePath) is deprecated but present in
             // 26.09.x; if removed, switch to sqliteStore(SqliteStoreBuilder(path)).
@@ -189,14 +195,28 @@ internal class RustMatrixClientHolder @Inject constructor(
             runCatching { cm?.unregisterNetworkCallback(cb) }
         }
         networkCallback = null
-        client = null
-        syncService = null
-        roomList = null
-        entriesResult = null
+        teardownClient()
         synchronized(entries) { entries.clear() }
         rooms.value = emptyList()
         syncState.value = SyncState.IDLE
         store.clear()
+    }
+
+    /**
+     * Drop all live SDK objects, destroying their native handles so the crypto
+     * store's SQLite files are closed deterministically (uniffi objects otherwise
+     * linger until GC, keeping the DB open). Order: dependents before the client.
+     * Idempotent — safe to call when nothing is built.
+     */
+    private fun teardownClient() {
+        runCatching { entriesResult?.destroy() }
+        runCatching { roomList?.destroy() }
+        runCatching { syncService?.destroy() }
+        runCatching { client?.destroy() }
+        entriesResult = null
+        roomList = null
+        syncService = null
+        client = null
     }
 
     private fun applyUpdates(updates: List<RoomListEntriesUpdate>) = synchronized(entries) {
