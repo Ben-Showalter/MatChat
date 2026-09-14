@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.matchat.core.matrix.DraftStore
 import org.matchat.core.matrix.MatrixDevConfig
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
@@ -41,6 +42,7 @@ import javax.inject.Singleton
 @Singleton
 internal class RustMatrixClientHolder @Inject constructor(
     private val store: SessionFileStore,
+    private val draftStore: DraftStore,
     private val devConfig: MatrixDevConfig,
     @ApplicationContext private val context: Context,
 ) {
@@ -199,6 +201,7 @@ internal class RustMatrixClientHolder @Inject constructor(
         synchronized(entries) { entries.clear() }
         rooms.value = emptyList()
         syncState.value = SyncState.IDLE
+        draftStore.clearAll()
         store.clear()
     }
 
