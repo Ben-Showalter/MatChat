@@ -279,8 +279,12 @@ message-bubble small icon. Selecting deep-links to S9 for that room, with the
 back stack rooted at S8. Whether it fires at all, and what sound it plays,
 are user-configurable — Settings → Notifications (S26).
 Persistent low-priority notification while the sync service runs:
-"MatChat is running." — always on, its own circular-arrows icon, not
-user-configurable (docs/adr/0004).
+"MatChat is running." — its own circular-arrows icon, not user-configurable
+(docs/adr/0004). Shown whenever the foreground service hosts sync; it goes
+away only when the Background helper hosts sync instead, which needs both
+the helper turned on and "Run in background" allowed (S25, S27,
+docs/adr/0008). Off by default is not possible: only the user can turn on an
+accessibility service.
 
 ### S16 — Text size (Small / Normal / Large)
 Normal is the default, the middle of three tiers: room name 21 sp, preview
@@ -403,15 +407,24 @@ on the left."). CENTER toggles it immediately, same as S24's rows — no
 separate confirm. The row carries a trailing checkmark when on; selection is
 never conveyed by color alone. Takes effect on the very next key press — no
 recreate, unlike S24 (there's no chrome to rebuild, just future key events
-reading the new preference). Second row: "Softkey helper (system setting)",
-with a subtitle explaining what it's for — a predictive-text keyboard on
-some phones that captures the right softkey while composing. CENTER opens
-the system Accessibility settings screen (`ACTION_ACCESSIBILITY_SETTINGS`)
-so the user can grant `MatChatKeyAccessibilityService` there; this is a
-system-level permission the app can neither read nor set for itself, so the
-row is a plain link, not a toggle rendered with its own checked/unchecked
-state. Focus order: swap row → helper row. Softkeys: (blank) | Select |
-Back.
+reading the new preference). Second row: "Run in background (system
+setting)". CENTER opens Android's own battery-optimization dialog
+(`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, falling back to the
+`ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS` list on builds without the
+dialog). An 11 sp status line under it reads "Allowed." or "Not allowed. New
+messages may be late while the phone is idle." Third row: "Background helper
+(system setting)", with a subtitle explaining its two jobs: stay connected
+without the "MatChat is running" notification (docs/adr/0008), and fix the
+right softkey on phones whose predictive-text keyboard captures it while
+composing. CENTER opens the system Accessibility settings screen
+(`ACTION_ACCESSIBILITY_SETTINGS`) so the user can turn on
+`MatChatKeyAccessibilityService` there. An 11 sp status line under it reads
+"On. No notification needed." / "On, but Run in background is not allowed.
+The notification stays." / "Off. MatChat shows a notification." Both are
+system-level permissions the app cannot set for itself, so these rows are
+action rows with a read-only status line, not toggles; the status lines
+refresh whenever the screen is shown again. Focus order: swap row → run in
+background → helper. Softkeys: (blank) | Select | Back.
 
 ### S26 — Notifications
 Reached from Settings → Notifications. Two focusable rows, in fixed order:
@@ -424,6 +437,23 @@ sync notification is unaffected. Per-room/per-thread sound is not offered
 here — every room shares the one chosen sound (future work).
 Focus order: Notifications → Sound. Initial focus: Notifications.
 Softkeys: (blank) | Select | Back.
+
+### S27 — Background helper ("Hide the running notification?")
+Shown **once per install**, right after the room list first appears
+following sign-in (existing installs: once after updating), and only when
+the Background helper is not already on (docs/adr/0008). Before it, if
+"Run in background" is not yet allowed, the app launches Android's own
+battery-optimization dialog (see S25); S27 follows whatever the user chose
+there. Content: one short paragraph ("MatChat can stay connected without the
+'MatChat is running' notification. Turn on MatChat in Accessibility
+settings."), one focusable row "Open Accessibility settings" (CENTER opens
+`ACTION_ACCESSIBILITY_SETTINGS`), and the same 11 sp status line as S25's
+helper row, refreshed when the user comes back from system settings.
+Initial focus: the row. Softkeys: (blank) | Open | Back. RIGHT (Back)
+means "not now" and returns to the room list; the S25 rows remain the way
+back to this later. On Android 13+ a sideloaded app may need Settings > Apps
+> MatChat > ⋮ > "Allow restricted settings" before the switch takes effect;
+the helper's own system description says so.
 
 ## 4. Content voice
 

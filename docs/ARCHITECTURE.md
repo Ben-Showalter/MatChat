@@ -199,15 +199,22 @@ optional retry `Action`. No stack traces reach a screen. No silent catches:
 ## Sync lifecycle
 
 ```
-App start → restore session → start SyncForegroundService
+App start / sign-in / boot / watchdog → SyncHosts.ensureRunning()
                                   │
-                       SDK SyncService (sliding sync)
+            SyncForegroundService  or  Background helper (accessibility service)
+                                  │            (ADR 0008: helper + battery exemption)
+                              SyncOwner  ← restores the session, notifications, call ringing
+                                  │
+                       SDK SyncService (sliding sync, offline mode, auto-restart)
                                   │
              rooms Flow ──────────┴────────── timeline Flows (per open room)
 ```
 
-The service is the single owner of the client. Screens observe; they never start
-or stop sync. Backgrounding does not stop sync; sign-out does.
+`SyncOwner` is the single owner of the client; a host only keeps the process
+alive and lends it a scope. Screens observe; they never start or stop sync.
+Backgrounding does not stop sync; sign-out does. A reboot restarts it
+(`SyncBootReceiver`), a dead SDK loop is restarted in `:core:matrix`, and the
+periodic `SyncWorker` watchdog restarts a missing host (ADR 0004 amendment).
 
 ## Performance budget (checked at every milestone, on hardware)
 
