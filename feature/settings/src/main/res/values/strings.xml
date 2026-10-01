@@ -86,6 +86,12 @@
     <string name="notifications_sound">Sound</string>
     <string name="notifications_sound_default">Default</string>
     <string name="notifications_sound_silent">Silent</string>
+    <!-- Note under the Sound row: each room can have its own sound, set from
+         that room's Room info screen. Wording requested by the product owner. -->
+    <string name="notifications_room_sound_note">You can set a custom notification in the room info.</string>
+    <!-- Shown on Android 7–9 when storage access was refused: MatChat's own
+         bundled sounds can't be added to the phone's sound list. -->
+    <string name="notifications_bundled_access">MatChat\'s own sounds need storage access. Open Sound again to allow it.</string>
 
     <!-- S23 Policy. -->
     <string name="policy_title">Policy</string>

@@ -8,6 +8,9 @@
 
     <!-- Incoming-message notifications. -->
     <string name="messages_channel_name">Messages</string>
+    <!-- A room's own notification channel (Room info > Notification sound), as
+         listed in the phone's notification settings. %1$s is the room name. -->
+    <string name="messages_room_channel_name">Messages: %1$s</string>
 
     <!-- Incoming voice-call ring (docs/VOICE.md §5). -->
     <string name="call_channel_name">Calls</string>
@@ -18,6 +21,15 @@
     <string name="call_decline">Decline</string>
     <string name="notif_reply">Reply</string>
     <string name="notif_mark_read">Mark as read</string>
+    <!-- Message notification text in a group: %1$s is the sender's name,
+         %2$s the message (or a media label below). -->
+    <string name="notif_sender_text">%1$s: %2$s</string>
+    <!-- Notification text when the latest message is media, not text. -->
+    <string name="notif_media_photo">Photo</string>
+    <string name="notif_media_video">Video</string>
+    <string name="notif_media_audio">Audio</string>
+    <string name="notif_media_voice">Voice message</string>
+    <string name="notif_media_file">File</string>
     <plurals name="notif_new_messages">
         <item quantity="one">New message</item>
         <item quantity="other">%d new messages</item>

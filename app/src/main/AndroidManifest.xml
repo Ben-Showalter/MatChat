@@ -12,6 +12,13 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Runtime notification permission on API 33+. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 7–9 only: copy the notification sounds bundled in res/raw into
+         the phone's public Notifications folder so the sound picker lists them
+         (BundledSounds, docs/SOUNDS.md). Requested when a sound picker is first
+         opened. Android 10+ needs no permission for this. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <!-- Recording voice notes (S9); the mic is optional hardware. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Call audio routing (earpiece/speaker) for LiveKit voice calls (ADR 0006). -->

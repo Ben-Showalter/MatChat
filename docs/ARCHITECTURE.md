@@ -216,6 +216,23 @@ Backgrounding does not stop sync; sign-out does. A reboot restarts it
 (`SyncBootReceiver`), a dead SDK loop is restarted in `:core:matrix`, and the
 periodic `SyncWorker` watchdog restarts a missing host (ADR 0004 amendment).
 
+## Message notifications
+
+`MessageNotifications` (app) raises one notification per room when its unread
+count climbs, built by `MessageNotifier` from the room's latest message
+(`RoomSummary.lastMessage*`, mapped from `Room.latestEvent()` in `:core:matrix`),
+and cancels it when the room is read, which also turns the LED off. Android 8+
+channels can't change sound or lights after creation, so they are versioned:
+
+| Channel | Used for |
+|---|---|
+| `matchat.messages.l<version>` | the app sound (S26) |
+| `matchat.messages.r.<room>.l<version>` | a room with its own sound (S12, `RoomNotificationSounds`) |
+| `matchat.messages.safe.l` | default sound, retried only if posting on the others fails |
+
+`l` marks the channels with lights; the older `matchat.messages.s*` ones are
+deleted on first use. Bundled sounds: docs/SOUNDS.md.
+
 ## Performance budget (checked at every milestone, on hardware)
 
 | Metric | Budget |

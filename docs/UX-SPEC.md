@@ -238,11 +238,19 @@ blank here.
 
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
-members can read this"), member list (a 16 dp avatar beside each name — same
+members can read this"), a **Notification sound** row (primary line: the
+sound's name — "Default (app sound)", "Silent", or the picked sound; caption
+"Notification sound"), member list (a 16 dp avatar beside each name — same
 placeholder-until-decoded treatment as S8/S9 — plus a power label), then two
 action rows: `Pinned messages` (Pinned messages round, below) and `Add
 member`/`Leave room`.
-Focus order: member rows, then the action rows.
+Focus order: name, topic, notification sound, member rows, then the action
+rows. CENTER on Notification sound opens Android's sound picker for this room
+only. Its "Default" entry means the app sound from S26 (removes the room's
+own sound); "Silent" silences this room. On Android 7–9 the first open may ask
+for storage access, to add MatChat's bundled sounds (docs/SOUNDS.md); if
+refused, a short message says MatChat's own sounds need storage access and the
+picker opens anyway.
 Softkeys: Options | Select | Back.
 Options: Mute this group · Leave group (confirm) · Help.
 
@@ -274,10 +282,19 @@ Softkeys: (blank) | Select | Back.
 ### S15 — Notification
 *Not a screen we draw — this is the system notification surface; the entries
 below are what we put into it.*
-Heads-up collapsed notification: room name + count ("Barn Crew · 3 new"), a
+Heads-up notification: title = room name; text = the latest message, with the
+sender's name in front in a group ("Ann: see you at six" — no name when it
+would repeat the title, as in a direct chat). Media shows "Photo", "Video",
+"Voice message", "Audio" or "File". When there's nothing to show (an encrypted
+message not yet decrypted), the text is the count ("3 new messages"); with
+more than one unread, the count is also the sub-text. Long text expands.
+Lock screen / outer display: if the phone is set to hide sensitive content,
+only the room name and count. The notification LED blinks for as long as the
+notification is up, i.e. while the room has unread messages. A
 message-bubble small icon. Selecting deep-links to S9 for that room, with the
 back stack rooted at S8. Whether it fires at all, and what sound it plays,
-are user-configurable — Settings → Notifications (S26).
+are user-configurable — Settings → Notifications (S26), and per room in Room
+info (S12), which overrides the app sound for that room.
 Persistent low-priority notification while the sync service runs:
 "MatChat is running." — its own circular-arrows icon, not user-configurable
 (docs/adr/0004). Shown whenever the foreground service hosts sync; it goes
@@ -433,7 +450,12 @@ when on — same convention as S24/S25) then "Sound" (CENTER launches the
 system ringtone picker; its 11 sp subtitle shows the current choice —
 "Default", "Silent", or the picked ringtone's name). Turning notifications
 off silences only the incoming-message notification (S15); the persistent
-sync notification is unaffected. Per-room/per-thread sound is not offered
+sync notification is unaffected. Under Sound, an 11 sp note: "You can set a
+custom notification in the room info." A room's own sound (S12) overrides
+this one for that room. On Android 7–9, opening Sound may first ask for
+storage access to add MatChat's bundled sounds (docs/SOUNDS.md); if refused,
+a second 11 sp note says they need storage access, and the picker opens
+anyway. Per-room/per-thread sound is not offered
 here — every room shares the one chosen sound (future work).
 Focus order: Notifications → Sound. Initial focus: Notifications.
 Softkeys: (blank) | Select | Back.
