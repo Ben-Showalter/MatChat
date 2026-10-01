@@ -451,7 +451,7 @@ system ringtone picker; its 11 sp subtitle shows the current choice —
 "Default", "Silent", or the picked ringtone's name). Turning notifications
 off silences only the incoming-message notification (S15); the persistent
 sync notification is unaffected. Under Sound, an 11 sp note: "You can set a
-custom notification in the room info." A room's own sound (S12) overrides
+custom room notification by going to the room info." A room's own sound (S12) overrides
 this one for that room. On Android 7–9, opening Sound may first ask for
 storage access to add MatChat's bundled sounds (docs/SOUNDS.md); if refused,
 a second 11 sp note says they need storage access, and the picker opens
