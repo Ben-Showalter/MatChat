@@ -184,7 +184,9 @@ object MessageNotifier {
     /**
      * Posts (or updates) [roomId]'s notification. With [roomSound] set, it goes
      * on the room's own channel with that sound; otherwise on the app-wide
-     * channel ([channelVersion], [soundUri]).
+     * channel ([channelVersion], [soundUri]). [alert] false replaces the text of
+     * a notification that is already up without sound, vibration or heads-up
+     * (the message text arriving after the unread count, NotificationDecision).
      */
     @Suppress("LongParameterList")
     suspend fun show(
@@ -194,6 +196,7 @@ object MessageNotifier {
         channelVersion: Int = 0,
         soundUri: String? = null,
         roomSound: RoomSound? = null,
+        alert: Boolean = true,
     ) {
         val channel: String
         val sound: String?
@@ -208,7 +211,7 @@ object MessageNotifier {
             sound = soundUri
         }
         val id = notifId(roomId)
-        val notification = buildNotification(context, roomId, id, content, channel, sound)
+        val notification = buildNotification(context, roomId, id, content, channel, sound, alert)
 
         // Crash fix (kept): a notification whose sound URI the app no longer
         // holds a read grant for (observed on-device: a custom sound picked
@@ -234,7 +237,7 @@ object MessageNotifier {
                 posted.exceptionOrNull(),
             )
             ensureSafeChannel(context)
-            val fallback = buildNotification(context, roomId, id, content, SAFE_CHANNEL_ID, soundUri = null)
+            val fallback = buildNotification(context, roomId, id, content, SAFE_CHANNEL_ID, soundUri = null, alert)
             runCatching { manager(context).notify(id, fallback) }
                 .onFailure { e -> Log.e(TAG, "fallback notify() also failed; giving up on this notification", e) }
         }
@@ -248,6 +251,7 @@ object MessageNotifier {
         content: NotificationContent,
         channelId: String,
         soundUri: String?,
+        alert: Boolean,
     ): Notification {
         val openPI = PendingIntent.getActivity(
             context,
@@ -312,6 +316,9 @@ object MessageNotifier {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .apply { if (content.unread > 1 && text != count) setSubText(count) }
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            // An update of the text only: Android replaces the showing
+            // notification without alerting again (the LED stays on).
+            .setOnlyAlertOnce(!alert)
             .setPublicVersion(publicVersion)
             // Below O the LED is set per notification (on O+ the channel's
             // enableLights decides). Blinks until the notification is cleared.
@@ -347,6 +354,13 @@ object MessageNotifier {
         MediaKind.VOICE -> R.string.notif_media_voice
         MediaKind.FILE -> R.string.notif_media_file
     }
+
+    /** True while [roomId]'s notification is still up (not read, cancelled or
+     *  dismissed by the user). */
+    fun isShowing(context: Context, roomId: RoomId): Boolean = runCatching {
+        val id = notifId(roomId)
+        manager(context).activeNotifications.any { it.id == id }
+    }.getOrDefault(false)
 
     fun cancel(context: Context, roomId: RoomId) = manager(context).cancel(notifId(roomId))
 

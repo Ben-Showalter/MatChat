@@ -233,6 +233,13 @@ channels can't change sound or lights after creation, so they are versioned:
 `l` marks the channels with lights; the older `matchat.messages.s*` ones are
 deleted on first use. Bundled sounds: docs/SOUNDS.md.
 
+A new unread message alerts; when the room's latest message changes while its
+notification is still up (the SDK often raises the unread count before it
+updates the latest message, and encrypted messages decrypt a moment later), the
+text is replaced silently (`NotificationDecision`). The room list itself is
+mapped one pass at a time from the newest entries (`LatestOnlyRunner`), so an
+older, slower pass can never overwrite a newer one.
+
 ## Performance budget (checked at every milestone, on hardware)
 
 | Metric | Budget |

@@ -407,12 +407,14 @@ internal class RustMatrixClientHolder @Inject constructor(
         }
     }
 
-    private fun recompute() {
+    /** Maps the room list one pass at a time, always from the latest entries
+     *  (see [LatestOnlyRunner] for the out-of-order bug this replaced). */
+    private val roomMapper = LatestOnlyRunner(scope) {
         val snapshot = synchronized(entries) { entries.toList() }
-        scope.launch {
-            rooms.value = snapshot.map { Mappers.toRoomSummary(it) }
-        }
+        rooms.value = snapshot.map { Mappers.toRoomSummary(it) }
     }
+
+    private fun recompute() = roomMapper.request()
 
     private companion object {
         const val PAGE_SIZE: UInt = 100u

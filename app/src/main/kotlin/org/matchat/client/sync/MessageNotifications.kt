@@ -30,33 +30,68 @@ class MessageNotifications @Inject constructor(
     private val roomSounds: RoomNotificationSounds,
 ) {
     private val lastUnread = HashMap<String, Int>()
+
+    /** What each room's latest message looked like at the last update, to spot
+     *  the text arriving (or decrypting) after the unread count went up. */
+    private val lastPreview = HashMap<String, Preview>()
     private var seeded = false
+
+    private data class Preview(
+        val text: String?,
+        val sender: String?,
+        val media: org.matchat.core.model.MediaKind?,
+        val isOwn: Boolean,
+        val timestamp: Long?,
+    )
+
+    private fun previewOf(room: RoomSummary) = Preview(
+        room.lastMessage, room.lastMessageSender, room.lastMessageMedia, room.lastMessageIsOwn,
+        room.lastActivityEpochMs,
+    )
 
     suspend fun onRooms(rooms: List<RoomSummary>) {
         if (!seeded) {
-            rooms.forEach { lastUnread[it.id.value] = it.unreadCount }
+            rooms.forEach {
+                lastUnread[it.id.value] = it.unreadCount
+                lastPreview[it.id.value] = previewOf(it)
+            }
             seeded = true
             return
         }
         rooms.forEach { room ->
             val prev = lastUnread[room.id.value] ?: 0
             val now = room.unreadCount
-            when {
-                now > prev && now > 0 -> if (userPreferences.notificationsEnabled.value) {
-                    MessageNotifier.show(
-                        context,
-                        room.id,
-                        contentFor(room, now),
-                        channelVersion = userPreferences.notificationChannelVersion.value,
-                        soundUri = userPreferences.notificationSoundUri.value,
-                        // A room's own sound (Room info) wins over the app-wide one.
-                        roomSound = roomSounds.overrides.value[room.id],
-                    )
-                }
-                now == 0 && prev > 0 -> MessageNotifier.cancel(context, room.id)
+            val preview = previewOf(room)
+            val previewChanged = lastPreview[room.id.value] != preview
+            val action = NotificationDecision.decide(
+                prevUnread = prev,
+                nowUnread = now,
+                previewChanged = previewChanged,
+                showing = previewChanged && MessageNotifier.isShowing(context, room.id),
+                enabled = userPreferences.notificationsEnabled.value,
+            )
+            when (action) {
+                NotificationDecision.Action.ALERT -> post(room, now, alert = true)
+                NotificationDecision.Action.UPDATE_SILENTLY -> post(room, now, alert = false)
+                NotificationDecision.Action.CANCEL -> MessageNotifier.cancel(context, room.id)
+                NotificationDecision.Action.NONE -> Unit
             }
             lastUnread[room.id.value] = now
+            lastPreview[room.id.value] = preview
         }
+    }
+
+    private suspend fun post(room: RoomSummary, unread: Int, alert: Boolean) {
+        MessageNotifier.show(
+            context,
+            room.id,
+            contentFor(room, unread),
+            channelVersion = userPreferences.notificationChannelVersion.value,
+            soundUri = userPreferences.notificationSoundUri.value,
+            // A room's own sound (Room info) wins over the app-wide one.
+            roomSound = roomSounds.overrides.value[room.id],
+            alert = alert,
+        )
     }
 
     /** The latest message's text, unless it is our own — then just the count
