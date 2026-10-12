@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Press feedback for a tappable softkey cell (SoftkeyBarView). A pressed cell
+     darkens; otherwise transparent so the bar's accent fill shows through. No
+     ripple and no animation (AGENTS.md §5) — just a flat state change, so a
+     touch on a phone whose hardware softkeys don't work gives a visible, instant
+     confirmation that the tap landed. The cell stays non-focusable (the bar is
+     chrome, never D-pad-focused); this is a touch affordance only. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/softkey_pressed_scrim" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</selector>

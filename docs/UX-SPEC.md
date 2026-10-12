@@ -31,7 +31,12 @@ Every screen has three fixed bands:
   Text size (§S16): a chrome band, not a row, so it stays this one size
   regardless of the Normal/Small setting, to avoid clipping a band that's
   already nearly full. On the same accent surface as the title bar so it is
-  never confused with content.
+  never confused with content. Each non-blank cell is also a touch target:
+  tapping it fires the same logical key as the matching hardware softkey
+  (Options / Select / Back, mirrored with the swap preference), and a tapped
+  cell shows a brief flat press-darken (no ripple) so a user on a phone whose
+  hardware softkeys don't work gets visible confirmation. A no-op on a real
+  non-touch feature phone.
 - Content never scrolls by pixel drag. It scrolls because focus moved.
   One documented exception (S9, long-message round): a message bubble
   taller than the visible list area scrolls in small fixed steps (~0.75")

@@ -2,6 +2,7 @@ package org.matchat.core.ui.softkey
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.widget.LinearLayout
 import org.matchat.core.ui.R
 import org.matchat.core.ui.databinding.ViewSoftkeyBarBinding
@@ -50,12 +51,21 @@ class SoftkeyBarView @JvmOverloads constructor(
         // Reads `swapped` fresh on each tap (a var, not a value captured at
         // init time), so it always matches the labels render() last set.
         binding.softkeyLeft.setOnClickListener {
-            onKey?.invoke(if (swapped) LogicalKey.SOFT_RIGHT else LogicalKey.SOFT_LEFT)
+            dispatchTap("left", if (swapped) LogicalKey.SOFT_RIGHT else LogicalKey.SOFT_LEFT)
         }
-        binding.softkeyCenter.setOnClickListener { onKey?.invoke(LogicalKey.CENTER) }
+        binding.softkeyCenter.setOnClickListener { dispatchTap("center", LogicalKey.CENTER) }
         binding.softkeyRight.setOnClickListener {
-            onKey?.invoke(if (swapped) LogicalKey.SOFT_LEFT else LogicalKey.SOFT_RIGHT)
+            dispatchTap("right", if (swapped) LogicalKey.SOFT_LEFT else LogicalKey.SOFT_RIGHT)
         }
+    }
+
+    /** A cell was tapped. Logs it (so a device whose hardware softkeys don't work
+     *  can be confirmed to be receiving the touch at all — the taps are otherwise
+     *  invisible in logcat, unlike the raw-key path in MainActivity) and then
+     *  dispatches the logical key exactly as the hardware key would. */
+    private fun dispatchTap(cell: String, key: LogicalKey) {
+        Log.d(TAG, "softkey cell tapped: $cell -> $key")
+        onKey?.invoke(key)
     }
 
     fun render(left: CharSequence, center: CharSequence, right: CharSequence, swapped: Boolean = false) {
@@ -67,5 +77,9 @@ class SoftkeyBarView @JvmOverloads constructor(
         binding.softkeyLeft.isClickable = left.isNotEmpty()
         binding.softkeyCenter.isClickable = center.isNotEmpty()
         binding.softkeyRight.isClickable = right.isNotEmpty()
+    }
+
+    private companion object {
+        const val TAG = "MatChatSoftkey"
     }
 }
