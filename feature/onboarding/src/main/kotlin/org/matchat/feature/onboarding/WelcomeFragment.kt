@@ -9,6 +9,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.ui.focus.FocusEngine
+import org.matchat.core.ui.menu.MenuItem
+import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.feature.onboarding.databinding.FragmentWelcomeBinding
@@ -58,8 +60,28 @@ class WelcomeFragment : SoftkeyFragment() {
         }
     }
 
+    /** Options (UX-SPEC S2): Help, or check for a newer app version. */
+    override fun onOptions(): Boolean {
+        val items = listOf(
+            MenuItem(OPT_HELP, getString(R.string.welcome_help)),
+            MenuItem(OPT_UPDATE, getString(R.string.signin_opt_update)),
+        )
+        MenuSheet.show(requireContext(), items) { selected ->
+            when (selected.id) {
+                OPT_HELP -> navigator.toHelp()
+                OPT_UPDATE -> navigator.toUpdate()
+            }
+        }
+        return true
+    }
+
     override fun onDestroyView() {
         binding = null
         super.onDestroyView()
+    }
+
+    private companion object {
+        const val OPT_HELP = "help"
+        const val OPT_UPDATE = "update"
     }
 }

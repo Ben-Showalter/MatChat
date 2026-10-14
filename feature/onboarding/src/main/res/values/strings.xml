@@ -25,6 +25,11 @@
 
     <!-- Sign in > Options (LEFT softkey) menu. -->
     <string name="signin_opt_update">Software update</string>
+    <string name="signin_opt_help">Help</string>
+    <!-- Sign in: a row at the end of the form that opens the Options menu. It
+         exists because the phone's T9 keyboard takes the softkeys while a text
+         box is focused, so Options can't be opened with a softkey from there. -->
+    <string name="signin_more_options">More options…</string>
 
     <!-- S27 "Hide the running notification?" — shown once after sign-in
          (docs/adr/0008). "Background helper" is MatChat's accessibility service;

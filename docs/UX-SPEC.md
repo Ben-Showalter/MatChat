@@ -109,17 +109,21 @@ Error: "Could not reach the server." + Retry (focused) / Sign out.
 Content: app name, one line of purpose text, two buttons.
 Focus order: `Sign in with QR code` → `Sign in with password` → `Help`.
 Softkeys: Options | Select | Exit.
-Options: Help · About.
+Options: Help · Software update. (QR sign-in and an About screen are v1.1
+candidates, not built.)
 (QR button hidden when `policy.qrLoginEnabled = false`.)
 
 ### S3 — Sign in (password)
 Content: homeserver row (read-only when pinned, shown as grey text with a lock
 glyph), `Username` field, `Password` field, `Show password` toggle (directly
 below the password; CENTER flips masking, label reads `Show password` /
-`Hide password`), `Sign in` button.
-Focus order: Username → Password → Show password → Sign in.
+`Hide password`), `Sign in` button, `More options…` row.
+Focus order: Username → Password → Show password → Sign in → More options.
 Softkeys: Options | Select | Back.
-Options: Sign in with QR code · Help · About.
+Options: Software update · Help — from the Options softkey, or from the
+`More options…` row (CENTER). The row is the route while a text box is
+focused: the phone's T9 keyboard owns the softkeys then (its typing-mode menu
+on the left; it can swallow the right one — Flip-DumbPhoneGuide keys.md).
 Errors: inline under the field, red, plain language — "That username or password
 did not work." / "No network. Check signal and try again."
 
