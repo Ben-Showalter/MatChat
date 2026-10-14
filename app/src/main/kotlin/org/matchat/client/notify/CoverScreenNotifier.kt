@@ -79,7 +79,8 @@ internal object CoverScreenNotifier {
 
     /** How the card shows the time. [CoverCardStyle.TEXT2] is the one the
      *  DuraXV probe confirmed shows it (time on the first line, the banner on
-     *  the second); TITLE showed no time and CLOCK drew only black
+     *  the second); a title line isn't drawn, and our own layout has so far
+     *  drawn only black
      *  (docs/COVER-DISPLAY.md, "Clock on the card"). */
     private val cardStyle = CoverCardStyle.TEXT2
 
@@ -238,25 +239,16 @@ internal object CoverScreenNotifier {
                 setText.invoke(extender, time)
                 extenderClass.getMethod("setText2", CharSequence::class.java).invoke(extender, text)
             }
-            CoverCardStyle.TITLE -> {
-                extenderClass.getMethod("setTitle", CharSequence::class.java).invoke(extender, time)
-                setText.invoke(extender, text)
-            }
-            CoverCardStyle.CLOCK -> {
-                setText.invoke(extender, text)
-                val views = RemoteViews(context.packageName, R.layout.cover_card)
-                views.setTextViewText(R.id.cover_banner, text)
-                extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
-            }
-            CoverCardStyle.CLOCK_PLAIN -> {
+            CoverCardStyle.CLOCK, CoverCardStyle.CLOCK_FULL -> {
                 setText.invoke(extender, text)
                 val now = Date()
                 val is24 = DateFormat.is24HourFormat(context)
-                val views = RemoteViews(context.packageName, R.layout.cover_card_plain)
+                val views = RemoteViews(context.packageName, R.layout.cover_card)
                 views.setTextViewText(R.id.cover_time, DateFormat.format(if (is24) "H:mm" else "h:mm", now))
                 views.setTextViewText(R.id.cover_ampm, if (is24) "" else DateFormat.format("a", now))
                 views.setTextViewText(R.id.cover_banner, text)
                 extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
+                if (style == CoverCardStyle.CLOCK_FULL) setFullScreen(extenderClass, extender)
             }
         }
 
@@ -267,6 +259,20 @@ internal object CoverScreenNotifier {
             .getMethod("extend", Notification.Extender::class.java)
             .invoke(builder, extender)
         return builder.build()
+    }
+
+    /** `SubLcdNotificationExtender.setFullScreen(true)`, if it exists and takes
+     *  one boolean — its signature isn't confirmed, so this only logs when it
+     *  doesn't fit. */
+    private fun setFullScreen(extenderClass: Class<*>, extender: Any) {
+        val method = extenderClass.methods.firstOrNull { it.name == "setFullScreen" && it.parameterTypes.size == 1 }
+        val param = method?.parameterTypes?.first()
+        if (param == Boolean::class.javaPrimitiveType || param == Boolean::class.javaObjectType) {
+            runCatching { method?.invoke(extender, true) }
+                .onFailure { Log.d(TAG, "sub-LCD setFullScreen failed: ${it.javaClass.simpleName}") }
+        } else {
+            Log.d(TAG, "sub-LCD setFullScreen unavailable (param=${param?.name})")
+        }
     }
 
     /** DEBUG probe (CoverProbeReceiver): posts one card in [style] with
@@ -311,17 +317,13 @@ internal enum class CoverCardStyle {
      *  Confirmed on the DuraXV; the live style. */
     TEXT2,
 
-    /** Time in the template's title line (`setTitle`), the banner below.
-     *  On the DuraXV the title is not shown. */
-    TITLE,
-
-    /** Our own layout via `setRemoteViews` (layout/cover_card.xml): a large
-     *  live clock, the banner along the bottom. Drew only black on the DuraXV. */
+    /** Our own layout via `setRemoteViews` (layout/cover_card.xml): the time
+     *  large, the banner below, in plain white TextViews filled at each post.
+     *  Being tried by the probe (docs/COVER-DISPLAY.md). */
     CLOCK,
 
-    /** The same idea with plain TextViews filled at each post, no
-     *  background and dark text (layout/cover_card_plain.xml) — probe step 5. */
-    CLOCK_PLAIN,
+    /** [CLOCK] with the extender's `setFullScreen(true)` as well. */
+    CLOCK_FULL,
 }
 
 /** Whether the cover turning on should bring the card back: something is

@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Kyocera cover (sub-LCD) card, handed to SubLcdNotificationExtender
-     .setRemoteViews (CoverScreenNotifier, docs/COVER-DISPLAY.md). The card
-     covers the cover screen's own clock, so it carries one: the time large,
-     like the idle cover, with the new-message banner along the bottom. Not a
-     phone screen — nothing here is focusable or interactive, and the cover
-     (~96 px square) is far below the 240 dp the main UI is designed for, so
-     sizes are its own. Only RemoteViews-supported views (LinearLayout,
-     TextClock, ImageView, TextView). -->
+<!-- Cover (sub-LCD) clock card (CoverCardStyle.CLOCK / CLOCK_FULL,
+     docs/COVER-DISPLAY.md), handed to SubLcdNotificationExtender
+     .setRemoteViews. Kyocera's container for a custom layout draws black,
+     so: no background of our own, white text, and plain TextViews that
+     CoverScreenNotifier fills at each post (a TextClock version drew
+     nothing). Not focusable or interactive — not a phone screen. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cover_background"
     android:gravity="center"
     android:orientation="vertical"
     android:paddingHorizontal="2dp">
@@ -21,27 +18,21 @@
         android:baselineAligned="true"
         android:orientation="horizontal">
 
-        <!-- TextClock follows the system 12/24-hour setting and ticks by
-             itself, so the time stays live without reposting the card. -->
-        <TextClock
-            android:id="@+id/cover_clock"
+        <TextView
+            android:id="@+id/cover_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:format12Hour="h:mm"
-            android:format24Hour="H:mm"
             android:includeFontPadding="false"
             android:textColor="@color/cover_text"
             android:textSize="@dimen/cover_clock_text"
             android:textStyle="bold" />
 
         <!-- AM/PM, small beside the time; empty in 24-hour mode. -->
-        <TextClock
+        <TextView
             android:id="@+id/cover_ampm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:format12Hour="a"
-            android:format24Hour=""
             android:includeFontPadding="false"
             android:textColor="@color/cover_text"
             android:textSize="@dimen/cover_banner_text" />
