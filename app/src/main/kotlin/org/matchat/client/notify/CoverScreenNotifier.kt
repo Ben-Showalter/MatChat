@@ -76,12 +76,12 @@ internal object CoverScreenNotifier {
 
     private val main = Handler(Looper.getMainLooper())
 
-    /** How the card shows the time. [CoverCardStyle.TEXT2] is the one the
-     *  DuraXV probe confirmed shows it (time on the first line, the banner on
-     *  the second); a title line isn't drawn, and the cover draws nothing for
-     *  an app's own layout (`setRemoteViews`)
-     *  (docs/COVER-DISPLAY.md, "Clock on the card"). */
-    private val cardStyle = CoverCardStyle.TEXT2
+    /** How the card shows the time: [CoverCardStyle.TWO_LINE], the time and
+     *  the message as two lines of the template's one text field. The
+     *  template doesn't draw `setText2` (an earlier TEXT2 card showed only the
+     *  time), a title line, or an app's own layout (docs/COVER-DISPLAY.md,
+     *  "Clock on the card"). */
+    private val cardStyle = CoverCardStyle.TWO_LINE
 
     /** Cards still owed to the user (id → text), most recent last, until the
      *  room is read. Main thread only. */
@@ -234,10 +234,7 @@ internal object CoverScreenNotifier {
         val time by lazy { DateFormat.getTimeFormat(context).format(Date()) }
         when (style) {
             CoverCardStyle.PLAIN -> setText.invoke(extender, text)
-            CoverCardStyle.TEXT2 -> {
-                setText.invoke(extender, time)
-                extenderClass.getMethod("setText2", CharSequence::class.java).invoke(extender, text)
-            }
+            CoverCardStyle.TWO_LINE -> setText.invoke(extender, "$time\n$text")
         }
 
         val builder = Notification.Builder(context)
@@ -249,17 +246,24 @@ internal object CoverScreenNotifier {
         return builder.build()
     }
 
-    /** DEBUG probe: a [CoverCardStyle.PLAIN] card whose icon is [iconRes] —
+    /** DEBUG probe: a card in [style] whose icon is [iconRes] —
      *  to learn how big the cover draws an icon image of a given size and
      *  density (docs/COVER-DISPLAY.md, "Clock on the card"). The slot takes
      *  resource ids only; a runtime Bitmap drew nothing. */
-    fun postIconTestCard(context: Context, id: Int, text: String, iconRes: Int, durationMs: Int) {
+    fun postIconTestCard(
+        context: Context,
+        id: Int,
+        text: String,
+        iconRes: Int,
+        durationMs: Int,
+        style: CoverCardStyle = CoverCardStyle.PLAIN,
+    ) {
         val app = context.applicationContext
         Log.d(TAG, "probe: posting icon test card id=$id")
         runCatching {
             val managerClass = Class.forName("jp.kyocera.sublcd.SubLcdManager")
             val manager = managerClass.getMethod("getInstance", Context::class.java).invoke(null, app)
-            val card = buildCard(app, text, durationMs, CoverCardStyle.PLAIN, iconRes)
+            val card = buildCard(app, text, durationMs, style, iconRes)
             managerClass.getMethod("notify", Int::class.javaPrimitiveType, Notification::class.java)
                 .invoke(manager, id, card)
         }.onSuccess {
@@ -268,9 +272,6 @@ internal object CoverScreenNotifier {
             Log.d(TAG, "probe: icon test card failed id=$id: ${it.javaClass.simpleName}: ${it.cause}")
         }
     }
-
-    /** DEBUG probe: clears a test card posted by [postIconTestCard]. */
-    fun cancelTestCard(context: Context, id: Int) = cancelCard(context.applicationContext, id)
 
     private fun cancelCard(context: Context, id: Int) {
         runCatching {
@@ -290,9 +291,9 @@ internal enum class CoverCardStyle {
     /** The known-working card: icon + scrolling text, no clock. */
     PLAIN,
 
-    /** Time in the template's first text line, the banner in `setText2`.
-     *  Confirmed on the DuraXV; the live style. */
-    TEXT2,
+    /** The time on the first line and the banner on the second, both in
+     *  `setText` (the template doesn't draw `setText2`). The live style. */
+    TWO_LINE,
 }
 
 /** Whether the cover turning on should bring the card back: something is

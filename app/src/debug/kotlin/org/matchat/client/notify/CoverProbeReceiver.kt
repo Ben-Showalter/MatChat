@@ -37,10 +37,10 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
- * `--ez clockcard true` instead posts three numbered test cards, each with a
- * square "12 over 34" clock image as its icon (1 24 px mdpi, 2 48 px nodpi,
- * 3 96 px nodpi), ~27 s in all, and does nothing else — close the flip first
- * and note how big and sharp each clock is.
+ * `--ez clockcard true` instead posts three numbered two-line test cards
+ * (time on top, message below: 1 normal icon, 2 the 96 px clock image as the
+ * icon, 3 a long scrolling message), ~27 s in all, and does nothing else —
+ * close the flip first and note what each shows.
  *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
@@ -75,28 +75,40 @@ class CoverProbeReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
     }
 
-    /** Posts square "12 over 34" clock images as the card icon, one per
-     *  step, each under its own id and cancelled before the next: 1 a 24 px
-     *  mdpi image (TurboText's symbol's size and bucket), 2 48 px nodpi,
-     *  3 96 px nodpi. Each card's text starts with its step number. Watch the
-     *  cover (flip closed) and note how big and sharp each clock is
-     *  (docs/COVER-DISPLAY.md). */
+    /** The two-line cover card (time on top, message below, both in the
+     *  template's one text field), one step at a time, each under its own id
+     *  and cleared before the next: 1 with the normal message icon, 2 with the
+     *  96 px square clock image as the icon, 3 a long message through the
+     *  live path (CoverScreenNotifier.notify), so line 2 scrolls while the
+     *  time stays put. Watch the cover (flip closed) (docs/COVER-DISPLAY.md). */
     private fun clockCardTest(context: Context) {
-        val icons = listOf(
-            "sq24" to R.drawable.cover_probe_sq24,
-            "sq48" to R.drawable.cover_probe_sq48,
-            "sq96" to R.drawable.cover_probe_sq96,
+        val ms = CLOCK_TEST_MS.toInt()
+        val steps = listOf<Pair<String, (Int) -> Unit>>(
+            "two lines" to { id ->
+                CoverScreenNotifier.postIconTestCard(
+                    context, id, "1 two lines", R.drawable.ic_stat_message, ms, CoverCardStyle.TWO_LINE,
+                )
+            },
+            "clock icon" to { id ->
+                CoverScreenNotifier.postIconTestCard(
+                    context, id, "2 clock icon", R.drawable.cover_probe_sq96, ms, CoverCardStyle.TWO_LINE,
+                )
+            },
+            "scrolling" to { id ->
+                CoverScreenNotifier.notify(context, id, "3 scrolling: this line scrolls, the time stays")
+            },
         )
         val main = Handler(Looper.getMainLooper())
-        icons.forEachIndexed { index, (name, icon) ->
+        steps.forEachIndexed { index, (name, post) ->
             val step = index + 1
             val id = CLOCK_TEST_ID + step
             val start = index * (CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
             main.postDelayed({
                 Log.d(TAG, "probe: step $step $name")
-                CoverScreenNotifier.postIconTestCard(context, id, "$step $name", icon, CLOCK_TEST_MS.toInt())
+                post(id)
             }, start)
-            main.postDelayed({ CoverScreenNotifier.cancelTestCard(context, id) }, start + CLOCK_TEST_MS)
+            // CoverScreenNotifier.cancel also stops step 3's scroll and re-show.
+            main.postDelayed({ CoverScreenNotifier.cancel(context, id) }, start + CLOCK_TEST_MS)
         }
     }
 

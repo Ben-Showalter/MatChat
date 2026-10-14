@@ -90,10 +90,12 @@ reporting cover on/off (1/0) cleanly; it does not forward cover keys.
 ### Clock on the card
 
 The card covers the cover screen's own idle clock for its 15 s, so it carries
-the time. **Live: `CoverCardStyle.TEXT2`** — the time on the template's first
-line (`setText`), the scrolling "Room: message" banner on its second
-(`setText2`). The time is formatted at every post, and the ticker reposts every
-400 ms, so it stays current.
+the time. **Live: `CoverCardStyle.TWO_LINE`**: the time on the first line,
+the scrolling "Room: message" on the second, both in the template's one text
+field (`setText("$time\n$message")`). Only the second line scrolls: each
+ticker frame is reposted with the time in front. An earlier `TEXT2` card put
+the message in `setText2`, which the template doesn't draw, so only the time
+showed.
 
 **A big clock has to go through the icon slot.** Every card that draws fills
 fields of Kyocera's own template: `setIcon`, `setText`, `setText2`. The icon
@@ -116,12 +118,13 @@ Probe results on the DuraXV (each card under its own id):
 | Style | What it sets | Result |
 |---|---|---|
 | `PLAIN` | the old card, no clock | works |
-| `TEXT2` | `setText(time)` + `setText2(banner)` | **works, time shown** — live |
+| `TEXT2` | `setText(time)` + `setText2(banner)` | time only — `setText2` isn't drawn; replaced by `TWO_LINE` |
+| `TWO_LINE` | `setText("time\nbanner")` | live — confirming with the probe |
 | title line | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn |
 | own layout | `setRemoteViews(…)` — `TextClock` or plain `TextView`s, white or dark text, our background or none, with or without `setFullScreen(true)` | blank, every time |
 | wide icon | `setIcon` with a 96×48 "12:34" PNG | drawn, but very small (wide image in a square slot) |
 | runtime bitmap | the time drawn into a `Bitmap`, handed to every extender image setter taking `Bitmap`/`Icon`, plus `setLargeIcon` | nothing drawn — resource ids only |
-| square icons (probe now) | `setIcon` with a square "12 over 34" PNG: 1 24 px mdpi, 2 48 px nodpi, 3 96 px nodpi | to test |
+| square icons | `setIcon` with a square "12 over 34" PNG: 24 px mdpi, 48 px nodpi, 96 px nodpi | **96 px nodpi best** |
 
 The title and own-layout styles were removed after these results.
 
@@ -136,9 +139,10 @@ $env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
 ```
 
-Close the flip first and note how big and sharp each numbered card's clock is
-(~27 s), compared with TurboText's symbol. In Android Studio's Logcat, filter
-`tag:MatChatCover` for the `probe: step` lines.
+Close the flip first (~27 s): 1 the two-line card, 2 the same with the 96 px
+clock image as the icon, 3 a long message so line 2 scrolls under a fixed
+time. In Android Studio's Logcat, filter `tag:MatChatCover` for the
+`probe: step` lines.
 
 Still open:
 
