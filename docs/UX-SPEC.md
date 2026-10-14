@@ -173,6 +173,11 @@ Offline: title bar `!` plus a 16 dp banner "No connection — showing saved
 messages."
 
 ### S9 — Timeline
+**The newest message sits flush with the bottom of the list.** New and sent
+messages arrive that way — also when a row grows afterwards (an image loading)
+or a band under the list appears — unless the user has scrolled up in the
+thread; scrolling back down to the end follows again, and sending always
+brings your message into view (`followAfterScroll`).
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
