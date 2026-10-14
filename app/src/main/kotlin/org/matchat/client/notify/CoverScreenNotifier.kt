@@ -8,9 +8,12 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.text.format.DateFormat
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import org.matchat.client.R
+import java.util.Date
 
 /**
  * Posts a transient alert card to the Kyocera **cover (sub-LCD) screen** via the
@@ -73,6 +76,10 @@ internal object CoverScreenNotifier {
     private const val TICKER_HOLD_MS = 1_500
 
     private val main = Handler(Looper.getMainLooper())
+
+    /** How the card shows the time; [CoverCardStyle.CLOCK] unless on-device
+     *  testing shows the cover ignores our own layout (docs/COVER-DISPLAY.md). */
+    private val cardStyle = CoverCardStyle.CLOCK
 
     /** Cards still owed to the user (id → text), most recent last, until the
      *  room is read. Main thread only. */
@@ -204,9 +211,18 @@ internal object CoverScreenNotifier {
     }
 
     /** A Notification carrying the sub-LCD extender (icon, text, template,
-     *  duration). */
+     *  duration). The card covers the cover's own clock, so it carries one
+     *  (docs/COVER-DISPLAY.md): [CoverCardStyle.CLOCK] hands the extender our
+     *  own layout (a live clock, the banner along the bottom); if the extender
+     *  has no `setRemoteViews`, or [style] is [CoverCardStyle.TITLE], the time
+     *  goes in the template's title line instead, above the same banner. */
     @Suppress("DEPRECATION")
-    private fun buildCard(context: Context, text: String, durationMs: Int): Notification {
+    private fun buildCard(
+        context: Context,
+        text: String,
+        durationMs: Int,
+        style: CoverCardStyle = cardStyle,
+    ): Notification {
         val extenderClass = Class.forName("jp.kyocera.sublcd.SubLcdNotificationExtender")
         val extender = extenderClass.getConstructor(Context::class.java).newInstance(context)
         extenderClass.getMethod("setCategory", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_CATEGORY_MESSAGE)
@@ -216,6 +232,18 @@ internal object CoverScreenNotifier {
         extenderClass.getMethod("setText", CharSequence::class.java).invoke(extender, text)
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
 
+        val withClock = style == CoverCardStyle.CLOCK && runCatching {
+            val views = RemoteViews(context.packageName, R.layout.cover_card)
+            views.setTextViewText(R.id.cover_banner, text)
+            extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
+        }.onFailure {
+            Log.d(TAG, "sub-LCD setRemoteViews unavailable: ${it.javaClass.simpleName} — clock in title")
+        }.isSuccess
+        if (!withClock) {
+            val time = DateFormat.getTimeFormat(context).format(Date())
+            extenderClass.getMethod("setTitle", CharSequence::class.java).invoke(extender, time)
+        }
+
         val builder = Notification.Builder(context)
             .setSmallIcon(R.drawable.ic_stat_message)
             .setContentText(text)
@@ -223,6 +251,22 @@ internal object CoverScreenNotifier {
             .getMethod("extend", Notification.Extender::class.java)
             .invoke(builder, extender)
         return builder.build()
+    }
+
+    /** DEBUG probe (CoverProbeReceiver): posts one card in [style] with
+     *  [text], so each style can be checked on the cover itself. */
+    fun postTestCard(context: Context, id: Int, text: String, style: CoverCardStyle, durationMs: Int) {
+        val app = context.applicationContext
+        runCatching {
+            val managerClass = Class.forName("jp.kyocera.sublcd.SubLcdManager")
+            val manager = managerClass.getMethod("getInstance", Context::class.java).invoke(null, app)
+            managerClass.getMethod("notify", Int::class.javaPrimitiveType, Notification::class.java)
+                .invoke(manager, id, buildCard(app, text, durationMs, style))
+        }.onSuccess {
+            Log.d(TAG, "probe: test card posted id=$id style=$style")
+        }.onFailure {
+            Log.d(TAG, "probe: test card failed id=$id style=$style: ${it.javaClass.simpleName}")
+        }
     }
 
     private fun cancelCard(context: Context, id: Int) {
@@ -236,6 +280,17 @@ internal object CoverScreenNotifier {
             Log.d(TAG, "sub-LCD cancel unavailable id=$id: ${it.javaClass.simpleName}")
         }
     }
+}
+
+/** How a cover card shows the time (CoverScreenNotifier.buildCard). */
+internal enum class CoverCardStyle {
+    /** Our own layout via `setRemoteViews`: a large live clock, with the
+     *  message banner along the bottom. */
+    CLOCK,
+
+    /** The template's title line holds the time, set when the card is posted
+     *  (each scroll frame reposts, so it stays current while showing). */
+    TITLE,
 }
 
 /** Whether the cover turning on should bring the card back: something is

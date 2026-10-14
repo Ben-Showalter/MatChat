@@ -16,8 +16,8 @@ that blocked us (below). Any app can post to it; it no-ops (reflection
 try/catch) on non-Kyocera hardware.
 
 `MessageNotifier` drives it on its existing lifecycle: a card is posted when a
-message arrives and cancelled when the room is read. The card shows
-"Room: message" (e.g. "Ann: see you at six", or "Barn Crew: Ann: see you at
+message arrives and cancelled when the room is read. The card shows the time
+(see "Clock on the card" below) above "Room: message" (e.g. "Ann: see you at six", or "Barn Crew: Ann: see you at
 six" in a group — the count when the text can't be shown yet). **Settings ▸
 Notifications ▸ "Hide message on cover"** (UX-SPEC S26, off by default) swaps
 that for a generic "MatChat message", for anyone who doesn't want the sender
@@ -86,6 +86,29 @@ an outside-button wake was invisible. An accessibility-service attempt saw no
 keys with the flip shut and was removed. The debug probe
 (`CoverProbeReceiver --ez callback true`) then showed Kyocera's callback
 reporting cover on/off (1/0) cleanly; it does not forward cover keys.
+
+### Clock on the card
+
+The card covers the cover screen's own idle clock for its 15 s, so it carries
+one: the time large, the new-message banner (the same ticker) along the
+bottom. `CoverScreenNotifier.buildCard` hands the extender our own layout
+(`layout/cover_card.xml`: a `TextClock` that follows the 12/24-hour setting and
+ticks by itself, an icon, and the banner `TextView`) via
+`SubLcdNotificationExtender.setRemoteViews`. If that method is missing, the
+time goes in the template's title line (`setTitle`, `CoverCardStyle.TITLE`)
+above the same text instead.
+
+**Not yet confirmed on-device:** whether Kyocera's cover renders a custom
+`RemoteViews` at all. Check both styles with the flip closed:
+
+```
+adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
+adb logcat -d -s MatChatCover
+```
+
+The probe shows our layout for 8 s, then (2 s later) the title-line version
+for 8 s. If the first is blank or wrong, switch `CoverScreenNotifier.cardStyle`
+to `CoverCardStyle.TITLE`; sizes are in `values/cover.xml`.
 
 Still open:
 

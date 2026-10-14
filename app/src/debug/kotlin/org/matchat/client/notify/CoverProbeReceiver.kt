@@ -36,11 +36,15 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
+ * `--ez clockcard true` instead posts a test card in each cover-clock style
+ * (our own layout, then the title line) and does nothing else — close the
+ * flip first and watch the cover.
+ *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
  * cover on/off and forwarded keys, answering every key "not handled".
  *
- * It never posts to the cover. (A tray-icon test that called
+ * Apart from `clockcard`, it never posts to the cover. (A tray-icon test that called
  * `notifyIconToAnnunciatorTray` was removed — it crashed SystemUI.)
  *
  * Results (scrolling: no native marquee, app-side ticker works;
@@ -52,6 +56,10 @@ class CoverProbeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // A BroadcastReceiver's own context can't register receivers; the app's can.
         val app = context.applicationContext
+        if (intent.getBooleanExtra("clockcard", false)) {
+            clockCardTest(app)
+            return
+        }
         dumpClass("jp.kyocera.sublcd.SubLcdManager")
         dumpClass("jp.kyocera.sublcd.SubLcdNotificationExtender")
         // The callback SubLcdManager.registerCallback takes — likely how
@@ -63,6 +71,18 @@ class CoverProbeReceiver : BroadcastReceiver() {
         dumpDisplays(app)
         watchWake(app)
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
+    }
+
+    /** Posts the clock card both ways, one after the other, so the cover
+     *  shows which one Kyocera renders: first our own layout (big clock,
+     *  banner below), then the template's title line. Watch the cover (flip
+     *  closed) and note which looks right (docs/COVER-DISPLAY.md). */
+    private fun clockCardTest(context: Context) {
+        val text = "Probe: clock card test"
+        CoverScreenNotifier.postTestCard(context, CLOCK_TEST_ID, text, CoverCardStyle.CLOCK, CLOCK_TEST_MS)
+        Handler(Looper.getMainLooper()).postDelayed({
+            CoverScreenNotifier.postTestCard(context, CLOCK_TEST_ID, text, CoverCardStyle.TITLE, CLOCK_TEST_MS)
+        }, CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
     }
 
     /** Registers a listener on Kyocera's cover service for [WATCH_MS] and only
@@ -197,6 +217,11 @@ class CoverProbeReceiver : BroadcastReceiver() {
         val LAYOUT_HINT = Regex("sub|lcd|marquee|ticker|scroll", RegexOption.IGNORE_CASE)
 
         const val WATCH_MS = 120_000L
+
+        /** The clock-card test: each style shows for 8 s, 2 s apart. */
+        const val CLOCK_TEST_ID = 0x4d43 // "MC"
+        const val CLOCK_TEST_MS = 8_000
+        const val CLOCK_TEST_GAP_MS = 2_000L
     }
 }
 

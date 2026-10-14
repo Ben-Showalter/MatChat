@@ -79,6 +79,9 @@ class SyncWorker @AssistedInject constructor(
         coroutineScope {
             val observer = launch { session.rooms.collect { messageNotifications.onRooms(it) } }
             session.catchUpSync(WINDOW_MILLIS)
+            // A notification still waiting for its text would be dropped with
+            // the observer — post it without the text instead.
+            messageNotifications.flushPending()
             observer.cancel()
         }
         Result.success()

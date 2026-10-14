@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Kyocera cover card (layout/cover_card.xml). The cover is a separate
+     ~96 px monochrome-style display, not the main UI, so it has its own
+     colors and sizes rather than the :core:ui palette roles: white on black,
+     matching the cover's own idle clock. -->
+<resources>
+    <color name="cover_background">#000000</color>
+    <color name="cover_text">#FFFFFF</color>
+
+    <dimen name="cover_clock_text">30sp</dimen>
+    <dimen name="cover_banner_text">12sp</dimen>
+    <dimen name="cover_banner_icon">12dp</dimen>
+</resources>
