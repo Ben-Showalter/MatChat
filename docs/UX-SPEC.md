@@ -101,8 +101,10 @@ Options: Help · About.
 
 ### S3 — Sign in (password)
 Content: homeserver row (read-only when pinned, shown as grey text with a lock
-glyph), `Username` field, `Password` field, `Sign in` button.
-Focus order: Username → Password → Sign in.
+glyph), `Username` field, `Password` field, `Show password` toggle (directly
+below the password; CENTER flips masking, label reads `Show password` /
+`Hide password`), `Sign in` button.
+Focus order: Username → Password → Show password → Sign in.
 Softkeys: Options | Select | Back.
 Options: Sign in with QR code · Help · About.
 Errors: inline under the field, red, plain language — "That username or password
@@ -182,6 +184,19 @@ sits flush, not a full rounded rect). A focused bubble's border recolors to
 the accent and thickens, in place of the app's usual flat-fill-plus-bar
 focus style (AGENTS.md §4's named exception) — the row itself has no
 background.
+**Voice messages** render as a bubble too (a waveform + duration), with their
+own **play/pause button** on the leading side of the bubble. That button is a
+*second* focus stop on the row (the only row in the app with two): CENTER on it
+plays the clip in-app (feature phones have no media-player app), and the glyph
+flips ▶ → ⏸ while playing; CENTER again pauses, then resumes from the same
+spot. The waveform doubles as a **progress bar** — bars left of the playhead
+fill with the accent — and the duration becomes an "elapsed / total" readout
+(`0:05 / 0:12`) while playing. D-pad LEFT/RIGHT moves between the play button
+and the rest of the bubble; CENTER on the bubble itself opens the message menu
+(S11) — React/Pin/Message info, no "Open" (playback is the button now). Only
+one clip plays at a time; starting another stops the first. (RIGHT still jumps
+to Pinned messages, but only once focus is at the right edge of a row — see the
+band below.)
 **Pinned-messages band** (Pinned messages quick-access round): when the room
 has ≥1 pinned message, a band reading "📌 N pinned message(s) ›" sits at the
 very top of the content, above the unencrypted-warning band — same row
@@ -226,9 +241,11 @@ Sending an empty message is a no-op, not an error.
 ### S11 — Message menu
 Opened with CENTER on a message row. A bottom-anchored list, typically ~5
 rows, each 26 dp, dismiss with RIGHT softkey.
-Items: `Reply` · `Edit` (own messages only) · `React` · `Pin message` /
 `Unpin message` · `Copy text` · `Save to gallery` (image messages only) ·
 `Save to files` (any image/video/file/voice attachment) · `Message info`.
+Image and other-attachment rows prepend an `Open` item (image viewer / external
+open). Voice messages do **not**: they play from their own in-bubble play/pause
+button (S9), so CENTER on a voice bubble opens this menu with no `Open`.
 `Save to gallery` writes the image to the public Pictures folder (Pictures/
 MatChat); `Save to files` writes any attachment to Downloads (Downloads/
 MatChat). On Android 8.1 and older the first save prompts once for storage
@@ -470,7 +487,14 @@ storage access to add MatChat's bundled sounds (docs/SOUNDS.md); if refused,
 a second 11 sp note says they need storage access, and the picker opens
 anyway. Per-room/per-thread sound is not offered
 here — every room shares the one chosen sound (future work).
-Focus order: Notifications → Sound. Initial focus: Notifications.
+Last, a third toggle row, "Hide message on cover" (same checkmark convention,
+off by default), with an 11 sp subtitle explaining both states. On Kyocera
+flip phones a new message also appears on the small outside (cover) screen,
+scrolling, as "Room: message" (docs/COVER-DISPLAY.md); with this on it reads
+only "MatChat message", so who wrote and what they said aren't visible on a
+closed phone.
+Focus order: Notifications → Sound → Hide message on cover. Initial focus:
+Notifications.
 Softkeys: (blank) | Select | Back.
 
 ### S27 — Background helper ("Hide the running notification?")

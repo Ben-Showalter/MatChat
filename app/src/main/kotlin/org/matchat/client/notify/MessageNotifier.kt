@@ -10,6 +10,7 @@ import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
@@ -47,6 +48,21 @@ object MessageNotifier {
     const val REPLY_KEY = "matchat.reply"
     const val EXTRA_ROOM_ID = "org.matchat.client.ROOM_ID"
     const val EXTRA_NOTIF_ID = "org.matchat.client.NOTIF_ID"
+
+    /** Kyocera cover-screen mirror (docs/COVER-DISPLAY.md). InfoSign's
+     *  NotificationListener mirrors a notification to the front screen when
+     *  this extra equals [SUBLCD_MESSAGING] (or "email") — it keys on the
+     *  extra, not the package, so this is all an unrooted app needs to light
+     *  the cover for a waiting message. Harmless everywhere else: a device
+     *  without InfoSign just ignores an unknown extra. */
+    const val EXTRA_SUBLCD = "sublcd_notification"
+    const val SUBLCD_MESSAGING = "messaging"
+
+    /** One logcat tag for the whole cover-screen pipeline, so it can be watched
+     *  alongside InfoSign's own tag:
+     *  `adb shell logcat -s MatChatCover kc_infosign`. Diagnostics only — no PII
+     *  (docs/COVER-DISPLAY.md, AGENTS.md §9). */
+    const val COVER_TAG = "MatChatCover"
 
     private const val REQ_REPLY = 1_000
     private const val REQ_READ = 2_000
@@ -184,7 +200,8 @@ object MessageNotifier {
     /**
      * Posts (or updates) [roomId]'s notification. With [roomSound] set, it goes
      * on the room's own channel with that sound; otherwise on the app-wide
-     * channel ([channelVersion], [soundUri]).
+     * channel ([channelVersion], [soundUri]). [coverMessageHidden] (Settings >
+     * Notifications) makes the Kyocera cover card generic.
      */
     @Suppress("LongParameterList")
     suspend fun show(
@@ -194,6 +211,7 @@ object MessageNotifier {
         channelVersion: Int = 0,
         soundUri: String? = null,
         roomSound: RoomSound? = null,
+        coverMessageHidden: Boolean = false,
     ) {
         val channel: String
         val sound: String?
@@ -209,6 +227,17 @@ object MessageNotifier {
         }
         val id = notifId(roomId)
         val notification = buildNotification(context, roomId, id, content, channel, sound)
+
+        // Cover-screen diagnostics (docs/COVER-DISPLAY.md). Reads the extra
+        // back off the *built* Notification so we can see whether the
+        // `sublcd_notification` key actually survived NotificationCompat into
+        // notification.extras — the thing InfoSign reads. No PII: ids, the
+        // count, the channel and the category only, never room name or body.
+        Log.d(
+            COVER_TAG,
+            "show id=$id unread=${content.unread} channel=$channel roomSound=${roomSound != null} " +
+                "sublcd=${notification.extras?.getString(EXTRA_SUBLCD)} category=${notification.category}",
+        )
 
         // Crash fix (kept): a notification whose sound URI the app no longer
         // holds a read grant for (observed on-device: a custom sound picked
@@ -227,17 +256,40 @@ object MessageNotifier {
         // fixed, always-default-sound channel, so a broken stored sound
         // preference degrades to "wrong sound" rather than "no notification."
         val posted = runCatching { manager(context).notify(id, notification) }
+        if (posted.isSuccess) {
+            Log.d(COVER_TAG, "notify ok id=$id — InfoSign should now mirror it if sublcd=messaging above")
+        }
         if (posted.isFailure) {
             Log.w(
                 TAG,
                 "notify() failed on channel $channel; retrying with the default sound",
                 posted.exceptionOrNull(),
             )
+            Log.d(COVER_TAG, "notify FAILED id=$id on channel $channel; retrying on safe channel")
             ensureSafeChannel(context)
             val fallback = buildNotification(context, roomId, id, content, SAFE_CHANNEL_ID, soundUri = null)
             runCatching { manager(context).notify(id, fallback) }
+                .onSuccess { Log.d(COVER_TAG, "fallback notify ok id=$id") }
                 .onFailure { e -> Log.e(TAG, "fallback notify() also failed; giving up on this notification", e) }
         }
+
+        // Also raise a card on the Kyocera cover screen (sub-LCD) so a waiting
+        // message is visible with the flip closed (docs/COVER-DISPLAY.md).
+        // Independent of the status-bar notify() above; no-ops off Kyocera.
+        CoverScreenNotifier.notify(context, id, coverText(context, content, coverMessageHidden))
+    }
+
+    /** What the cover card says: "Room: Ann: see you at six" (scrolls when
+     *  long), or just "MatChat message" when the user hid it (Settings >
+     *  Notifications). Falls back to the count, like the notification body,
+     *  when the text can't be shown (e.g. not yet decrypted). */
+    private fun coverText(context: Context, content: NotificationContent, hidden: Boolean): String {
+        if (hidden) return context.getString(R.string.cover_generic_message)
+        val body = messageText(context, content)
+            ?: context.resources.getQuantityString(R.plurals.notif_new_messages, content.unread, content.unread)
+        // A direct chat is named after the other person, and messageText
+        // already prefixes the sender when it differs from the room name.
+        return context.getString(R.string.cover_message_format, content.roomName, body)
     }
 
     @Suppress("LongMethod")
@@ -319,6 +371,10 @@ object MessageNotifier {
             .setContentIntent(openPI)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            // Lights the Kyocera cover screen (docs/COVER-DISPLAY.md). Rides
+            // this notification's existing lifecycle: posted on a new message,
+            // cancelled on read, so the cover indicator tracks unread for free.
+            .addExtras(Bundle().apply { putString(EXTRA_SUBLCD, SUBLCD_MESSAGING) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             // Below O the channel doesn't carry the sound — set it directly here.
             // On O+ this is ignored in favor of the channel's own sound.
@@ -348,9 +404,16 @@ object MessageNotifier {
         MediaKind.FILE -> R.string.notif_media_file
     }
 
-    fun cancel(context: Context, roomId: RoomId) = manager(context).cancel(notifId(roomId))
+    fun cancel(context: Context, roomId: RoomId) {
+        val id = notifId(roomId)
+        manager(context).cancel(id)
+        CoverScreenNotifier.cancel(context, id) // clear the cover card too
+    }
 
-    fun cancelById(context: Context, notifId: Int) = manager(context).cancel(notifId)
+    fun cancelById(context: Context, notifId: Int) {
+        manager(context).cancel(notifId)
+        CoverScreenNotifier.cancel(context, notifId)
+    }
 
     private fun manager(context: Context): NotificationManager =
         context.getSystemService(NotificationManager::class.java)
