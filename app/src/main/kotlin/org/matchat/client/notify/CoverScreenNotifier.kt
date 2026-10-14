@@ -58,8 +58,12 @@ internal object CoverScreenNotifier {
      *  15 s per the user's call (re-shown on every flip close anyway). */
     private const val CARD_DURATION_MS = 15_000
 
-    /** Characters visible on the cover at once — longer text scrolls. */
-    private const val TICKER_WINDOW = 14
+    /** Characters visible beside the MatChat icon at once — longer text
+     *  scrolls. Measured on the DuraXV with the probe's ruler card (0–8 show). */
+    private const val TICKER_WINDOW = 9
+
+    /** Characters the ticker moves per frame (user's call: twice the old one). */
+    private const val TICKER_SCROLL_STEP = 2
 
     /** Longest message the cover shows; anything past it is cut and ends in
      *  "…". High enough for the whole of an ordinary message (the user asked
@@ -144,7 +148,7 @@ internal object CoverScreenNotifier {
             Log.d(TAG, "cover card shown id=$id scrolling=false")
             return
         }
-        val cycle = tickerFrames(shown, TICKER_WINDOW, TICKER_PAUSE_STEPS)
+        val cycle = tickerFrames(shown, TICKER_WINDOW, TICKER_PAUSE_STEPS, TICKER_SCROLL_STEP)
         // Whole passes only, so the card never ends partway through the
         // message: at least CARD_DURATION_MS, then the current pass finishes.
         val frames = tickerFrameCount(cycle.size, TICKER_STEP_MS, CARD_DURATION_MS.toLong())
@@ -152,6 +156,10 @@ internal object CoverScreenNotifier {
         val ticker = object : Runnable {
             private var frame = 0
             override fun run() {
+                // No PII: the id, pass number and frame counts only.
+                if (frame % cycle.size == 0) {
+                    Log.d(TAG, "cover pass ${frame / cycle.size + 1} id=$id frames=${cycle.size}")
+                }
                 post(context, id, cycle[frame % cycle.size], TICKER_HOLD_MS)
                 frame++
                 if (frame < frames) main.postDelayed(this, TICKER_STEP_MS) else tickers.remove(id)
@@ -293,13 +301,15 @@ internal fun tickerFrameCount(passLength: Int, stepMs: Long, minDurationMs: Long
 }
 
 /** One scroll pass over [text] as the frames the cover shows, [window]
- *  characters each: the start held for [pauseSteps] frames, one character per
- *  frame to the end, the end held for [pauseSteps] frames. The ticker repeats
- *  this pass, so it always starts over cleanly from the beginning instead of
- *  wrapping the end into the start. Text that fits is a single frame. */
-internal fun tickerFrames(text: String, window: Int, pauseSteps: Int): List<String> {
+ *  characters each: the start held for [pauseSteps] frames, [step] characters
+ *  per frame to the end (the last frame always lands exactly on the end), the
+ *  end held for [pauseSteps] frames. The ticker repeats this pass, so it
+ *  always starts over cleanly from the beginning instead of wrapping the end
+ *  into the start. Text that fits is a single frame. */
+internal fun tickerFrames(text: String, window: Int, pauseSteps: Int, step: Int = 1): List<String> {
     if (text.length <= window) return listOf(text)
     val lastStart = text.length - window
-    val starts = List(pauseSteps) { 0 } + (1 until lastStart) + List(pauseSteps) { lastStart }
+    val moving = (step until lastStart step step).toList()
+    val starts = List(pauseSteps) { 0 } + moving + List(pauseSteps) { lastStart }
     return starts.map { text.substring(it, it + window) }
 }

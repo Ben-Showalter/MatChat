@@ -66,7 +66,7 @@ Implemented in `CoverScreenNotifier`:
 
 - The message is cut to 120 characters, ending in "…" when longer
   (`coverDisplayText`; it was 40, which cut ordinary messages short). If the
-  line is wider than the cover it scrolls: holds the start, steps one character
+  line is wider than the cover it scrolls: holds the start, steps two characters
   at a time to the end, holds the end, then starts over from the beginning
   (`tickerFrames`). It runs **whole passes only** (`tickerFrameCount`): at
   least the card's 15 s, then the current pass finishes, so the card never
@@ -74,9 +74,12 @@ Implemented in `CoverScreenNotifier`:
   before their end). A re-show waits for the whole showing
   (`lastShowingMs`). An earlier version wrapped the end back into the start,
   which read as broken text on the second pass.
-- `TICKER_WINDOW` (14) is the characters visible beside the icon. It was
-  measured with the small message icon; the 96 px MatChat icon may leave less
-  room, so the probe's ruler card re-measures it.
+- `TICKER_WINDOW` (9) is the characters visible beside the 96 px MatChat
+  icon, measured with the probe's ruler card (`0`–`8` show). It was 14 with the
+  small message icon; frames wider than the cover lost their ends. The ticker
+  moves `TICKER_SCROLL_STEP` (2) characters per frame (user's call), and its
+  last frame always lands exactly on the end of the line. Each pass logs
+  `cover pass N id=… frames=…` under `MatChatCover`.
 - The card comes back **whenever the cover screen turns on** — flip closed,
   or an outside button pressed with the flip shut — until the room is read
   (`MessageNotifier.cancel*` → `CoverScreenNotifier.cancel`), and stops when the

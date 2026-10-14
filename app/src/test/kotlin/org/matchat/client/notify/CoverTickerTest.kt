@@ -75,4 +75,19 @@ class CoverTickerTest {
         val message = "Ann: running late, the bus broke down near the bridge, see you around seven instead"
         assertEquals("1:05 PM · $message", coverLine("1:05 PM", message, maxChars = 120))
     }
+
+    @Test
+    fun `two-character steps still start at the beginning and land exactly on the end`() {
+        val frames = tickerFrames("abcdefghij", window = 4, pauseSteps = 2, step = 2)
+        // starts: 0,0 (hold), 2, 4, then 6,6 (end hold) — 6 is the last start.
+        assertEquals(listOf("abcd", "abcd", "cdef", "efgh", "ghij", "ghij"), frames)
+    }
+
+    @Test
+    fun `an odd distance to the end still ends on the last characters`() {
+        val frames = tickerFrames("abcdefghi", window = 4, pauseSteps = 1, step = 2)
+        // starts: 0, 2, 4, then 5 (the end) — never past it.
+        assertEquals(listOf("abcd", "cdef", "efgh", "fghi"), frames)
+        assertTrue(frames.all { it.length == 4 })
+    }
 }
