@@ -33,6 +33,7 @@ import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.LogicalKeyReceiver
+import org.matchat.core.ui.theme.SystemBars
 import javax.inject.Inject
 
 /**
@@ -232,6 +233,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun onResume() {
         super.onResume()
         activeInstance = this
+        SystemBars.hideNavigation(this) // the white system soft-key bar (UX-SPEC §1)
         if (sessionStore.hasSession()) {
             // Make sure a sync host is running on every foreground (docs/adr/0008).
             // With the FGS as host, being in the foreground resets the Android 15
@@ -242,6 +244,12 @@ class MainActivity : AppCompatActivity(), Navigator {
             syncHosts.ensureRunning()
             lifecycleScope.launch { session.setPresence(online = true) }
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Dialogs and the T9 keyboard bring the system bar back; hide it again.
+        if (hasFocus) SystemBars.hideNavigation(this)
     }
 
     override fun onPause() {
