@@ -4,15 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
-import android.text.format.DateFormat
 import android.util.Log
 import android.view.Display
 import android.view.KeyEvent
@@ -20,7 +14,6 @@ import androidx.core.content.ContextCompat
 import jp.kyocera.sublcd.ISubLcdCallback
 import org.matchat.client.R
 import java.lang.reflect.Modifier
-import java.util.Date
 
 /**
  * DEBUG-ONLY. Answers two device-specific questions about the Kyocera cover
@@ -44,11 +37,10 @@ import java.util.Date
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
- * `--ez clockcard true` instead posts four numbered test cards (1 plain,
- * 2 text2 — the time on the first line, 3 a big static clock image as the
- * icon, 4 the current time as a runtime bitmap), ~36 s in all, logs every
- * image-related OEM method, and does nothing else — close the flip first and
- * note what each number shows.
+ * `--ez clockcard true` instead posts three numbered test cards, each with a
+ * square "12 over 34" clock image as its icon (1 24 px mdpi, 2 48 px nodpi,
+ * 3 96 px nodpi), ~27 s in all, and does nothing else — close the flip first
+ * and note how big and sharp each clock is.
  *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
@@ -83,81 +75,29 @@ class CoverProbeReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
     }
 
-    /** Posts the cover-card tests in turn, each under its own id, each
-     *  cancelled before the next, so one card's state can't leak into the
-     *  next. Each card's text starts with its step number:
-     *  1 PLAIN (no clock), 2 TEXT2 (live, time on the first line),
-     *  3 a big static "12:34" image as the icon (how big does the slot draw?),
-     *  4 the current time rendered into a bitmap, handed to every image
-     *  setter the extender has plus the large icon (does it take a runtime
-     *  image?). First logs every image-related OEM method. Watch the cover
-     *  (flip closed) and note what each step shows (docs/COVER-DISPLAY.md). */
+    /** Posts square "12 over 34" clock images as the card icon, one per
+     *  step, each under its own id and cancelled before the next: 1 a 24 px
+     *  mdpi image (TurboText's symbol's size and bucket), 2 48 px nodpi,
+     *  3 96 px nodpi. Each card's text starts with its step number. Watch the
+     *  cover (flip closed) and note how big and sharp each clock is
+     *  (docs/COVER-DISPLAY.md). */
     private fun clockCardTest(context: Context) {
-        logImageMethods("jp.kyocera.sublcd.SubLcdNotificationExtender")
-        logImageMethods("jp.kyocera.sublcd.SubLcdManager")
-        val ms = CLOCK_TEST_MS.toInt()
-        val styleSteps = CoverCardStyle.entries.map { style ->
-            ProbeStep(style.name.lowercase()) { id, text ->
-                CoverScreenNotifier.postTestCard(context, id, text, style, ms)
-            }
-        }
-        val iconSteps = listOf(
-            ProbeStep("big icon") { id, text ->
-                CoverScreenNotifier.postIconTestCard(context, id, text, R.drawable.cover_probe_clock, null, ms)
-            },
-            ProbeStep("bitmap") { id, text ->
-                val bitmap = clockBitmap(DateFormat.getTimeFormat(context).format(Date()))
-                CoverScreenNotifier.postIconTestCard(context, id, text, R.drawable.ic_stat_message, bitmap, ms)
-            },
+        val icons = listOf(
+            "sq24" to R.drawable.cover_probe_sq24,
+            "sq48" to R.drawable.cover_probe_sq48,
+            "sq96" to R.drawable.cover_probe_sq96,
         )
         val main = Handler(Looper.getMainLooper())
-        (styleSteps + iconSteps).forEachIndexed { index, probe ->
+        icons.forEachIndexed { index, (name, icon) ->
             val step = index + 1
             val id = CLOCK_TEST_ID + step
             val start = index * (CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
             main.postDelayed({
-                Log.d(TAG, "probe: step $step ${probe.name}")
-                probe.post(id, "$step ${probe.name} test")
+                Log.d(TAG, "probe: step $step $name")
+                CoverScreenNotifier.postIconTestCard(context, id, "$step $name", icon, CLOCK_TEST_MS.toInt())
             }, start)
             main.postDelayed({ CoverScreenNotifier.cancelTestCard(context, id) }, start + CLOCK_TEST_MS)
         }
-    }
-
-    private class ProbeStep(val name: String, val post: (id: Int, text: String) -> Unit)
-
-    /** Logs every method of [className] whose name looks like it takes an
-     *  image, with its parameter types — does the cover accept a runtime
-     *  Bitmap/Icon, or only a resource id like `setIcon(int)`? */
-    private fun logImageMethods(className: String) {
-        val cls = runCatching { Class.forName(className) }.getOrElse {
-            Log.d(TAG, "probe: $className not found (${it.javaClass.simpleName})")
-            return
-        }
-        cls.methods
-            .filter { IMAGE_METHOD.containsMatchIn(it.name) }
-            .sortedBy { it.name }
-            .forEach { m ->
-                val params = m.parameterTypes.joinToString { it.name }
-                Log.d(TAG, "probe: image method ${cls.simpleName}.${m.name}($params)")
-            }
-    }
-
-    /** [time] in large dark digits on a transparent [CLOCK_BITMAP_W]×
-     *  [CLOCK_BITMAP_H] bitmap, the same size as the static test image. */
-    private fun clockBitmap(time: String): Bitmap {
-        val bitmap = Bitmap.createBitmap(CLOCK_BITMAP_W, CLOCK_BITMAP_H, Bitmap.Config.ARGB_8888)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.CENTER
-            textSize = CLOCK_BITMAP_H * CLOCK_TEXT_FRACTION
-        }
-        // Shrink to fit the width ("12:34 PM" is wider than "1:05").
-        val maxWidth = CLOCK_BITMAP_W - 4
-        if (paint.measureText(time) > maxWidth) paint.textSize *= maxWidth / paint.measureText(time)
-        val baseline = (CLOCK_BITMAP_H - paint.descent() - paint.ascent()) / 2
-        Canvas(bitmap).drawText(time, CLOCK_BITMAP_W / 2f, baseline, paint)
-        return bitmap
     }
 
     /** Registers a listener on Kyocera's cover service for [WATCH_MS] and only
@@ -298,13 +238,6 @@ class CoverProbeReceiver : BroadcastReceiver() {
         const val CLOCK_TEST_ID = 0x4d43 // "MC"
         const val CLOCK_TEST_MS = 6_000L
         const val CLOCK_TEST_GAP_MS = 3_000L
-
-        /** The runtime clock bitmap (step 4), sized like
-         *  res/drawable-nodpi/cover_probe_clock.png (step 3). */
-        const val CLOCK_BITMAP_W = 96
-        const val CLOCK_BITMAP_H = 48
-        const val CLOCK_TEXT_FRACTION = 0.75f
-        val IMAGE_METHOD = Regex("Icon|Image|Bitmap|Picture", RegexOption.IGNORE_CASE)
     }
 }
 
