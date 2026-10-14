@@ -16,8 +16,8 @@ that blocked us (below). Any app can post to it; it no-ops (reflection
 try/catch) on non-Kyocera hardware.
 
 `MessageNotifier` drives it on its existing lifecycle: a card is posted when a
-message arrives and cancelled when the room is read. The card shows the time
-(see "Clock on the card" below) above "Room: message" (e.g. "Ann: see you at six", or "Barn Crew: Ann: see you at
+message arrives and cancelled when the room is read. The card shows
+"Room: message" (e.g. "Ann: see you at six", or "Barn Crew: Ann: see you at
 six" in a group — the count when the text can't be shown yet). **Settings ▸
 Notifications ▸ "Hide message on cover"** (UX-SPEC S26, off by default) swaps
 that for a generic "MatChat message", for anyone who doesn't want the sender
@@ -87,28 +87,43 @@ keys with the flip shut and was removed. The debug probe
 (`CoverProbeReceiver --ez callback true`) then showed Kyocera's callback
 reporting cover on/off (1/0) cleanly; it does not forward cover keys.
 
-### Clock on the card
+### Clock on the card (investigating — not shipped)
 
-The card covers the cover screen's own idle clock for its 15 s, so it carries
-one: the time large, the new-message banner (the same ticker) along the
-bottom. `CoverScreenNotifier.buildCard` hands the extender our own layout
-(`layout/cover_card.xml`: a `TextClock` that follows the 12/24-hour setting and
-ticks by itself, an icon, and the banner `TextView`) via
-`SubLcdNotificationExtender.setRemoteViews`. If that method is missing, the
-time goes in the template's title line (`setTitle`, `CoverCardStyle.TITLE`)
-above the same text instead.
+The card covers the cover screen's own idle clock for its 15 s, so the goal is
+for it to carry one: the time large, the new-message banner (the same ticker)
+along the bottom.
 
-**Not yet confirmed on-device:** whether Kyocera's cover renders a custom
-`RemoteViews` at all. Check both styles with the flip closed:
+**First on-device result (DuraXV): blank.** Both the custom layout
+(`layout/cover_card.xml` via `SubLcdNotificationExtender.setRemoteViews`) and
+the title-line version (`setTitle(time)` on the usual template) showed a plain
+white cover with only the status bar. Live cards are back on
+`CoverCardStyle.PLAIN` — the known-working card, no clock — until a style is
+confirmed.
+
+The probe now posts four numbered cards, each under its own id, cancelled
+before the next (6 s each, 3 s apart, ~36 s in all), so one card's state can't
+leak into the next:
+
+| Step | Style | What it sets |
+|---|---|---|
+| 1 | `PLAIN` | the control — today's working card |
+| 2 | `TEXT2` | `setText(time)` + `setText2(banner)` |
+| 3 | `TITLE` | `setTitle(time)` + `setText(banner)` |
+| 4 | `CLOCK` | `setRemoteViews(cover_card)` |
 
 ```
+adb logcat -c
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
-adb logcat -d -s MatChatCover
+# flip closed; note what steps 1-4 show (each card's text starts with its number)
+adb logcat -d > clock.txt
+Select-String -Path clock.txt -Pattern "MatChatCover","SubLcd","RemoteViews","AndroidRuntime","InflateException"
 ```
 
-The probe shows our layout for 8 s, then (2 s later) the title-line version
-for 8 s. If the first is blank or wrong, switch `CoverScreenNotifier.cardStyle`
-to `CoverCardStyle.TITLE`; sizes are in `values/cover.xml`.
+The SystemUI lines (`SubLcd`, `RemoteViews`, `InflateException`) say whether
+a style failed on the system side. Whichever step shows the time becomes the
+live `CoverScreenNotifier.cardStyle`; if only step 1 shows anything, the
+template can't carry a clock and the time would go into the banner text
+instead. Sizes for the custom layout are in `values/cover.xml`.
 
 Still open:
 

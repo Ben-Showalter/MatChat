@@ -77,9 +77,10 @@ internal object CoverScreenNotifier {
 
     private val main = Handler(Looper.getMainLooper())
 
-    /** How the card shows the time; [CoverCardStyle.CLOCK] unless on-device
-     *  testing shows the cover ignores our own layout (docs/COVER-DISPLAY.md). */
-    private val cardStyle = CoverCardStyle.CLOCK
+    /** How the card shows the time. [CoverCardStyle.PLAIN] (no clock) until a
+     *  clock style is confirmed on-device: on the DuraXV both CLOCK and TITLE
+     *  came out as a blank cover (docs/COVER-DISPLAY.md, "Clock on the card"). */
+    private val cardStyle = CoverCardStyle.PLAIN
 
     /** Cards still owed to the user (id → text), most recent last, until the
      *  room is read. Main thread only. */
@@ -211,11 +212,9 @@ internal object CoverScreenNotifier {
     }
 
     /** A Notification carrying the sub-LCD extender (icon, text, template,
-     *  duration). The card covers the cover's own clock, so it carries one
-     *  (docs/COVER-DISPLAY.md): [CoverCardStyle.CLOCK] hands the extender our
-     *  own layout (a live clock, the banner along the bottom); if the extender
-     *  has no `setRemoteViews`, or [style] is [CoverCardStyle.TITLE], the time
-     *  goes in the template's title line instead, above the same banner. */
+     *  duration). [style] says whether and how it also carries the time
+     *  ([CoverCardStyle]); every style but [CoverCardStyle.PLAIN] is still
+     *  being tried on-device by the debug probe. */
     @Suppress("DEPRECATION")
     private fun buildCard(
         context: Context,
@@ -229,19 +228,25 @@ internal object CoverScreenNotifier {
         extenderClass.getMethod("setLayout", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_LAYOUT_RICH_CARD)
         extenderClass.getMethod("setPriority", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_PRIORITY)
         extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, R.drawable.ic_stat_message)
-        extenderClass.getMethod("setText", CharSequence::class.java).invoke(extender, text)
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
-
-        val withClock = style == CoverCardStyle.CLOCK && runCatching {
-            val views = RemoteViews(context.packageName, R.layout.cover_card)
-            views.setTextViewText(R.id.cover_banner, text)
-            extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
-        }.onFailure {
-            Log.d(TAG, "sub-LCD setRemoteViews unavailable: ${it.javaClass.simpleName} — clock in title")
-        }.isSuccess
-        if (!withClock) {
-            val time = DateFormat.getTimeFormat(context).format(Date())
-            extenderClass.getMethod("setTitle", CharSequence::class.java).invoke(extender, time)
+        val setText = extenderClass.getMethod("setText", CharSequence::class.java)
+        val time by lazy { DateFormat.getTimeFormat(context).format(Date()) }
+        when (style) {
+            CoverCardStyle.PLAIN -> setText.invoke(extender, text)
+            CoverCardStyle.TEXT2 -> {
+                setText.invoke(extender, time)
+                extenderClass.getMethod("setText2", CharSequence::class.java).invoke(extender, text)
+            }
+            CoverCardStyle.TITLE -> {
+                extenderClass.getMethod("setTitle", CharSequence::class.java).invoke(extender, time)
+                setText.invoke(extender, text)
+            }
+            CoverCardStyle.CLOCK -> {
+                setText.invoke(extender, text)
+                val views = RemoteViews(context.packageName, R.layout.cover_card)
+                views.setTextViewText(R.id.cover_banner, text)
+                extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
+            }
         }
 
         val builder = Notification.Builder(context)
@@ -257,6 +262,7 @@ internal object CoverScreenNotifier {
      *  [text], so each style can be checked on the cover itself. */
     fun postTestCard(context: Context, id: Int, text: String, style: CoverCardStyle, durationMs: Int) {
         val app = context.applicationContext
+        Log.d(TAG, "probe: posting test card id=$id style=$style")
         runCatching {
             val managerClass = Class.forName("jp.kyocera.sublcd.SubLcdManager")
             val manager = managerClass.getMethod("getInstance", Context::class.java).invoke(null, app)
@@ -265,9 +271,12 @@ internal object CoverScreenNotifier {
         }.onSuccess {
             Log.d(TAG, "probe: test card posted id=$id style=$style")
         }.onFailure {
-            Log.d(TAG, "probe: test card failed id=$id style=$style: ${it.javaClass.simpleName}")
+            Log.d(TAG, "probe: test card failed id=$id style=$style: ${it.javaClass.simpleName}: ${it.cause}")
         }
     }
+
+    /** DEBUG probe: clears a test card posted by [postTestCard]. */
+    fun cancelTestCard(context: Context, id: Int) = cancelCard(context.applicationContext, id)
 
     private fun cancelCard(context: Context, id: Int) {
         runCatching {
@@ -284,13 +293,18 @@ internal object CoverScreenNotifier {
 
 /** How a cover card shows the time (CoverScreenNotifier.buildCard). */
 internal enum class CoverCardStyle {
-    /** Our own layout via `setRemoteViews`: a large live clock, with the
-     *  message banner along the bottom. */
-    CLOCK,
+    /** The known-working card: icon + scrolling text, no clock. */
+    PLAIN,
 
-    /** The template's title line holds the time, set when the card is posted
-     *  (each scroll frame reposts, so it stays current while showing). */
+    /** Time in the template's first text line, the banner in `setText2`. */
+    TEXT2,
+
+    /** Time in the template's title line (`setTitle`), the banner below. */
     TITLE,
+
+    /** Our own layout via `setRemoteViews` (layout/cover_card.xml): a large
+     *  live clock, the banner along the bottom. */
+    CLOCK,
 }
 
 /** Whether the cover turning on should bring the card back: something is

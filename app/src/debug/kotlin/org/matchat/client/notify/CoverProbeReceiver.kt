@@ -36,9 +36,10 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
- * `--ez clockcard true` instead posts a test card in each cover-clock style
- * (our own layout, then the title line) and does nothing else — close the
- * flip first and watch the cover.
+ * `--ez clockcard true` instead posts four numbered test cards, one per
+ * cover-clock style (1 plain control, 2 text2, 3 title, 4 our own layout),
+ * ~36 s in all, and does nothing else — close the flip first and note what
+ * each number shows.
  *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
@@ -73,16 +74,24 @@ class CoverProbeReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
     }
 
-    /** Posts the clock card both ways, one after the other, so the cover
-     *  shows which one Kyocera renders: first our own layout (big clock,
-     *  banner below), then the template's title line. Watch the cover (flip
-     *  closed) and note which looks right (docs/COVER-DISPLAY.md). */
+    /** Posts four test cards in turn, each under its own id, each cancelled
+     *  before the next, so one card's state can't leak into the next: 1 PLAIN
+     *  (the known-working control), 2 TEXT2, 3 TITLE, 4 CLOCK (our own
+     *  layout). Each card's text starts with its step number. Watch the cover
+     *  (flip closed) and note what each step shows (docs/COVER-DISPLAY.md). */
     private fun clockCardTest(context: Context) {
-        val text = "Probe: clock card test"
-        CoverScreenNotifier.postTestCard(context, CLOCK_TEST_ID, text, CoverCardStyle.CLOCK, CLOCK_TEST_MS)
-        Handler(Looper.getMainLooper()).postDelayed({
-            CoverScreenNotifier.postTestCard(context, CLOCK_TEST_ID, text, CoverCardStyle.TITLE, CLOCK_TEST_MS)
-        }, CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
+        val main = Handler(Looper.getMainLooper())
+        CoverCardStyle.entries.forEachIndexed { index, style ->
+            val step = index + 1
+            val id = CLOCK_TEST_ID + step
+            val start = index * (CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
+            main.postDelayed({
+                Log.d(TAG, "probe: step $step $style")
+                val text = "$step ${style.name.lowercase()} test"
+                CoverScreenNotifier.postTestCard(context, id, text, style, CLOCK_TEST_MS.toInt())
+            }, start)
+            main.postDelayed({ CoverScreenNotifier.cancelTestCard(context, id) }, start + CLOCK_TEST_MS)
+        }
     }
 
     /** Registers a listener on Kyocera's cover service for [WATCH_MS] and only
@@ -218,10 +227,11 @@ class CoverProbeReceiver : BroadcastReceiver() {
 
         const val WATCH_MS = 120_000L
 
-        /** The clock-card test: each style shows for 8 s, 2 s apart. */
+        /** The clock-card test: each style shows for 6 s, 3 s apart, under
+         *  ids CLOCK_TEST_ID + step. */
         const val CLOCK_TEST_ID = 0x4d43 // "MC"
-        const val CLOCK_TEST_MS = 8_000
-        const val CLOCK_TEST_GAP_MS = 2_000L
+        const val CLOCK_TEST_MS = 6_000L
+        const val CLOCK_TEST_GAP_MS = 3_000L
     }
 }
 
