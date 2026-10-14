@@ -105,4 +105,9 @@
     <color name="warning">@color/palette_red</color>
     <color name="error">@color/palette_red</color>
     <color name="scrim">#99000000</color>
+    <!-- Pressed-state darken for a tapped softkey cell. A translucent black so
+         it reads as a press over whatever accent the bar currently uses, in
+         either mode, without needing a per-accent value. Touch feedback only —
+         the bar is still driven by the hardware keys first. -->
+    <color name="softkey_pressed_scrim">#40000000</color>
 </resources>
