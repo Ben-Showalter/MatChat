@@ -12,7 +12,6 @@ import android.view.Display
 import android.view.KeyEvent
 import androidx.core.content.ContextCompat
 import jp.kyocera.sublcd.ISubLcdCallback
-import org.matchat.client.R
 import java.lang.reflect.Modifier
 
 /**
@@ -37,10 +36,10 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
- * `--ez clockcard true` instead posts three numbered two-line test cards
- * (time on top, message below: 1 normal icon, 2 the 96 px clock image as the
- * icon, 3 a long scrolling message), ~27 s in all, and does nothing else —
- * close the flip first and note what each shows.
+ * `--ez clockcard true` instead shows the live cover card twice through the
+ * real path (1 a short message, 2 a long one that scrolls), ~15 s in all, and
+ * does nothing else — close the flip first and check each reads
+ * "time · message" beside the MatChat icon.
  *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
@@ -75,39 +74,26 @@ class CoverProbeReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
     }
 
-    /** The two-line cover card (time on top, message below, both in the
-     *  template's one text field), one step at a time, each under its own id
-     *  and cleared before the next: 1 with the normal message icon, 2 with the
-     *  96 px square clock image as the icon, 3 a long message through the
-     *  live path (CoverScreenNotifier.notify), so line 2 scrolls while the
-     *  time stays put. Watch the cover (flip closed) (docs/COVER-DISPLAY.md). */
+    /** The live cover card through the real path (CoverScreenNotifier.notify
+     *  / cancel), one step at a time, each under its own id and cleared before
+     *  the next: 1 a short message (one still card: MatChat icon, then
+     *  "time · message"), 2 a long one, which scrolls from the time onwards.
+     *  Watch the cover (flip closed) (docs/COVER-DISPLAY.md). */
     private fun clockCardTest(context: Context) {
-        val ms = CLOCK_TEST_MS.toInt()
-        val steps = listOf<Pair<String, (Int) -> Unit>>(
-            "two lines" to { id ->
-                CoverScreenNotifier.postIconTestCard(
-                    context, id, "1 two lines", R.drawable.ic_stat_message, ms, CoverCardStyle.TWO_LINE,
-                )
-            },
-            "clock icon" to { id ->
-                CoverScreenNotifier.postIconTestCard(
-                    context, id, "2 clock icon", R.drawable.cover_probe_sq96, ms, CoverCardStyle.TWO_LINE,
-                )
-            },
-            "scrolling" to { id ->
-                CoverScreenNotifier.notify(context, id, "3 scrolling: this line scrolls, the time stays")
-            },
+        val messages = listOf(
+            "1 short" to "Probe: hi",
+            "2 scrolling" to "Probe: this long message scrolls after the time",
         )
         val main = Handler(Looper.getMainLooper())
-        steps.forEachIndexed { index, (name, post) ->
+        messages.forEachIndexed { index, (name, text) ->
             val step = index + 1
             val id = CLOCK_TEST_ID + step
             val start = index * (CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
             main.postDelayed({
-                Log.d(TAG, "probe: step $step $name")
-                post(id)
+                Log.d(TAG, "probe: step $name")
+                CoverScreenNotifier.notify(context, id, text)
             }, start)
-            // CoverScreenNotifier.cancel also stops step 3's scroll and re-show.
+            // Also stops step 2's scroll and the re-show on flip close.
             main.postDelayed({ CoverScreenNotifier.cancel(context, id) }, start + CLOCK_TEST_MS)
         }
     }
@@ -245,7 +231,7 @@ class CoverProbeReceiver : BroadcastReceiver() {
 
         const val WATCH_MS = 120_000L
 
-        /** The clock-card test: each style shows for 6 s, 3 s apart, under
+        /** The clock-card test: each step shows for 6 s, 3 s apart, under
          *  ids CLOCK_TEST_ID + step. */
         const val CLOCK_TEST_ID = 0x4d43 // "MC"
         const val CLOCK_TEST_MS = 6_000L

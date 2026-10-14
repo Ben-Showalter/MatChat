@@ -495,8 +495,9 @@ here — every room shares the one chosen sound (future work).
 Last, a third toggle row, "Hide message on cover" (same checkmark convention,
 off by default), with an 11 sp subtitle explaining both states. On Kyocera
 flip phones a new message also appears on the small outside (cover) screen,
-as the time with "Room: message" scrolling beneath it (docs/COVER-DISPLAY.md); with this on it reads
-only "MatChat message", so who wrote and what they said aren't visible on a
+beside the MatChat icon, as the time then "Room: message", scrolling on one
+line (docs/COVER-DISPLAY.md); with this on it reads
+only the time and "MatChat message", so who wrote and what they said aren't visible on a
 closed phone.
 Focus order: Notifications → Sound → Hide message on cover. Initial focus:
 Notifications.

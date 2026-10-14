@@ -76,13 +76,6 @@ internal object CoverScreenNotifier {
 
     private val main = Handler(Looper.getMainLooper())
 
-    /** How the card shows the time: [CoverCardStyle.TWO_LINE], the time and
-     *  the message as two lines of the template's one text field. The
-     *  template doesn't draw `setText2` (an earlier TEXT2 card showed only the
-     *  time), a title line, or an app's own layout (docs/COVER-DISPLAY.md,
-     *  "Clock on the card"). */
-    private val cardStyle = CoverCardStyle.TWO_LINE
-
     /** Cards still owed to the user (id → text), most recent last, until the
      *  room is read. Main thread only. */
     private val active = LinkedHashMap<Int, String>()
@@ -129,12 +122,16 @@ internal object CoverScreenNotifier {
     }
 
     /** Only one card is on screen at a time: stop any other scroll, then show
-     *  [text] (cut to [COVER_MAX_CHARS]) once if it fits, or as a ticker that
-     *  scrolls to the end, pauses, and starts over from the beginning. */
+     *  the time followed by [text] (cut to [COVER_MAX_CHARS]) — the card hides
+     *  the cover's own clock, and its one text line is all the template draws
+     *  (docs/COVER-DISPLAY.md, "Clock on the card") — once if it fits, or as
+     *  a ticker that scrolls to the end, pauses, and starts over from the
+     *  beginning. The time is taken at each showing, so a re-show is current. */
     private fun show(context: Context, id: Int, text: String) {
         tickers.keys.toList().forEach(::stopTicker)
         lastShownAt = SystemClock.elapsedRealtime()
-        val shown = coverDisplayText(text, COVER_MAX_CHARS)
+        val time = DateFormat.getTimeFormat(context).format(Date())
+        val shown = coverLine(time, text, COVER_MAX_CHARS)
         if (shown.length <= TICKER_WINDOW) {
             post(context, id, shown, CARD_DURATION_MS)
             Log.d(TAG, "cover card shown id=$id scrolling=false")
@@ -213,29 +210,19 @@ internal object CoverScreenNotifier {
     }
 
     /** A Notification carrying the sub-LCD extender (icon, text, template,
-     *  duration). [style] says whether it also carries the time
-     *  ([CoverCardStyle]). */
+     *  duration). The icon is the MatChat mark in black
+     *  (drawable-nodpi/ic_cover_matchat.png, tools/gen_cover_icon.py): the
+     *  slot takes a resource id only, and a 96 px square drew best. */
     @Suppress("DEPRECATION")
-    private fun buildCard(
-        context: Context,
-        text: String,
-        durationMs: Int,
-        style: CoverCardStyle = cardStyle,
-        iconRes: Int = R.drawable.ic_stat_message,
-    ): Notification {
+    private fun buildCard(context: Context, text: String, durationMs: Int): Notification {
         val extenderClass = Class.forName("jp.kyocera.sublcd.SubLcdNotificationExtender")
         val extender = extenderClass.getConstructor(Context::class.java).newInstance(context)
         extenderClass.getMethod("setCategory", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_CATEGORY_MESSAGE)
         extenderClass.getMethod("setLayout", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_LAYOUT_RICH_CARD)
         extenderClass.getMethod("setPriority", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_PRIORITY)
-        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, iconRes)
+        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, R.drawable.ic_cover_matchat)
+        extenderClass.getMethod("setText", CharSequence::class.java).invoke(extender, text)
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
-        val setText = extenderClass.getMethod("setText", CharSequence::class.java)
-        val time by lazy { DateFormat.getTimeFormat(context).format(Date()) }
-        when (style) {
-            CoverCardStyle.PLAIN -> setText.invoke(extender, text)
-            CoverCardStyle.TWO_LINE -> setText.invoke(extender, "$time\n$text")
-        }
 
         val builder = Notification.Builder(context)
             .setSmallIcon(R.drawable.ic_stat_message)
@@ -244,33 +231,6 @@ internal object CoverScreenNotifier {
             .getMethod("extend", Notification.Extender::class.java)
             .invoke(builder, extender)
         return builder.build()
-    }
-
-    /** DEBUG probe: a card in [style] whose icon is [iconRes] —
-     *  to learn how big the cover draws an icon image of a given size and
-     *  density (docs/COVER-DISPLAY.md, "Clock on the card"). The slot takes
-     *  resource ids only; a runtime Bitmap drew nothing. */
-    fun postIconTestCard(
-        context: Context,
-        id: Int,
-        text: String,
-        iconRes: Int,
-        durationMs: Int,
-        style: CoverCardStyle = CoverCardStyle.PLAIN,
-    ) {
-        val app = context.applicationContext
-        Log.d(TAG, "probe: posting icon test card id=$id")
-        runCatching {
-            val managerClass = Class.forName("jp.kyocera.sublcd.SubLcdManager")
-            val manager = managerClass.getMethod("getInstance", Context::class.java).invoke(null, app)
-            val card = buildCard(app, text, durationMs, style, iconRes)
-            managerClass.getMethod("notify", Int::class.javaPrimitiveType, Notification::class.java)
-                .invoke(manager, id, card)
-        }.onSuccess {
-            Log.d(TAG, "probe: icon test card posted id=$id")
-        }.onFailure {
-            Log.d(TAG, "probe: icon test card failed id=$id: ${it.javaClass.simpleName}: ${it.cause}")
-        }
     }
 
     private fun cancelCard(context: Context, id: Int) {
@@ -284,16 +244,6 @@ internal object CoverScreenNotifier {
             Log.d(TAG, "sub-LCD cancel unavailable id=$id: ${it.javaClass.simpleName}")
         }
     }
-}
-
-/** How a cover card shows the time (CoverScreenNotifier.buildCard). */
-internal enum class CoverCardStyle {
-    /** The known-working card: icon + scrolling text, no clock. */
-    PLAIN,
-
-    /** The time on the first line and the banner on the second, both in
-     *  `setText` (the template doesn't draw `setText2`). The live style. */
-    TWO_LINE,
 }
 
 /** Whether the cover turning on should bring the card back: something is
@@ -310,6 +260,11 @@ internal fun shouldReshow(
  *  fit [maxChars] including a trailing "…". */
 internal fun coverDisplayText(text: String, maxChars: Int): String =
     if (text.length <= maxChars) text else text.take(maxChars - 1).trimEnd() + "…"
+
+/** The cover's one line: [time], then [text] cut by [coverDisplayText] to
+ *  [maxChars] — e.g. "1:05 PM · Ann: see you at six". */
+internal fun coverLine(time: String, text: String, maxChars: Int): String =
+    "$time · ${coverDisplayText(text, maxChars)}"
 
 /** One scroll pass over [text] as the frames the cover shows, [window]
  *  characters each: the start held for [pauseSteps] frames, one character per

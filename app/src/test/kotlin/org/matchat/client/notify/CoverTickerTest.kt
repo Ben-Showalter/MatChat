@@ -35,4 +35,17 @@ class CoverTickerTest {
         assertEquals(listOf("abcd", "abcd", "bcde", "cdef", "cdef"), frames)
         assertTrue(frames.all { it.length == 4 })
     }
+
+    @Test
+    fun `the cover line puts the time first`() {
+        assertEquals("1:05 PM · Ann: hi", coverLine("1:05 PM", "Ann: hi", maxChars = 40))
+    }
+
+    @Test
+    fun `a long message is cut before the time goes in front`() {
+        val line = coverLine("13:05", "a".repeat(60), maxChars = 40)
+        assertTrue(line.startsWith("13:05 · "))
+        assertEquals("13:05 · ".length + 40, line.length)
+        assertTrue(line.endsWith("…"))
+    }
 }

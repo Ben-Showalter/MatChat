@@ -90,59 +90,42 @@ reporting cover on/off (1/0) cleanly; it does not forward cover keys.
 ### Clock on the card
 
 The card covers the cover screen's own idle clock for its 15 s, so it carries
-the time. **Live: `CoverCardStyle.TWO_LINE`**: the time on the first line,
-the scrolling "Room: message" on the second, both in the template's one text
-field (`setText("$time\n$message")`). Only the second line scrolls: each
-ticker frame is reposted with the time in front. An earlier `TEXT2` card put
-the message in `setText2`, which the template doesn't draw, so only the time
-showed.
+the time. The template draws **one text line and an icon**, so the card is:
 
-**A big clock has to go through the icon slot.** Every card that draws fills
-fields of Kyocera's own template: `setIcon`, `setText`, `setText2`. The icon
-is an *app-supplied image*. TurboText's big message symbol is its own
-**square** 24×24 PNG (`drawable-mdpi`) passed to `setIcon(R.drawable…)`. An
-app's own layout (`setRemoteViews`) is never drawn: every version tried left
-the cover blank (status bar only).
+- **icon**: the MatChat mark in black on transparent
+  (`drawable-nodpi/ic_cover_matchat.png`, 96×96, drawn from
+  `ic_launcher.xml`'s bubble by `tools/gen_cover_icon.py`; re-run it when the
+  launcher mark changes);
+- **text**: the time, then the message, e.g. `1:05 PM · Ann: see you at six`
+  (`coverLine`). It scrolls when it's wider than the cover, starting from the
+  time. The time is taken at each showing, so a re-show on flip close is
+  current.
 
-What the icon slot accepts:
-- **Resource ids only.** A runtime `Bitmap`, handed to every extender image
-  setter and `setLargeIcon`, drew nothing. A live clock therefore needs one
-  image per minute, picked by id at each post.
-- **The shape matters.** A wide 96×48 "12:34" image drew very small: fitted
-  into the square slot, it fills only half the height. The clock is
-  therefore a square image, "12" over "34", like TurboText's square symbol.
-  The probe now compares square sizes.
+What the DuraXV probe found, so nobody retries the dead ends:
 
-Probe results on the DuraXV (each card under its own id):
+| Tried | Result |
+|---|---|
+| `setText` | drawn — one line only |
+| `setText2` | not drawn |
+| `setTitle` | not drawn |
+| `"time\nmessage"` in `setText` | only the first line shows |
+| `setRemoteViews` (own layout: `TextClock` or plain `TextView`s, any colors, with or without `setFullScreen(true)`) | blank cover, every time |
+| `setIcon(resId)` | drawn — app images work (TurboText's symbol is one); a square image fills the slot, a wide one draws small; 96 px nodpi drew best |
+| runtime `Bitmap`/`Icon` to any extender image setter or `setLargeIcon` | not drawn — resource ids only |
 
-| Style | What it sets | Result |
-|---|---|---|
-| `PLAIN` | the old card, no clock | works |
-| `TEXT2` | `setText(time)` + `setText2(banner)` | time only — `setText2` isn't drawn; replaced by `TWO_LINE` |
-| `TWO_LINE` | `setText("time\nbanner")` | live — confirming with the probe |
-| title line | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn |
-| own layout | `setRemoteViews(…)` — `TextClock` or plain `TextView`s, white or dark text, our background or none, with or without `setFullScreen(true)` | blank, every time |
-| wide icon | `setIcon` with a 96×48 "12:34" PNG | drawn, but very small (wide image in a square slot) |
-| runtime bitmap | the time drawn into a `Bitmap`, handed to every extender image setter taking `Bitmap`/`Icon`, plus `setLargeIcon` | nothing drawn — resource ids only |
-| square icons | `setIcon` with a square "12 over 34" PNG: 24 px mdpi, 48 px nodpi, 96 px nodpi | **96 px nodpi best** |
+A big clock *image* would need one built-in image per minute (resource ids
+only); the one-line time was chosen instead.
 
-The title and own-layout styles were removed after these results.
-
-An earlier run reused one id for every card, and the own-layout card left the cover
-blank for the next card too — hence a separate id per step now.
-
-Run the probe (PowerShell in Android Studio's
-Terminal; the first line puts `adb` on the path for that window):
+Check the live card (PowerShell in Android Studio's Terminal; the first line
+puts `adb` on the path for that window):
 
 ```
 $env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
 ```
 
-Close the flip first (~27 s): 1 the two-line card, 2 the same with the 96 px
-clock image as the icon, 3 a long message so line 2 scrolls under a fixed
-time. In Android Studio's Logcat, filter `tag:MatChatCover` for the
-`probe: step` lines.
+Close the flip first: 1 a short message, 2 a long one that scrolls from the
+time. In Android Studio's Logcat, filter `tag:MatChatCover`.
 
 Still open:
 
