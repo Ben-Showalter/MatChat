@@ -21,12 +21,12 @@ SUPERSAMPLE = 8
 OUT = Path(__file__).resolve().parent.parent / "app/src/main/res/drawable-nodpi/ic_cover_matchat.png"
 
 # The bubble in ic_launcher.xml's 48-unit viewport: a rounded body from
-# (12,12) to (40,32), corner radius 4, with a tail down to (16,38).
-BODY = (12, 12, 40, 32)
-RADIUS = 4
-TAIL = [(24, 32), (16, 38), (16, 31)]
+# (3,4) to (45,34), corner radius 5, with a tail down to (11,44).
+BODY = (3, 4, 45, 34)
+RADIUS = 5
+TAIL = [(22, 34), (11, 44), (11, 33)]
 # The bubble's bounding box in that viewport (body plus tail).
-BOX = (12, 12, 40, 38)
+BOX = (3, 4, 45, 44)
 FILL = 0.9  # share of the square the bubble's larger side takes
 
 

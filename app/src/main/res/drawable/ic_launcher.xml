@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Placeholder launcher mark (a chat bubble on the brand ink). Replaced with the
-     final asset before M7 (signed APK). Vector so no density PNGs are needed. -->
+<!-- Launcher mark: the MatChat chat bubble in brick red (#801000, the user's
+     chosen colour) on a transparent background, filling most of the icon so it
+     reads at a flip phone's small launcher size. Placeholder until the final
+     asset before M7 (signed APK). Vector so no density PNGs are needed. The
+     cover-screen icon (drawable-nodpi/ic_cover_matchat.png) is drawn from this
+     same shape by tools/gen_cover_icon.py — keep the two in step. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
     <path
-        android:fillColor="#14130E"
-        android:pathData="M0,0h48v48h-48z" />
-    <path
-        android:fillColor="#E3A98C"
-        android:pathData="M12,12h24a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4h-12l-8,6v-6h-0a4,4 0,0 1,-4 -4v-12a4,4 0,0 1,4 -4z" />
+        android:fillColor="#801000"
+        android:pathData="M8,4h32a5,5 0,0 1,5 5v20a5,5 0,0 1,-5 5h-18l-11,10v-10h-3a5,5 0,0 1,-5 -5v-20a5,5 0,0 1,5 -5z" />
 </vector>
