@@ -95,12 +95,15 @@ line (`setText`), the scrolling "Room: message" banner on its second
 (`setText2`). The time is formatted at every post, and the ticker reposts every
 400 ms, so it stays current.
 
-**A big clock is not possible through this API.** Every card that draws only
-fills fields of Kyocera's own template — `setIcon` (TurboText's message icon
-is this field too; MatChat sets it on every card), `setText`, `setText2` — and
-Kyocera's code lays them out. An app's own layout (`setRemoteViews`) is never
-drawn: every version tried left the cover blank (status bar only), whatever
-its views or colors, with or without `setFullScreen(true)`.
+**A big clock has to go through the icon slot.** Every card that draws fills
+fields of Kyocera's own template: `setIcon`, `setText`, `setText2`. The icon
+is an *app-supplied image*. TurboText's message symbol is its own 24×24 PNG
+passed to `setIcon(R.drawable…)`, and it shows on the cover. An app's own
+layout (`setRemoteViews`) is never drawn: every version tried left the cover
+blank (status bar only). So the clock is being built as the icon image. Still
+open: how big the slot draws an image, and whether it takes a runtime image
+(`Bitmap`/`Icon`) or only a resource id. That is what probe steps 3 and 4
+test.
 
 Probe results on the DuraXV (each card under its own id):
 
@@ -110,13 +113,15 @@ Probe results on the DuraXV (each card under its own id):
 | `TEXT2` | `setText(time)` + `setText2(banner)` | **works, time shown** — live |
 | title line | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn |
 | own layout | `setRemoteViews(…)` — `TextClock` or plain `TextView`s, white or dark text, our background or none, with or without `setFullScreen(true)` | blank, every time |
+| big icon (step 3) | `setIcon(R.drawable.cover_probe_clock)` — a 96×48 "12:34" PNG (debug build) | to test |
+| runtime bitmap (step 4) | the current time drawn into a `Bitmap`, handed to every extender image setter taking `Bitmap`/`Icon`, plus `setLargeIcon` | to test |
 
 The title and own-layout styles were removed after these results.
 
 An earlier run reused one id for every card, and the own-layout card left the cover
 blank for the next card too — hence a separate id per step now.
 
-Re-check on another device with the probe (PowerShell in Android Studio's
+Run the probe (PowerShell in Android Studio's
 Terminal; the first line puts `adb` on the path for that window):
 
 ```
@@ -124,8 +129,11 @@ $env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
 ```
 
-Close the flip first; card 1 is the plain card, card 2 has the time. In
-Android Studio's Logcat, filter `tag:MatChatCover` for the `probe: step` lines.
+Close the flip first and note what each numbered card shows (~36 s): 1 plain,
+2 the time on the first line, 3 the big static clock image, 4 the runtime
+clock bitmap. In Android Studio's Logcat, filter `tag:MatChatCover`. The
+`probe: image method …` lines list the OEM methods that might take an image,
+and `probe: step` lines show each step.
 
 Still open:
 

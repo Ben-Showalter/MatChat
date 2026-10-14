@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.drawable.Icon
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -75,6 +77,9 @@ internal object CoverScreenNotifier {
     private const val TICKER_HOLD_MS = 1_500
 
     private val main = Handler(Looper.getMainLooper())
+
+    /** Extender method names that may take an image (probe only). */
+    private val IMAGE_SETTER = Regex("Icon|Image|Bitmap|Picture", RegexOption.IGNORE_CASE)
 
     /** How the card shows the time. [CoverCardStyle.TEXT2] is the one the
      *  DuraXV probe confirmed shows it (time on the first line, the banner on
@@ -221,13 +226,16 @@ internal object CoverScreenNotifier {
         text: String,
         durationMs: Int,
         style: CoverCardStyle = cardStyle,
+        iconRes: Int = R.drawable.ic_stat_message,
+        iconBitmap: Bitmap? = null,
     ): Notification {
         val extenderClass = Class.forName("jp.kyocera.sublcd.SubLcdNotificationExtender")
         val extender = extenderClass.getConstructor(Context::class.java).newInstance(context)
         extenderClass.getMethod("setCategory", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_CATEGORY_MESSAGE)
         extenderClass.getMethod("setLayout", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_LAYOUT_RICH_CARD)
         extenderClass.getMethod("setPriority", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_PRIORITY)
-        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, R.drawable.ic_stat_message)
+        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, iconRes)
+        if (iconBitmap != null) setBitmapIcon(extenderClass, extender, iconBitmap)
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
         val setText = extenderClass.getMethod("setText", CharSequence::class.java)
         val time by lazy { DateFormat.getTimeFormat(context).format(Date()) }
@@ -242,6 +250,7 @@ internal object CoverScreenNotifier {
         val builder = Notification.Builder(context)
             .setSmallIcon(R.drawable.ic_stat_message)
             .setContentText(text)
+        if (iconBitmap != null) builder.setLargeIcon(iconBitmap)
         Notification.Builder::class.java
             .getMethod("extend", Notification.Extender::class.java)
             .invoke(builder, extender)
@@ -263,6 +272,51 @@ internal object CoverScreenNotifier {
         }.onFailure {
             Log.d(TAG, "probe: test card failed id=$id style=$style: ${it.javaClass.simpleName}: ${it.cause}")
         }
+    }
+
+    /** DEBUG probe: a [CoverCardStyle.PLAIN] card whose icon is [iconRes] and,
+     *  when [iconBitmap] is set, also that bitmap through every extender
+     *  method that takes one (see [setBitmapIcon]) and the Notification's
+     *  large icon — to learn how big the cover draws the icon and whether it
+     *  takes a runtime image (docs/COVER-DISPLAY.md, "Clock on the card"). */
+    fun postIconTestCard(context: Context, id: Int, text: String, iconRes: Int, iconBitmap: Bitmap?, durationMs: Int) {
+        val app = context.applicationContext
+        Log.d(TAG, "probe: posting icon test card id=$id bitmap=${iconBitmap != null}")
+        runCatching {
+            val managerClass = Class.forName("jp.kyocera.sublcd.SubLcdManager")
+            val manager = managerClass.getMethod("getInstance", Context::class.java).invoke(null, app)
+            val card = buildCard(app, text, durationMs, CoverCardStyle.PLAIN, iconRes, iconBitmap)
+            managerClass.getMethod("notify", Int::class.javaPrimitiveType, Notification::class.java)
+                .invoke(manager, id, card)
+        }.onSuccess {
+            Log.d(TAG, "probe: icon test card posted id=$id")
+        }.onFailure {
+            Log.d(TAG, "probe: icon test card failed id=$id: ${it.javaClass.simpleName}: ${it.cause}")
+        }
+    }
+
+    /** Hands [bitmap] to every one-argument extender method named like an
+     *  image setter that takes a `Bitmap` or an `Icon` — the OEM API isn't
+     *  documented, so each is tried and logged. Never the annunciator-tray
+     *  methods (one crashed SystemUI, docs/COVER-DISPLAY.md). */
+    private fun setBitmapIcon(extenderClass: Class<*>, extender: Any, bitmap: Bitmap) {
+        extenderClass.methods
+            .filter { m ->
+                m.parameterTypes.size == 1 &&
+                    IMAGE_SETTER.containsMatchIn(m.name) &&
+                    !m.name.contains("Annunciator", ignoreCase = true)
+            }
+            .forEach { m ->
+                val arg: Any? = when (m.parameterTypes.first()) {
+                    Bitmap::class.java -> bitmap
+                    Icon::class.java -> Icon.createWithBitmap(bitmap)
+                    else -> null
+                }
+                if (arg == null) return@forEach
+                runCatching { m.invoke(extender, arg) }
+                    .onSuccess { Log.d(TAG, "probe: ${m.name}(${m.parameterTypes.first().simpleName}) ok") }
+                    .onFailure { Log.d(TAG, "probe: ${m.name} failed: ${it.javaClass.simpleName}: ${it.cause}") }
+            }
     }
 
     /** DEBUG probe: clears a test card posted by [postTestCard]. */
