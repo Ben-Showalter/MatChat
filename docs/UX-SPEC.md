@@ -231,7 +231,7 @@ Special rows:
 Empty: "No messages yet. Say hello."
 
 **Full-screen image viewer** (reached from an image message's `Open`): the
-image fills the screen; `*` zooms in, `#` zooms out, the D-pad / 2468 pan, `0`
+image fills the screen; `#` zooms in, `*` zooms out, the D-pad / 2468 pan, `0`
 resets, Back returns. Softkeys: Options | | Back — Options offers `Save to
 gallery` and `Save to files` (same destinations and permission behaviour as
 the S11 items above), acting on the image already on screen.
