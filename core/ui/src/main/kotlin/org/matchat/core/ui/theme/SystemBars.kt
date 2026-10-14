@@ -5,6 +5,7 @@ import android.os.Build
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.widget.EditText
 
 /**
  * Hides the phone's white soft-key label bar at the bottom of the screen — on
@@ -15,9 +16,13 @@ import android.view.WindowInsetsController
  * Adapted from the Flip-DumbPhoneGuide's `templates/SystemBars.kt`
  * (docs/layout-and-type.md, "System soft-key bar"), confirmed on FlipWeather.
  *
+ * **Except while a text field has focus** (user's call): the system T9
+ * keyboard uses that bar for its word and mode labels, so typing needs it.
+ * [hideNavigation] does nothing then, and its re-hide listener leaves the bar
+ * alone; MainActivity calls [showNavigation] when focus moves into a text
+ * field and [hideNavigation] when it moves out.
+ *
  * Call [hideNavigation] from `onResume()` and `onWindowFocusChanged(true)`.
- * The system T9 keyboard brings the bar back while the user types, for its
- * word labels; that's left alone — the focus change re-hides it afterwards.
  *
  * Two layers, always both:
  *  - Android 11+: the insets controller.
@@ -34,10 +39,14 @@ object SystemBars {
     private const val LEGACY_FLAGS =
         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 
+    /** True while a text field has focus — the keyboard needs the bar then. */
+    private fun typing(activity: Activity) = activity.currentFocus is EditText
+
     fun hideNavigation(activity: Activity) {
         val window = activity.window ?: return
         val decor = window.decorView
-        val hide = {
+        val hide = hide@{
+            if (typing(activity)) return@hide
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.insetsController?.let {
                     it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -53,7 +62,8 @@ object SystemBars {
                     window.attributes = lp
                 }
                 decor.setOnSystemUiVisibilityChangeListener { visibility ->
-                    if (visibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0) {
+                    val shown = visibility and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION == 0
+                    if (shown && !typing(activity)) {
                         decor.systemUiVisibility = decor.systemUiVisibility or LEGACY_FLAGS
                     }
                 }
@@ -62,5 +72,23 @@ object SystemBars {
         hide()
         // Early in a launch the decor isn't attached to the window yet; apply again once it is.
         decor.post { hide() }
+    }
+
+    /** Brings the bar back, for a text field's keyboard labels. */
+    fun showNavigation(activity: Activity) {
+        val window = activity.window ?: return
+        val decor = window.decorView
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.show(WindowInsets.Type.navigationBars())
+        }
+        @Suppress("DEPRECATION")
+        run {
+            decor.systemUiVisibility = decor.systemUiVisibility and LEGACY_FLAGS.inv()
+            val lp = window.attributes
+            if (lp.systemUiVisibility and LEGACY_FLAGS != 0) {
+                lp.systemUiVisibility = lp.systemUiVisibility and LEGACY_FLAGS.inv()
+                window.attributes = lp
+            }
+        }
     }
 }

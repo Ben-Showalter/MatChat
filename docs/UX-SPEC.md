@@ -21,8 +21,10 @@ Every screen has three fixed bands:
 
 - The phone's own white soft-key label bar (the system navigation bar) is
   hidden on every screen — our softkey bar replaces it — with no setting to
-  show it (`SystemBars`, per the Flip-DumbPhoneGuide). The system T9 keyboard
-  may bring it back while typing; it hides again afterwards.
+  show it (`SystemBars`, per the Flip-DumbPhoneGuide), **except while a text
+  field has focus**: the system T9 keyboard shows its word and mode labels
+  there, so the bar appears when focus moves into a text field and hides
+  again when it leaves.
 - Title bar: scales with Settings > Text size (§S16) like everything else —
   18 sp by default (Normal), 14 sp at Small — single line, ellipsized at the
   end, on the accent surface (`?attr/colorFocusAccent` — the user's chosen

@@ -106,6 +106,7 @@ class MainActivity : AppCompatActivity(), Navigator {
         restoreSessionIfPresent(goHome = savedInstanceState == null || !navStartedThisProcess)
         navStartedThisProcess = true
         observeThemeChanges()
+        window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener(barFocusListener)
         checkForUpdates()
     }
 
@@ -278,9 +279,22 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
     }
 
+    /** The white system bar shows while a text field has focus (its T9
+     *  keyboard's word labels live there) and hides again once focus leaves
+     *  it (SystemBars, UX-SPEC §1). */
+    private val barFocusListener = android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+        if (newFocus is android.widget.EditText) SystemBars.showNavigation(this) else SystemBars.hideNavigation(this)
+    }
+
+    override fun onDestroy() {
+        runCatching { window.decorView.viewTreeObserver.removeOnGlobalFocusChangeListener(barFocusListener) }
+        super.onDestroy()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        // Dialogs and the T9 keyboard bring the system bar back; hide it again.
+        // Dialogs bring the system bar back; hide it again (not while typing —
+        // hideNavigation leaves it for a focused text field's keyboard).
         if (hasFocus) SystemBars.hideNavigation(this)
     }
 
