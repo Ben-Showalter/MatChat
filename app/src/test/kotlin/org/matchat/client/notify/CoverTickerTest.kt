@@ -48,4 +48,31 @@ class CoverTickerTest {
         assertEquals("13:05 · ".length + 40, line.length)
         assertTrue(line.endsWith("…"))
     }
+
+    @Test
+    fun `a scroll runs whole passes until it has run the minimum`() {
+        // 15 s at 400 ms is 38 frames; passes of 20 frames need two.
+        assertEquals(40, tickerFrameCount(passLength = 20, stepMs = 400, minDurationMs = 15_000))
+    }
+
+    @Test
+    fun `a pass longer than the minimum runs once, all the way to its end`() {
+        assertEquals(90, tickerFrameCount(passLength = 90, stepMs = 400, minDurationMs = 15_000))
+    }
+
+    @Test
+    fun `an exact multiple adds no extra pass`() {
+        assertEquals(40, tickerFrameCount(passLength = 10, stepMs = 500, minDurationMs = 20_000))
+    }
+
+    @Test
+    fun `there is always at least one pass`() {
+        assertEquals(5, tickerFrameCount(passLength = 5, stepMs = 400, minDurationMs = 0))
+    }
+
+    @Test
+    fun `an ordinary long message is shown whole under the 120 cap`() {
+        val message = "Ann: running late, the bus broke down near the bridge, see you around seven instead"
+        assertEquals("1:05 PM · $message", coverLine("1:05 PM", message, maxChars = 120))
+    }
 }

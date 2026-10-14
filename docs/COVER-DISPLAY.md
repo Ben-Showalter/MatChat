@@ -64,11 +64,19 @@ on the DuraXV. Findings:
 
 Implemented in `CoverScreenNotifier`:
 
-- Text is cut to 40 characters, ending in "…" when longer (`coverDisplayText`).
-  If it's wider than the 14-character cover it scrolls: holds the start, steps
-  one character at a time to the end, holds the end, then starts over from the
-  beginning (`tickerFrames`) for the card's 15 s. An earlier version wrapped the
-  end back into the start, which read as broken text on the second pass.
+- The message is cut to 120 characters, ending in "…" when longer
+  (`coverDisplayText`; it was 40, which cut ordinary messages short). If the
+  line is wider than the cover it scrolls: holds the start, steps one character
+  at a time to the end, holds the end, then starts over from the beginning
+  (`tickerFrames`). It runs **whole passes only** (`tickerFrameCount`): at
+  least the card's 15 s, then the current pass finishes, so the card never
+  ends partway through the message (a fixed 15 s used to stop long lines
+  before their end). A re-show waits for the whole showing
+  (`lastShowingMs`). An earlier version wrapped the end back into the start,
+  which read as broken text on the second pass.
+- `TICKER_WINDOW` (14) is the characters visible beside the icon. It was
+  measured with the small message icon; the 96 px MatChat icon may leave less
+  room, so the probe's ruler card re-measures it.
 - The card comes back **whenever the cover screen turns on** — flip closed,
   or an outside button pressed with the flip shut — until the room is read
   (`MessageNotifier.cancel*` → `CoverScreenNotifier.cancel`), and stops when the
@@ -124,8 +132,10 @@ $env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
 ```
 
-Close the flip first: 1 a short message, 2 a long one that scrolls from the
-time. In Android Studio's Logcat, filter `tag:MatChatCover`.
+Close the flip first: 1 a still ruler card, `0123456789ABCDEFGHIJ` — note
+the last character visible beside the icon (that sets `TICKER_WINDOW`); 2 a
+long message that should scroll from the time all the way to "END", hold, and
+only then end (~40 s). In Android Studio's Logcat, filter `tag:MatChatCover`.
 
 Still open:
 
