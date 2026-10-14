@@ -77,10 +77,11 @@ internal object CoverScreenNotifier {
 
     private val main = Handler(Looper.getMainLooper())
 
-    /** How the card shows the time. [CoverCardStyle.PLAIN] (no clock) until a
-     *  clock style is confirmed on-device: on the DuraXV both CLOCK and TITLE
-     *  came out as a blank cover (docs/COVER-DISPLAY.md, "Clock on the card"). */
-    private val cardStyle = CoverCardStyle.PLAIN
+    /** How the card shows the time. [CoverCardStyle.TEXT2] is the one the
+     *  DuraXV probe confirmed shows it (time on the first line, the banner on
+     *  the second); TITLE showed no time and CLOCK drew only black
+     *  (docs/COVER-DISPLAY.md, "Clock on the card"). */
+    private val cardStyle = CoverCardStyle.TEXT2
 
     /** Cards still owed to the user (id → text), most recent last, until the
      *  room is read. Main thread only. */
@@ -247,6 +248,16 @@ internal object CoverScreenNotifier {
                 views.setTextViewText(R.id.cover_banner, text)
                 extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
             }
+            CoverCardStyle.CLOCK_PLAIN -> {
+                setText.invoke(extender, text)
+                val now = Date()
+                val is24 = DateFormat.is24HourFormat(context)
+                val views = RemoteViews(context.packageName, R.layout.cover_card_plain)
+                views.setTextViewText(R.id.cover_time, DateFormat.format(if (is24) "H:mm" else "h:mm", now))
+                views.setTextViewText(R.id.cover_ampm, if (is24) "" else DateFormat.format("a", now))
+                views.setTextViewText(R.id.cover_banner, text)
+                extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
+            }
         }
 
         val builder = Notification.Builder(context)
@@ -296,15 +307,21 @@ internal enum class CoverCardStyle {
     /** The known-working card: icon + scrolling text, no clock. */
     PLAIN,
 
-    /** Time in the template's first text line, the banner in `setText2`. */
+    /** Time in the template's first text line, the banner in `setText2`.
+     *  Confirmed on the DuraXV; the live style. */
     TEXT2,
 
-    /** Time in the template's title line (`setTitle`), the banner below. */
+    /** Time in the template's title line (`setTitle`), the banner below.
+     *  On the DuraXV the title is not shown. */
     TITLE,
 
     /** Our own layout via `setRemoteViews` (layout/cover_card.xml): a large
-     *  live clock, the banner along the bottom. */
+     *  live clock, the banner along the bottom. Drew only black on the DuraXV. */
     CLOCK,
+
+    /** The same idea with plain TextViews filled at each post, no
+     *  background and dark text (layout/cover_card_plain.xml) — probe step 5. */
+    CLOCK_PLAIN,
 }
 
 /** Whether the cover turning on should bring the card back: something is

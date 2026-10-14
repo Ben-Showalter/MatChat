@@ -36,10 +36,10 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
- * `--ez clockcard true` instead posts four numbered test cards, one per
- * cover-clock style (1 plain control, 2 text2, 3 title, 4 our own layout),
- * ~36 s in all, and does nothing else — close the flip first and note what
- * each number shows.
+ * `--ez clockcard true` instead posts five numbered test cards, one per
+ * cover-clock style (1 plain control, 2 text2, 3 title, 4 our own layout,
+ * 5 our own layout with plain text and no background), ~45 s in all, and
+ * does nothing else — close the flip first and note what each number shows.
  *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
@@ -74,10 +74,10 @@ class CoverProbeReceiver : BroadcastReceiver() {
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
     }
 
-    /** Posts four test cards in turn, each under its own id, each cancelled
-     *  before the next, so one card's state can't leak into the next: 1 PLAIN
-     *  (the known-working control), 2 TEXT2, 3 TITLE, 4 CLOCK (our own
-     *  layout). Each card's text starts with its step number. Watch the cover
+    /** Posts one test card per [CoverCardStyle] in turn, each under its own
+     *  id, each cancelled before the next, so one card's state can't leak into
+     *  the next: 1 PLAIN (the known-working control), 2 TEXT2, 3 TITLE,
+     *  4 CLOCK, 5 CLOCK_PLAIN. Each card's text starts with its step number. Watch the cover
      *  (flip closed) and note what each step shows (docs/COVER-DISPLAY.md). */
     private fun clockCardTest(context: Context) {
         val main = Handler(Looper.getMainLooper())

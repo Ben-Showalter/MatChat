@@ -6,6 +6,9 @@
 <resources>
     <color name="cover_background">#000000</color>
     <color name="cover_text">#FFFFFF</color>
+    <!-- cover_card_plain.xml: dark text on the cover's own light background,
+         like its idle clock. -->
+    <color name="cover_text_dark">#000000</color>
 
     <dimen name="cover_clock_text">30sp</dimen>
     <dimen name="cover_banner_text">12sp</dimen>

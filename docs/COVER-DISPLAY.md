@@ -87,43 +87,39 @@ keys with the flip shut and was removed. The debug probe
 (`CoverProbeReceiver --ez callback true`) then showed Kyocera's callback
 reporting cover on/off (1/0) cleanly; it does not forward cover keys.
 
-### Clock on the card (investigating — not shipped)
+### Clock on the card
 
-The card covers the cover screen's own idle clock for its 15 s, so the goal is
-for it to carry one: the time large, the new-message banner (the same ticker)
-along the bottom.
+The card covers the cover screen's own idle clock for its 15 s, so it carries
+the time. **Live: `CoverCardStyle.TEXT2`** — the time on the template's first
+line (`setText`), the scrolling "Room: message" banner on its second
+(`setText2`). The time is formatted at every post, and the ticker reposts every
+400 ms, so it stays current.
 
-**First on-device result (DuraXV): blank.** Both the custom layout
-(`layout/cover_card.xml` via `SubLcdNotificationExtender.setRemoteViews`) and
-the title-line version (`setTitle(time)` on the usual template) showed a plain
-white cover with only the status bar. Live cards are back on
-`CoverCardStyle.PLAIN` — the known-working card, no clock — until a style is
-confirmed.
+Probe results on the DuraXV (each card under its own id):
 
-The probe now posts four numbered cards, each under its own id, cancelled
-before the next (6 s each, 3 s apart, ~36 s in all), so one card's state can't
-leak into the next:
+| Step | Style | What it sets | Result |
+|---|---|---|---|
+| 1 | `PLAIN` | the old card, no clock | works |
+| 2 | `TEXT2` | `setText(time)` + `setText2(banner)` | **works, time shown** — live |
+| 3 | `TITLE` | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn |
+| 4 | `CLOCK` | `setRemoteViews(cover_card)` — `TextClock`, black background | black screen, no text |
+| 5 | `CLOCK_PLAIN` | `setRemoteViews(cover_card_plain)` — plain `TextView`s, no background, dark text | to test |
 
-| Step | Style | What it sets |
-|---|---|---|
-| 1 | `PLAIN` | the control — today's working card |
-| 2 | `TEXT2` | `setText(time)` + `setText2(banner)` |
-| 3 | `TITLE` | `setTitle(time)` + `setText(banner)` |
-| 4 | `CLOCK` | `setRemoteViews(cover_card)` |
+An earlier run reused one id for every card, and the CLOCK card left the cover
+blank for the next card too — hence a separate id per step now.
+
+Run the probe (PowerShell in Android Studio's Terminal; the first line puts
+`adb` on the path for that window):
 
 ```
-adb logcat -c
+$env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
-# flip closed; note what steps 1-4 show (each card's text starts with its number)
-adb logcat -d > clock.txt
-Select-String -Path clock.txt -Pattern "MatChatCover","SubLcd","RemoteViews","AndroidRuntime","InflateException"
 ```
 
-The SystemUI lines (`SubLcd`, `RemoteViews`, `InflateException`) say whether
-a style failed on the system side. Whichever step shows the time becomes the
-live `CoverScreenNotifier.cardStyle`; if only step 1 shows anything, the
-template can't carry a clock and the time would go into the banner text
-instead. Sizes for the custom layout are in `values/cover.xml`.
+Close the flip first and note what each numbered card shows (~45 s). In
+Android Studio's Logcat, filter `tag:MatChatCover` for the `probe: step` lines.
+If step 5 draws a big clock, it can replace TEXT2 as the live
+`CoverScreenNotifier.cardStyle`; sizes are in `values/cover.xml`.
 
 Still open:
 
