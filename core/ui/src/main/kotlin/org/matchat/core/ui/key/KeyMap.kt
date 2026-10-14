@@ -39,6 +39,11 @@ object KeyMap {
      *  once "the right position" and "always Back" can disagree). */
     fun map(event: KeyEvent, swapped: Boolean = false): LogicalKey? {
         if (event.keyCode == KeyEvent.KEYCODE_BACK) return LogicalKey.SOFT_RIGHT
+        // MENU is a dedicated Options key wherever it exists (Sonim's Options
+        // key; the left softkey on AOSP flips that send it), so — like BACK —
+        // it always means Options and is never swapped. Seeing it moves the
+        // "Options" label to the left ([detectSoftkeys]).
+        if (event.keyCode == KeyEvent.KEYCODE_MENU) return LogicalKey.SOFT_LEFT
         val logical = mapRaw(event) ?: return null
         return if (swapped) swapSoftkeys(logical) else logical
     }
@@ -56,9 +61,9 @@ object KeyMap {
         KeyEvent.KEYCODE_DPAD_RIGHT -> LogicalKey.RIGHT
         KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> LogicalKey.CENTER
 
-        // LEFT softkey = Options. Most AOSP flips deliver it as MENU; some as the
-        // legacy SOFT_LEFT. Add a SKU's OEM code here, never in a feature module.
-        KeyEvent.KEYCODE_SOFT_LEFT, KeyEvent.KEYCODE_MENU -> LogicalKey.SOFT_LEFT
+        // LEFT softkey position (KEYCODE_MENU is handled in map(): always
+        // Options). Add a SKU's OEM code here, never in a feature module.
+        KeyEvent.KEYCODE_SOFT_LEFT -> LogicalKey.SOFT_LEFT
 
         // RIGHT softkey position. KEYCODE_BACK is NOT handled here — see map()'s
         // doc comment: it's a separate, never-swapped, always-Back case.
@@ -80,6 +85,26 @@ object KeyMap {
         KeyEvent.KEYCODE_8 -> LogicalKey.DIGIT_8
         KeyEvent.KEYCODE_9 -> LogicalKey.DIGIT_9
 
+        else -> null
+    }
+
+    /**
+     * Automatic softkey layout, like FlipWeather (docs/adr/0007, "Auto-detection"):
+     * a phone with a MENU key gets Options on the LEFT; one with a right softkey
+     * (`KEYCODE_SOFT_RIGHT`) gets Options on the RIGHT, the default. Given a
+     * key-DOWN's [keyCode] and the [seen] kind stored so far, returns the new
+     * kind and layout to apply, or null when nothing changes.
+     *
+     * It only acts when the phone shows something different, so a manual choice
+     * in Settings > Advanced stands until then. MENU is final: once seen, a
+     * right softkey on the same phone stays Back (the label it shows there), so
+     * a phone with both keys can't flip the layout back and forth.
+     */
+    fun detectSoftkeys(keyCode: Int, seen: SoftkeyKind): SoftkeyDetection? = when {
+        keyCode == KeyEvent.KEYCODE_MENU && seen != SoftkeyKind.MENU ->
+            SoftkeyDetection(SoftkeyKind.MENU, swapped = false)
+        keyCode == KeyEvent.KEYCODE_SOFT_RIGHT && seen == SoftkeyKind.NONE ->
+            SoftkeyDetection(SoftkeyKind.SOFT_RIGHT, swapped = true)
         else -> null
     }
 

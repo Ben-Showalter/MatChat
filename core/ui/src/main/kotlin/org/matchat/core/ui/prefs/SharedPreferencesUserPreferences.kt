@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.matchat.core.ui.key.SoftkeyKind
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,8 +30,12 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
     private val textSizeState = MutableStateFlow(readEnum(KEY_TEXT_SIZE, TextSizePreference.NORMAL))
     override val textSize: StateFlow<TextSizePreference> = textSizeState
 
-    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, false))
+    // Options on the right by default (docs/adr/0007, "Auto-detection").
+    private val softkeysSwappedState = MutableStateFlow(prefs.getBoolean(KEY_SOFTKEYS_SWAPPED, true))
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
+
+    private val softkeyKindSeenState = MutableStateFlow(readEnum(KEY_SOFTKEY_KIND_SEEN, SoftkeyKind.NONE))
+    override val softkeyKindSeen: StateFlow<SoftkeyKind> = softkeyKindSeenState
 
     private val notificationsEnabledState = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true))
     override val notificationsEnabled: StateFlow<Boolean> = notificationsEnabledState
@@ -65,6 +70,11 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         softkeysSwappedState.value = swapped
     }
 
+    override suspend fun setSoftkeyKindSeen(kind: SoftkeyKind) {
+        prefs.edit { putString(KEY_SOFTKEY_KIND_SEEN, kind.name) }
+        softkeyKindSeenState.value = kind
+    }
+
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled) }
         notificationsEnabledState.value = enabled
@@ -96,6 +106,7 @@ internal class SharedPreferencesUserPreferences @Inject constructor(
         const val KEY_ACCENT_COLOR = "accent_color"
         const val KEY_TEXT_SIZE = "text_size"
         const val KEY_SOFTKEYS_SWAPPED = "softkeys_swapped"
+        const val KEY_SOFTKEY_KIND_SEEN = "softkey_kind_seen"
         const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val KEY_NOTIFICATION_SOUND_URI = "notification_sound_uri"
         const val KEY_NOTIFICATION_CHANNEL_VERSION = "notification_channel_version"

@@ -399,7 +399,7 @@ class MainActivity : AppCompatActivity(), Navigator {
             Log.d(SOFTKEY_LOG_TAG, "dispatchKeyEvent: normal dispatch saw raw SOFT_RIGHT")
         }
 
-        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value)
+        val logical = KeyMap.map(event, softkeysSwappedAfter(event))
             ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
         // the softkeys, CENTER and digits are offered to the screen first.
@@ -450,8 +450,24 @@ class MainActivity : AppCompatActivity(), Navigator {
      *  service filters to just that code before calling in; digits/D-pad/
      *  CENTER/holds/the left softkey never do, so T9 text entry — and every
      *  other key — is unaffected whether or not the service is enabled). */
+    /** The softkey layout to map [event] with, after letting it set the layout
+     *  automatically (KeyMap.detectSoftkeys: a MENU key puts Options on the
+     *  left, a right softkey on the right). A change is saved and the bar
+     *  re-renders through the softkeysSwapped flow; this key already uses the
+     *  new layout, so the very first press does what its new label says. */
+    private fun softkeysSwappedAfter(event: KeyEvent): Boolean {
+        val detected = KeyMap.detectSoftkeys(event.keyCode, userPreferences.softkeyKindSeen.value)
+            ?: return userPreferences.softkeysSwapped.value
+        Log.d(SOFTKEY_LOG_TAG, "softkey layout detected: ${detected.kind} swapped=${detected.swapped}")
+        lifecycleScope.launch {
+            userPreferences.setSoftkeyKindSeen(detected.kind)
+            userPreferences.setSoftkeysSwapped(detected.swapped)
+        }
+        return detected.swapped
+    }
+
     private fun handleAccessibilityKeyEvent(event: KeyEvent): Boolean {
-        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value) ?: return false
+        val logical = KeyMap.map(event, softkeysSwappedAfter(event)) ?: return false
         val handled = receiver()?.onLogicalKey(logical) ?: false
         // Diagnostic only — see the matching log line in dispatchKeyEvent. This
         // one firing at all proves MatChatKeyAccessibilityService.onKeyEvent was

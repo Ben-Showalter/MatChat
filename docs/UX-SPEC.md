@@ -54,22 +54,24 @@ Every screen has three fixed bands:
 | ↑ ↓ | Move focus. At list end, stop — do not wrap (wrapping disorients on a small viewport). |
 | ← → | Ignored. **No v1 screen declares horizontal focus** — every list, form and grid is traversed with ↑↓ only. Never means "back". |
 | CENTER | Activate focused item — identical to the centre softkey label. |
-| LEFT softkey | **Options** — context menu for the screen + focused item. Blank on a screen that has no options; never reassigned to anything else. |
-| RIGHT softkey | **Back**. On the room list (top level): **Exit**, with confirm. |
+| Options softkey | **Options** — context menu for the screen + focused item. Blank on a screen that has no options; never reassigned to anything else. On the **right** by default; on the **left** on a phone with a MENU key (set automatically, below). A MENU key always opens Options. |
+| Back softkey | **Back** — the other softkey. On the room list (top level): **Exit**, with confirm. |
 | END / BACK | Same as RIGHT softkey. |
 | CALL | Ignored (never places a call from inside the app). |
 | 0–9 | Text entry when an input is focused; otherwise jump to list item *n*. |
 | `#` (hold) | Next unread room. |
 | `*` (hold) | Cycle text size (Small → Normal → Large, §S16). |
 
-"Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
+"Unchangeable" above means no *screen* ever reassigns the softkeys to a
 different meaning (AGENTS.md §4) — Options and Back are always exactly one
-softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
-is a separate, global exception, **on by default** (Options on the physical
-right, Back on the left) with the toggle still there for anyone who prefers
-the original left-Options layout or has hardware with reversed physical
-softkeys: it flips which *physical* key produces which *logical* one, for
-every screen at once, not a per-screen reassignment.
+softkey each. Which physical side is Options is set **globally and
+automatically**, like FlipWeather (docs/adr/0007, "Auto-detection"):
+**Options on the right, Back on the left by default**; the first MENU key
+press moves Options to the left (and opens it); a right-softkey press keeps
+it on the right. It stays set until the phone shows a different kind of key
+(once a MENU key is seen, it stays on the left). Settings > Advanced >
+"Swap Left/Right keys" (S25) overrides it by hand. The softkey bar's labels
+always match.
 
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`), at the Small text
 size — the default (Normal) is larger, §S16: body 16 sp · interactive labels
