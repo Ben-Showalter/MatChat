@@ -400,6 +400,12 @@ class MainActivity : AppCompatActivity(), Navigator {
             }
             hold?.let { return receiver()?.onLogicalKey(it) ?: false }
         }
+        // MENU is ours for the whole press (KeyMap.isMenuKey): its UP — and a
+        // held key's repeats — must not reach AppCompat, which would open its
+        // own options panel over the Options menu the DOWN just opened.
+        if (KeyMap.isMenuKey(event.keyCode) && (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0)) {
+            return true
+        }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
         // Diagnostic only (on-device report: right softkey doesn't open Options

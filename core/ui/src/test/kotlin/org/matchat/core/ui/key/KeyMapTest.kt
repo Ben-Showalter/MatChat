@@ -64,6 +64,14 @@ class KeyMapTest {
         assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_MENU), swapped = true))
     }
 
+    @Test
+    fun `only MENU is kept away from the platform for its whole press`() {
+        assertEquals(true, KeyMap.isMenuKey(KeyEvent.KEYCODE_MENU))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_SOFT_LEFT))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_SOFT_RIGHT))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_BACK))
+    }
+
     // --- detectSoftkeys — automatic layout (docs/adr/0007, "Auto-detection") ---
 
     @Test

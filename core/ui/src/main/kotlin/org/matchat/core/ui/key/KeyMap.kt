@@ -108,6 +108,14 @@ object KeyMap {
         else -> null
     }
 
+    /** True for the MENU key. The caller keeps the *whole* press — its UP and
+     *  any repeats, not just the DOWN that [map] turns into Options — away
+     *  from the platform: AppCompat otherwise opens its own (empty) options
+     *  panel on MENU UP over the menu the DOWN just opened, which looked like
+     *  "MENU moves the label but doesn't open Options" on a Sonim XP3800.
+     *  FlipWeather intercepts MENU the same way. */
+    fun isMenuKey(keyCode: Int): Boolean = keyCode == KeyEvent.KEYCODE_MENU
+
     /** Codes that a long-press turns into a hold action. Unlike `#`/`*`
      *  (absent from [mapRaw], so a short press of those does nothing
      *  anywhere), CENTER/ENTER are also mapped in [mapRaw] to plain CENTER —
