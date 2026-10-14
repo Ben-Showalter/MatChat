@@ -146,6 +146,12 @@ Options: Verify with another device instead · Paste from clipboard.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
+**Opening the app always lands here** — from the launcher, or after leaving
+with Home/End — whatever screen was last open. Exceptions: a notification tap
+opens its own room or call; returning from a screen MatChat opened (gallery,
+ringtone or file picker, a system settings page) goes back where you were;
+closing and opening the flip keeps the screen; an ongoing call keeps its
+screen (`shouldGoHome`, LaunchRouting.kt).
 Rows (44 dp each): a 32 dp room avatar (a plain filled circle placeholder
 until the real image decodes, or when none is set — Avatars round) at the
 start · room name 16 sp bold · last message 13 sp grey, one line
