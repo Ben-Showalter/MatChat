@@ -95,11 +95,12 @@ line (`setText`), the scrolling "Room: message" banner on its second
 (`setText2`). The time is formatted at every post, and the ticker reposts every
 400 ms, so it stays current.
 
-Why an icon works but a big clock is hard: every card that draws only fills
-fields of Kyocera's own template — `setIcon` (TurboText's message icon is this
-field too; MatChat sets it on every card), `setText`, `setText2`. Kyocera's
-code lays them out. A big clock needs our own layout instead
-(`setRemoteViews`), and that is what hasn't drawn yet.
+**A big clock is not possible through this API.** Every card that draws only
+fills fields of Kyocera's own template — `setIcon` (TurboText's message icon
+is this field too; MatChat sets it on every card), `setText`, `setText2` — and
+Kyocera's code lays them out. An app's own layout (`setRemoteViews`) is never
+drawn: every version tried left the cover blank (status bar only), whatever
+its views or colors, with or without `setFullScreen(true)`.
 
 Probe results on the DuraXV (each card under its own id):
 
@@ -107,30 +108,24 @@ Probe results on the DuraXV (each card under its own id):
 |---|---|---|
 | `PLAIN` | the old card, no clock | works |
 | `TEXT2` | `setText(time)` + `setText2(banner)` | **works, time shown** — live |
-| (title) | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn — removed |
-| (TextClock layout) | remote views, `TextClock`, our black background | black, no text — removed |
-| (dark layout) | remote views, plain `TextView`s, dark text | black — dark text on Kyocera's black container, so not a fair test — removed |
-| `CLOCK` | remote views, plain `TextView`s, **white** text, filled at each post | to test (probe step 3) |
-| `CLOCK_FULL` | `CLOCK` + `setFullScreen(true)` | to test (probe step 4) |
+| title line | `setTitle(time)` + `setText(banner)` | text only; the title isn't drawn |
+| own layout | `setRemoteViews(…)` — `TextClock` or plain `TextView`s, white or dark text, our background or none, with or without `setFullScreen(true)` | blank, every time |
 
-If steps 3 and 4 are still black, Kyocera's cover doesn't draw third-party
-remote views, and TEXT2 stays.
+The title and own-layout styles were removed after these results.
 
-An earlier run reused one id for every card, and the CLOCK card left the cover
+An earlier run reused one id for every card, and the own-layout card left the cover
 blank for the next card too — hence a separate id per step now.
 
-Run the probe (PowerShell in Android Studio's Terminal; the first line puts
-`adb` on the path for that window):
+Re-check on another device with the probe (PowerShell in Android Studio's
+Terminal; the first line puts `adb` on the path for that window):
 
 ```
 $env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
 adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
 ```
 
-Close the flip first and note what each numbered card shows (~36 s). In
+Close the flip first; card 1 is the plain card, card 2 has the time. In
 Android Studio's Logcat, filter `tag:MatChatCover` for the `probe: step` lines.
-If step 3 or 4 draws a big clock, it can replace TEXT2 as the live
-`CoverScreenNotifier.cardStyle`; sizes are in `values/cover.xml`.
 
 Still open:
 

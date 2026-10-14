@@ -10,7 +10,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.util.Log
-import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import org.matchat.client.R
 import java.util.Date
@@ -79,8 +78,8 @@ internal object CoverScreenNotifier {
 
     /** How the card shows the time. [CoverCardStyle.TEXT2] is the one the
      *  DuraXV probe confirmed shows it (time on the first line, the banner on
-     *  the second); a title line isn't drawn, and our own layout has so far
-     *  drawn only black
+     *  the second); a title line isn't drawn, and the cover draws nothing for
+     *  an app's own layout (`setRemoteViews`)
      *  (docs/COVER-DISPLAY.md, "Clock on the card"). */
     private val cardStyle = CoverCardStyle.TEXT2
 
@@ -214,9 +213,8 @@ internal object CoverScreenNotifier {
     }
 
     /** A Notification carrying the sub-LCD extender (icon, text, template,
-     *  duration). [style] says whether and how it also carries the time
-     *  ([CoverCardStyle]); every style but [CoverCardStyle.PLAIN] is still
-     *  being tried on-device by the debug probe. */
+     *  duration). [style] says whether it also carries the time
+     *  ([CoverCardStyle]). */
     @Suppress("DEPRECATION")
     private fun buildCard(
         context: Context,
@@ -239,17 +237,6 @@ internal object CoverScreenNotifier {
                 setText.invoke(extender, time)
                 extenderClass.getMethod("setText2", CharSequence::class.java).invoke(extender, text)
             }
-            CoverCardStyle.CLOCK, CoverCardStyle.CLOCK_FULL -> {
-                setText.invoke(extender, text)
-                val now = Date()
-                val is24 = DateFormat.is24HourFormat(context)
-                val views = RemoteViews(context.packageName, R.layout.cover_card)
-                views.setTextViewText(R.id.cover_time, DateFormat.format(if (is24) "H:mm" else "h:mm", now))
-                views.setTextViewText(R.id.cover_ampm, if (is24) "" else DateFormat.format("a", now))
-                views.setTextViewText(R.id.cover_banner, text)
-                extenderClass.getMethod("setRemoteViews", RemoteViews::class.java).invoke(extender, views)
-                if (style == CoverCardStyle.CLOCK_FULL) setFullScreen(extenderClass, extender)
-            }
         }
 
         val builder = Notification.Builder(context)
@@ -259,20 +246,6 @@ internal object CoverScreenNotifier {
             .getMethod("extend", Notification.Extender::class.java)
             .invoke(builder, extender)
         return builder.build()
-    }
-
-    /** `SubLcdNotificationExtender.setFullScreen(true)`, if it exists and takes
-     *  one boolean — its signature isn't confirmed, so this only logs when it
-     *  doesn't fit. */
-    private fun setFullScreen(extenderClass: Class<*>, extender: Any) {
-        val method = extenderClass.methods.firstOrNull { it.name == "setFullScreen" && it.parameterTypes.size == 1 }
-        val param = method?.parameterTypes?.first()
-        if (param == Boolean::class.javaPrimitiveType || param == Boolean::class.javaObjectType) {
-            runCatching { method?.invoke(extender, true) }
-                .onFailure { Log.d(TAG, "sub-LCD setFullScreen failed: ${it.javaClass.simpleName}") }
-        } else {
-            Log.d(TAG, "sub-LCD setFullScreen unavailable (param=${param?.name})")
-        }
     }
 
     /** DEBUG probe (CoverProbeReceiver): posts one card in [style] with
@@ -316,14 +289,6 @@ internal enum class CoverCardStyle {
     /** Time in the template's first text line, the banner in `setText2`.
      *  Confirmed on the DuraXV; the live style. */
     TEXT2,
-
-    /** Our own layout via `setRemoteViews` (layout/cover_card.xml): the time
-     *  large, the banner below, in plain white TextViews filled at each post.
-     *  Being tried by the probe (docs/COVER-DISPLAY.md). */
-    CLOCK,
-
-    /** [CLOCK] with the extender's `setFullScreen(true)` as well. */
-    CLOCK_FULL,
 }
 
 /** Whether the cover turning on should bring the card back: something is
