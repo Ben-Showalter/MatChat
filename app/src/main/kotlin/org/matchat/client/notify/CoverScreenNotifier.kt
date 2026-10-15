@@ -243,7 +243,7 @@ internal object CoverScreenNotifier {
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
 
         val builder = Notification.Builder(context)
-            .setSmallIcon(R.drawable.ic_stat_message)
+            .setSmallIcon(R.drawable.ic_stat_matchat)
             .setContentText(text)
         Notification.Builder::class.java
             .getMethod("extend", Notification.Extender::class.java)
