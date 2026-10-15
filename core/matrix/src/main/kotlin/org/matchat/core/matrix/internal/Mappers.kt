@@ -46,14 +46,17 @@ internal object Mappers {
             lastMessageSender = latest?.sender,
             lastMessageIsOwn = latest?.isOwn ?: false,
             lastMessageMedia = latest?.media,
+            lastMessageUndecrypted = latest?.undecrypted ?: false,
         )
     }
 
     /**
      * The room's latest message for the room-list preview and the message
      * notification (Room.latestEvent). Null when there is none we can show:
-     * no event yet, a non-message event, or an encrypted one not yet
-     * decrypted. Never throws — a preview is never worth failing the room row.
+     * no event yet or a non-message event. An encrypted one not yet decrypted
+     * is a preview with no text and [LatestPreview.undecrypted] set, so the
+     * notification can wait for its text (MessageNotifications). Never
+     * throws — a preview is never worth failing the room row.
      */
     private suspend fun latestPreview(room: Room): LatestPreview? {
         val value = runCatching { room.latestEvent() }.getOrNull() ?: return null
@@ -82,9 +85,25 @@ internal object Mappers {
         timestampEpochMs: Long,
     ): LatestPreview? {
         val msgLike = content as? TimelineItemContent.MsgLike ?: return null
-        val message = msgLike.content.kind as? MsgLikeKind.Message ?: return null
         val name = (profile as? ProfileDetails.Ready)?.displayName
-        val (text, media) = when (val type = message.content.msgType) {
+        // Not decrypted yet: no text, but the sender and time are known.
+        val undecrypted = msgLike.content.kind is MsgLikeKind.UnableToDecrypt
+        val (text, media) = if (undecrypted) null to null else textAndMediaOf(msgLike.content.kind) ?: return null
+        return LatestPreview(
+            text = text,
+            media = media,
+            sender = previewSenderName(name, sender),
+            isOwn = isOwn,
+            timestampEpochMs = timestampEpochMs,
+            undecrypted = undecrypted,
+        )
+    }
+
+    /** A message's text, or the kind of media it carries; null for anything
+     *  the preview doesn't show (not a message, or an unsupported type). */
+    private fun textAndMediaOf(kind: MsgLikeKind): Pair<String?, MediaKind?>? {
+        val message = kind as? MsgLikeKind.Message ?: return null
+        return when (val type = message.content.msgType) {
             is MessageType.Text -> type.content.body to null
             is MessageType.Notice -> type.content.body to null
             is MessageType.Emote -> type.content.body to null
@@ -92,15 +111,8 @@ internal object Mappers {
             is MessageType.Video -> null to MediaKind.VIDEO
             is MessageType.Audio -> null to (if (type.content.voice != null) MediaKind.VOICE else MediaKind.AUDIO)
             is MessageType.File -> null to MediaKind.FILE
-            else -> return null
+            else -> null
         }
-        return LatestPreview(
-            text = text,
-            media = media,
-            sender = previewSenderName(name, sender),
-            isOwn = isOwn,
-            timestampEpochMs = timestampEpochMs,
-        )
     }
 
     /** A blank or missing display name falls back to the raw Matrix ID, the
@@ -114,6 +126,7 @@ internal object Mappers {
         val sender: String,
         val isOwn: Boolean,
         val timestampEpochMs: Long,
+        val undecrypted: Boolean = false,
     )
 
     /**

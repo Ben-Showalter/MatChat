@@ -19,7 +19,7 @@ import org.matchat.core.ui.softkey.SoftkeyFragment
 
 /**
  * S9 full-screen image viewer. Opened with CENTER on a timeline image. The image
- * fills the screen; `*` zooms in, `#` zooms out, the D-pad pans, and Back returns.
+ * fills the screen; `#` zooms in, `*` zooms out, the D-pad pans, and Back returns.
  * All of that is handled by [ZoomPanImageView], which holds focus so it receives
  * the keys through the platform (MainActivity passes them straight through).
  */

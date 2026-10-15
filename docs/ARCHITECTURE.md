@@ -233,6 +233,19 @@ channels can't change sound or lights after creation, so they are versioned:
 `l` marks the channels with lights; the older `matchat.messages.s*` ones are
 deleted on first use. Bundled sounds: docs/SOUNDS.md.
 
+A new notification **waits until its text is readable** (`NotificationGate`,
+pure and unit-tested). The SDK often raises a room's unread count a moment
+before it updates the room's latest message, and an encrypted message is only
+readable once decrypted (`RoomSummary.lastMessageUndecrypted`, mapped from
+`MsgLikeKind.UnableToDecrypt`). So a rising count starts a pending alert,
+posted once the latest message is newer than the last one accounted for, not
+our own, and decrypted. If that hasn't happened within 10 s
+(`DECRYPT_WAIT_MS`) it posts with the count only ("1 new message"), so a
+message that can't be decrypted still alerts. `SyncWorker` flushes anything
+still waiting before its catch-up window closes. The room list itself is
+mapped one pass at a time from the newest entries (`LatestOnlyRunner`), so an
+older, slower pass can never overwrite a newer one.
+
 ## Performance budget (checked at every milestone, on hardware)
 
 | Metric | Budget |

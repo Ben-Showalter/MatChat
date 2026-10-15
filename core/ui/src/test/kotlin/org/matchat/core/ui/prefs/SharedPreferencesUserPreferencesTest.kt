@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.matchat.core.ui.key.SoftkeyKind
 import org.robolectric.RobolectricTestRunner
 
 /** Read-after-write and defaults for the real SharedPreferences-backed impl
@@ -17,15 +18,27 @@ class SharedPreferencesUserPreferencesTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `defaults are light, rust, Normal, and unswapped`() {
+    fun `defaults are light, rust, Normal, and Options on the right`() {
         val prefs = SharedPreferencesUserPreferences(context)
         assertEquals(ThemeMode.LIGHT, prefs.themeMode.value)
         assertEquals(AccentColor.RUST, prefs.accentColor.value)
         assertEquals(TextSizePreference.NORMAL, prefs.textSize.value)
-        assertEquals(false, prefs.softkeysSwapped.value)
+        assertEquals(true, prefs.softkeysSwapped.value)
+        assertEquals(SoftkeyKind.NONE, prefs.softkeyKindSeen.value)
         assertEquals(true, prefs.notificationsEnabled.value)
         assertEquals(null, prefs.notificationSoundUri.value)
         assertEquals(0, prefs.notificationChannelVersion.value)
+        assertEquals(false, prefs.coverMessageHidden.value)
+    }
+
+    @Test
+    fun `cover-message-hidden read-after-write, including a fresh instance`() = runTest {
+        val prefs = SharedPreferencesUserPreferences(context)
+        prefs.setCoverMessageHidden(true)
+        assertEquals(true, prefs.coverMessageHidden.value)
+
+        val reloaded = SharedPreferencesUserPreferences(context)
+        assertEquals(true, reloaded.coverMessageHidden.value)
     }
 
     @Test
@@ -61,21 +74,21 @@ class SharedPreferencesUserPreferencesTest {
     @Test
     fun `softkeys-swapped read-after-write, including a fresh instance`() = runTest {
         val prefs = SharedPreferencesUserPreferences(context)
-        prefs.setSoftkeysSwapped(true)
-        assertEquals(true, prefs.softkeysSwapped.value)
+        prefs.setSoftkeysSwapped(false)
+        assertEquals(false, prefs.softkeysSwapped.value)
 
         val reloaded = SharedPreferencesUserPreferences(context)
-        assertEquals(true, reloaded.softkeysSwapped.value)
+        assertEquals(false, reloaded.softkeysSwapped.value)
     }
 
     @Test
-    fun `toggling softkeys-swapped on still works, even though off is the default`() = runTest {
+    fun `the softkey kind seen persists, including a fresh instance`() = runTest {
         val prefs = SharedPreferencesUserPreferences(context)
-        prefs.setSoftkeysSwapped(true)
-        assertEquals(true, prefs.softkeysSwapped.value)
+        prefs.setSoftkeyKindSeen(SoftkeyKind.MENU)
+        assertEquals(SoftkeyKind.MENU, prefs.softkeyKindSeen.value)
 
         val reloaded = SharedPreferencesUserPreferences(context)
-        assertEquals(true, reloaded.softkeysSwapped.value)
+        assertEquals(SoftkeyKind.MENU, reloaded.softkeyKindSeen.value)
     }
 
     @Test

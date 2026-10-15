@@ -70,6 +70,9 @@ feature/invites/         Invitation list, invitation detail, accept / decline
 feature/newchat/         New message: contacts, recents, type an address, blocked address
 feature/settings/        Settings, help, sign out
 feature/verification/    Emoji SAS, recovery key
+stubs/kyocera-sublcd/    Compile-only declaration of Kyocera's cover-screen callback (docs/adr/0009).
+                         :app uses it compileOnly (only CoverScreenCallback); never packaged.
+                         Nothing else may depend on it.
 docs/                    ARCHITECTURE.md, UX-SPEC.md, MDM.md, SERVER.md, DEVICE-SETUP.md, adr/
 config/                  detekt.yml, ktlint config
 ```
@@ -143,20 +146,24 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   `centerLabel`. A screen that does not declare them fails a unit test. A label
   may be **empty** (a screen with no options leaves LEFT blank) — but the
   declaration is still required, explicitly.
-- **LEFT softkey = Options. RIGHT softkey = Back. CENTER = activate the focused
+- **One softkey = Options, the other = Back. CENTER = activate the focused
   item.** Always. No screen reassigns a key to a different *meaning*; a screen
   may change the wording of the centre label (`Open`, `Send`, `Select`), leave
-  LEFT blank when it has no options, and choose what Options contains. RIGHT is
-  Back on every screen without exception (top level: `Exit`).
-  - **Named exception: Settings > Advanced > "Swap Left/Right keys"**
-    (docs/adr/0007), for hardware whose physical softkeys are reversed. It
-    flips which *physical* key produces `SOFT_LEFT`/`SOFT_RIGHT` (in
-    `KeyMap.map`, the one file that reads a keycode, per the rule below) —
-    globally, for every screen at once. It is not a per-screen reassignment:
-    `SoftkeyFragment.onLogicalKey`'s `SOFT_LEFT -> onOptions()` mapping never
-    changes, and Options/Back stay exactly one softkey each. Do not add a
-    second, independent key-remapping preference without the same kind of
-    explicit direction the ADR records.
+  the Options label blank when it has no options, and choose what Options
+  contains. Back is Back on every screen without exception (top level: `Exit`).
+  Logically, `SOFT_LEFT` is always Options and `SOFT_RIGHT` always Back
+  (`SoftkeyFragment.onLogicalKey`, never changed per screen).
+  - **Which physical side is Options is global and automatic** (per explicit
+    user direction, docs/adr/0007 "Auto-detection", like FlipWeather):
+    **Options on the physical RIGHT by default**; a MENU key moves it to the
+    LEFT; a right softkey keeps it RIGHT (`KeyMap.detectSoftkeys`, stored in
+    `UserPreferences.softkeyKindSeen`/`softkeysSwapped`). `KEYCODE_MENU` always
+    means Options and `KEYCODE_BACK` always Back — neither is ever swapped.
+    Settings > Advanced > "Swap Left/Right keys" is the manual override. All
+    of it happens in `KeyMap` (the one file that reads a keycode, per the rule
+    below), for every screen at once, never per screen. Do not add a second,
+    independent key-remapping preference without the same kind of explicit
+    direction the ADR records.
 - Raw key codes are handled in **one** place: `:core:ui`'s key map. Softkey
   codes vary by device — `KEYCODE_SOFT_LEFT`/`SOFT_RIGHT` are often not
   dispatched at all, and the keys arrive as `KEYCODE_MENU`/`KEYCODE_BACK` or an
@@ -199,7 +206,10 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
   can run without the "MatChat is running" notification, when the user has
   enabled it and allowed "Run in background". It still reads only the right
   softkey, never the screen. Do not give it any other job without the same
-  kind of explicit direction, and update this line again if so.
+  kind of explicit direction, and update this line again if so. (A short-lived
+  third job — re-showing the Kyocera cover card on key presses — was removed:
+  no key reached it with the flip shut, and Kyocera's own cover callback
+  replaced it, docs/adr/0009.)
 - **Never build a custom T9/predictive-text input engine to replace the
   system IME**, even to work around a device's own IME bugs (e.g. a
   `getShowingNowFlag`/`InputMethodManager` `NoSuchElementException` some

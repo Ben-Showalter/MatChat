@@ -11,7 +11,7 @@ import android.view.View
 
 /**
  * A non-touch image canvas for feature phones (S9 image viewer). The image opens
- * fit-to-screen; `*` zooms in, `#` zooms out, and the D-pad pans once the image is
+ * fit-to-screen; `#` zooms in, `*` zooms out, and the D-pad pans once the image is
  * larger than the screen. There is no pinch or drag — everything is a key press,
  * so the whole gesture set works on a hardware keypad (AGENTS.md §4).
  *
@@ -54,11 +54,12 @@ class ZoomPanImageView @JvmOverloads constructor(
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (bitmap == null) return super.onKeyDown(keyCode, event)
         return when (keyCode) {
-            KeyEvent.KEYCODE_STAR -> {
+            // `#` in, `*` out (user's call).
+            KeyEvent.KEYCODE_POUND -> {
                 zoomIn()
                 true
             }
-            KeyEvent.KEYCODE_POUND -> {
+            KeyEvent.KEYCODE_STAR -> {
                 zoomOut()
                 true
             }

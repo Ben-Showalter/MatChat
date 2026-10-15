@@ -2,6 +2,7 @@ package org.matchat.core.testing
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.matchat.core.ui.key.SoftkeyKind
 import org.matchat.core.ui.prefs.AccentColor
 import org.matchat.core.ui.prefs.TextSizePreference
 import org.matchat.core.ui.prefs.ThemeMode
@@ -16,6 +17,7 @@ class FakeUserPreferences(
     initialNotificationsEnabled: Boolean = true,
     initialNotificationSoundUri: String? = null,
     initialNotificationChannelVersion: Int = 0,
+    initialCoverMessageHidden: Boolean = false,
 ) : UserPreferences {
 
     private val themeModeState = MutableStateFlow(initialThemeMode)
@@ -30,6 +32,9 @@ class FakeUserPreferences(
     private val softkeysSwappedState = MutableStateFlow(initialSoftkeysSwapped)
     override val softkeysSwapped: StateFlow<Boolean> = softkeysSwappedState
 
+    private val softkeyKindSeenState = MutableStateFlow(SoftkeyKind.NONE)
+    override val softkeyKindSeen: StateFlow<SoftkeyKind> = softkeyKindSeenState
+
     private val notificationsEnabledState = MutableStateFlow(initialNotificationsEnabled)
     override val notificationsEnabled: StateFlow<Boolean> = notificationsEnabledState
 
@@ -38,6 +43,9 @@ class FakeUserPreferences(
 
     private val notificationChannelVersionState = MutableStateFlow(initialNotificationChannelVersion)
     override val notificationChannelVersion: StateFlow<Int> = notificationChannelVersionState
+
+    private val coverMessageHiddenState = MutableStateFlow(initialCoverMessageHidden)
+    override val coverMessageHidden: StateFlow<Boolean> = coverMessageHiddenState
 
     override suspend fun setThemeMode(mode: ThemeMode) {
         themeModeState.value = mode
@@ -55,8 +63,16 @@ class FakeUserPreferences(
         softkeysSwappedState.value = swapped
     }
 
+    override suspend fun setSoftkeyKindSeen(kind: SoftkeyKind) {
+        softkeyKindSeenState.value = kind
+    }
+
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
         notificationsEnabledState.value = enabled
+    }
+
+    override suspend fun setCoverMessageHidden(hidden: Boolean) {
+        coverMessageHiddenState.value = hidden
     }
 
     override suspend fun setNotificationSoundUri(uri: String?) {

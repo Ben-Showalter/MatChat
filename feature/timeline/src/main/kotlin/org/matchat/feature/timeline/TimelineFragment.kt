@@ -46,6 +46,11 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     private val viewModel: TimelineViewModel by viewModels()
     private var binding: FragmentTimelineBinding? = null
     private var lastMarkedStableId: String? = null
+
+    // New messages land flush with the bottom unless the user has scrolled up
+    // (UX-SPEC S9, followAfterScroll). Sending always follows again.
+    private var followBottom = true
+    private var followLayoutListener: android.view.ViewTreeObserver.OnGlobalLayoutListener? = null
     private val audio = AudioPlayback()
     /** The voice row currently loaded in [audio] (playing or paused), plus its
      *  live position — Fragment-local because it's an ephemeral, high-frequency
@@ -167,12 +172,20 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         b.timelineList.adapter = adapter
         b.timelineList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                followBottom = followAfterScroll(followBottom, dy, rv.canScrollVertically(1))
                 val lm = rv.layoutManager as LinearLayoutManager
                 if (lm.findFirstVisibleItemPosition() == 0) {
                     viewModel.onAction(TimelineAction.ReachedTop)
                 }
             }
         })
+        // Rows grow after they're laid out (an image loading, seen-by or
+        // reactions appearing) and the bands under the list come and go; keep
+        // the newest message's bottom flush while following.
+        followLayoutListener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            val list = binding?.timelineList ?: return@OnGlobalLayoutListener
+            if (followBottom && list.canScrollVertically(1)) scrollToEnd()
+        }.also { b.timelineList.viewTreeObserver.addOnGlobalLayoutListener(it) }
 
         b.composeInput.setOnFocusChangeListener { _, focused ->
             viewModel.onAction(TimelineAction.ComposeFocusChanged(focused))
@@ -228,7 +241,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         state.pendingAttachment?.let {
             b.attachmentPreview.text = getString(R.string.timeline_attachment_preview_format, it.displayName)
         }
-        adapter.submitList(state.rows)
+        adapter.submitList(state.rows) { if (followBottom) scrollToEnd() }
 
         // Viewing the room clears its unread count (a read receipt on the latest
         // message). Only send when the newest row changes, not on every render.
@@ -324,8 +337,17 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         else -> false
     }
 
+    /** The newest row's bottom flush with the list's bottom: with
+     *  `stackFromEnd`, scrolling to the last position anchors it at the end,
+     *  even when the row is taller than the list. */
+    private fun scrollToEnd() {
+        val last = adapter.itemCount - 1
+        if (last >= 0) binding?.timelineList?.scrollToPosition(last)
+    }
+
     private fun sendCompose() {
         val b = binding ?: return
+        followBottom = true // your own message always comes into view
         viewModel.onAction(TimelineAction.Send(b.composeInput.text.toString()))
         b.composeInput.text?.clear()
     }
@@ -1099,6 +1121,10 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
     override fun onDestroyView() {
         stopVoicePlayback()
         if (isRecording) cancelRecording()
+        followLayoutListener?.let { listener ->
+            runCatching { binding?.timelineList?.viewTreeObserver?.removeOnGlobalLayoutListener(listener) }
+        }
+        followLayoutListener = null
         binding?.timelineList?.adapter = null
         binding = null
         super.onDestroyView()

@@ -30,6 +30,9 @@ data class RoomSummary(
     /** Set when the latest message is media; [lastMessage] is then null and the
      *  UI shows a label for the kind ("Photo", "Voice message"…). */
     val lastMessageMedia: MediaKind? = null,
+    /** True while the latest message is encrypted and not yet decrypted — its
+     *  text is not readable yet, so a notification for it waits (docs/ARCHITECTURE.md). */
+    val lastMessageUndecrypted: Boolean = false,
 )
 
 /** An invitation (a room whose membership state is Invited). See S18/S19. */

@@ -115,5 +115,5 @@
     <!-- Image viewer (S9). -->
     <string name="viewer_title">Image</string>
     <string name="viewer_loading">Loading…</string>
-    <string name="viewer_hint">* in   # out   ✥/2468 pan   0 reset</string>
+    <string name="viewer_hint"># in   * out   ✥/2468 pan   0 reset</string>
 </resources>

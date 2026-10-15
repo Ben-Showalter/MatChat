@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- S9 full-screen image viewer. Non-touch: * / # zoom, D-pad pans (ZoomPanImageView).
+<!-- S9 full-screen image viewer. Non-touch: # in / * out zoom, D-pad pans (ZoomPanImageView).
      Black ground so the image reads on a small screen; a one-line key hint sits at
      the bottom. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"

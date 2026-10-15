@@ -1,6 +1,7 @@
 package org.matchat.core.ui.prefs
 
 import kotlinx.coroutines.flow.StateFlow
+import org.matchat.core.ui.key.SoftkeyKind
 
 /** Light or dark (Settings > Theme). */
 enum class ThemeMode { LIGHT, DARK }
@@ -53,21 +54,23 @@ interface UserPreferences {
     val accentColor: StateFlow<AccentColor>
     val textSize: StateFlow<TextSizePreference>
 
-    /** Settings > Advanced > "Swap Left/Right keys" (Phase 6, UI improvement
-     *  plan) — false by default, so Options sits on the left and Back on the
-     *  right out of the box (docs/adr/0007), the original layout; added for
-     *  a device whose hardware softkeys are physically reversed, or for
-     *  anyone who simply prefers Options on the right. (The swapped layout
-     *  was briefly the shipped default; reverted — on real hardware the
-     *  physical right softkey can be unreliable for Options while composing,
-     *  see docs/adr/0007's Addendum, and the compensating
-     *  AccessibilityService workaround doesn't reliably enable on every
-     *  phone, so defaulting Options back onto the uncontested left key
-     *  avoids the problem entirely for anyone who doesn't explicitly opt
-     *  into the swap.) Read directly (StateFlow.value, not collected) by
+    /** The softkey layout: true = Options on the RIGHT, Back on the left.
+     *  **True by default** (user's direction, matching FlipWeather and the
+     *  Flip-DumbPhoneGuide), and set automatically from the keys the phone
+     *  sends — a MENU key moves Options to the left, a right softkey to the
+     *  right ([softkeyKindSeen], KeyMap.detectSoftkeys, docs/adr/0007's
+     *  "Auto-detection" addendum). Settings > Advanced > "Swap Left/Right
+     *  keys" overrides it by hand until the phone shows a different kind of
+     *  key. (Earlier history — off by default, then briefly on, then off
+     *  again because the right softkey can be swallowed by the T9 keyboard
+     *  while composing — is in docs/adr/0007.) Read directly (StateFlow.value, not collected) by
      *  KeyMap's one caller (MainActivity.dispatchKeyEvent) on every key
      *  press — swapping takes effect immediately, no recreate. */
     val softkeysSwapped: StateFlow<Boolean>
+
+    /** The kind of Options key this phone has shown so far, for the automatic
+     *  softkey layout ([softkeysSwapped]). NONE until a softkey is pressed. */
+    val softkeyKindSeen: StateFlow<SoftkeyKind>
 
     /** Settings > Notifications — whether the incoming-message notification
      *  (raised by SyncForegroundService) fires at all. Read directly
@@ -88,11 +91,20 @@ interface UserPreferences {
      *  ("matchat.messages.s$version"), not mutating the old one. */
     val notificationChannelVersion: StateFlow<Int>
 
+    /** Settings > Notifications — when true, the Kyocera cover-screen card
+     *  (docs/COVER-DISPLAY.md) shows only a generic "MatChat message" instead
+     *  of the room, sender and message text, for privacy with the flip shut.
+     *  Default false. Read directly (.value) on every post, same read shape
+     *  as [notificationsEnabled]. */
+    val coverMessageHidden: StateFlow<Boolean>
+
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setAccentColor(color: AccentColor)
     suspend fun setTextSize(size: TextSizePreference)
     suspend fun setSoftkeysSwapped(swapped: Boolean)
+    suspend fun setSoftkeyKindSeen(kind: SoftkeyKind)
     suspend fun setNotificationsEnabled(enabled: Boolean)
+    suspend fun setCoverMessageHidden(hidden: Boolean)
 
     /** Also bumps [notificationChannelVersion] so the next notification is
      *  posted on a fresh channel carrying the new sound. */

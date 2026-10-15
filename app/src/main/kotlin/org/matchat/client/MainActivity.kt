@@ -2,6 +2,7 @@ package org.matchat.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
 import android.util.Log
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +34,7 @@ import org.matchat.core.ui.prefs.ThemeMode
 import org.matchat.core.ui.prefs.UserPreferences
 import org.matchat.core.ui.softkey.DirectionalKeyReceiver
 import org.matchat.core.ui.softkey.LogicalKeyReceiver
+import org.matchat.core.ui.theme.SystemBars
 import javax.inject.Inject
 
 /**
@@ -70,6 +72,14 @@ class MainActivity : AppCompatActivity(), Navigator {
     // start). Cleared after it's shown.
     private var pendingCall: Triple<String, String, Boolean>? = null
 
+    // "Opening the app lands on the room list unless from a notification"
+    // (shouldGoHome, LaunchRouting.kt). Gathered across leaving and coming back.
+    private var userLeft = false // onUserLeaveHint: Home/End, or our own launch
+    private var launchedExternal = false // a picker/settings page we opened
+    private var screenOnWhenStopped = false // false: the flip closed (screen off)
+    private var stoppedForConfigChange = false
+    private var openedFromNotification = false // onNewIntent with a room/call
+
     override fun onCreate(savedInstanceState: Bundle?) {
         userPreferences = EntryPointAccessors.fromApplication(
             applicationContext,
@@ -82,11 +92,21 @@ class MainActivity : AppCompatActivity(), Navigator {
         setContentView(R.layout.activity_main)
         val host = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
         navController = host.navController
-        pendingRoomId = intent?.getStringExtra(org.matchat.client.notify.MessageNotifier.EXTRA_ROOM_ID)
-        intent?.let { stashCallIntent(it) }
+        // Only a genuine launch carries a notification to act on. With saved
+        // state, `intent` is the one this activity was first started with — a
+        // notification tapped long ago must not reopen its room.
+        if (savedInstanceState == null) {
+            pendingRoomId = intent?.getStringExtra(org.matchat.client.notify.MessageNotifier.EXTRA_ROOM_ID)
+            intent?.let { stashCallIntent(it) }
+        }
         requestNotificationsIfNeeded()
-        restoreSessionIfPresent()
+        // A recreate within this process (theme or text-size change) keeps its
+        // screen. A cold start — or a restart after the process died, whose
+        // restored back stack is dropped — lands on the room list.
+        restoreSessionIfPresent(goHome = savedInstanceState == null || !navStartedThisProcess)
+        navStartedThisProcess = true
         observeThemeChanges()
+        window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener(barFocusListener)
         checkForUpdates()
     }
 
@@ -232,6 +252,21 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun onResume() {
         super.onResume()
         activeInstance = this
+        val goHome = !stoppedForConfigChange && shouldGoHome(
+            userLeft = userLeft,
+            launchedExternal = launchedExternal,
+            screenOnWhenStopped = screenOnWhenStopped,
+            fromNotification = openedFromNotification,
+            inCall = navController.currentDestination?.id == R.id.callFragment,
+            hasSession = sessionStore.hasSession(),
+        )
+        if (goHome) toRoomListHome()
+        screenOnWhenStopped = false
+        stoppedForConfigChange = false
+        openedFromNotification = false
+        userLeft = false
+        launchedExternal = false
+        SystemBars.hideNavigation(this) // the white system soft-key bar (UX-SPEC §1)
         if (sessionStore.hasSession()) {
             // Make sure a sync host is running on every foreground (docs/adr/0008).
             // With the FGS as host, being in the foreground resets the Android 15
@@ -244,19 +279,62 @@ class MainActivity : AppCompatActivity(), Navigator {
         }
     }
 
+    /** The white system bar shows while a text field has focus (its T9
+     *  keyboard's word labels live there) and hides again once focus leaves
+     *  it (SystemBars, UX-SPEC §1). */
+    private val barFocusListener = android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+        if (newFocus is android.widget.EditText) SystemBars.showNavigation(this) else SystemBars.hideNavigation(this)
+    }
+
+    override fun onDestroy() {
+        runCatching { window.decorView.viewTreeObserver.removeOnGlobalFocusChangeListener(barFocusListener) }
+        super.onDestroy()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Dialogs bring the system bar back; hide it again (not while typing —
+        // hideNavigation leaves it for a focused text field's keyboard).
+        if (hasFocus) SystemBars.hideNavigation(this)
+    }
+
     override fun onPause() {
         if (activeInstance === this) activeInstance = null
         super.onPause()
     }
 
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        userLeft = true
+    }
+
+    /** Every in-app launch of another app's screen (pickers, settings pages,
+     *  share sheets — Activity, Fragment and ActivityResult launches all funnel
+     *  here), so returning from it isn't mistaken for opening the app. */
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    override fun startActivityForResult(intent: Intent, requestCode: Int, options: Bundle?) {
+        launchedExternal = true
+        try {
+            super.startActivityForResult(intent, requestCode, options)
+        } catch (e: RuntimeException) {
+            launchedExternal = false // nothing opened (e.g. ActivityNotFoundException)
+            throw e
+        }
+    }
+
     override fun onStop() {
         super.onStop()
+        screenOnWhenStopped = getSystemService(PowerManager::class.java)?.isInteractive ?: true
+        stoppedForConfigChange = isChangingConfigurations
         if (sessionStore.hasSession()) lifecycleScope.launch { session.setPresence(online = false) }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        openedFromNotification = intent.hasExtra(org.matchat.client.notify.CallNotifier.EXTRA_CALL_ROOM) ||
+            intent.hasExtra(org.matchat.client.notify.MessageNotifier.EXTRA_ROOM_ID)
         if (intent.hasExtra(org.matchat.client.notify.CallNotifier.EXTRA_CALL_ROOM)) {
             stashCallIntent(intent)
             if (sessionStore.hasSession()) openPendingCall()
@@ -292,9 +370,9 @@ class MainActivity : AppCompatActivity(), Navigator {
      *  on low-end hardware, so we must NOT sit on Welcome/Sign-in while it runs —
      *  that produced a sign-in flash on every launch. Only a genuine restore
      *  failure falls back to Welcome. Otherwise (no session) stay on Welcome (S2). */
-    private fun restoreSessionIfPresent() {
+    private fun restoreSessionIfPresent(goHome: Boolean) {
         if (!sessionStore.hasSession()) return
-        toRoomListRoot() // replaces Welcome up front; the list shows until sync warms
+        if (goHome) toRoomListRoot() // replaces Welcome up front; the list shows until sync warms
         lifecycleScope.launch {
             if (auth.restoreSession().isSuccess) {
                 pendingRoomId?.let {
@@ -322,6 +400,12 @@ class MainActivity : AppCompatActivity(), Navigator {
             }
             hold?.let { return receiver()?.onLogicalKey(it) ?: false }
         }
+        // MENU is ours for the whole press (KeyMap.isMenuKey): its UP — and a
+        // held key's repeats — must not reach AppCompat, which would open its
+        // own options panel over the Options menu the DOWN just opened.
+        if (KeyMap.isMenuKey(event.keyCode) && (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0)) {
+            return true
+        }
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
         // Diagnostic only (on-device report: right softkey doesn't open Options
@@ -335,7 +419,7 @@ class MainActivity : AppCompatActivity(), Navigator {
             Log.d(SOFTKEY_LOG_TAG, "dispatchKeyEvent: normal dispatch saw raw SOFT_RIGHT")
         }
 
-        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value)
+        val logical = KeyMap.map(event, softkeysSwappedAfter(event))
             ?: return super.dispatchKeyEvent(event)
         // Directional keys stay with the platform focus search (XML order); only
         // the softkeys, CENTER and digits are offered to the screen first.
@@ -386,8 +470,24 @@ class MainActivity : AppCompatActivity(), Navigator {
      *  service filters to just that code before calling in; digits/D-pad/
      *  CENTER/holds/the left softkey never do, so T9 text entry — and every
      *  other key — is unaffected whether or not the service is enabled). */
+    /** The softkey layout to map [event] with, after letting it set the layout
+     *  automatically (KeyMap.detectSoftkeys: a MENU key puts Options on the
+     *  left, a right softkey on the right). A change is saved and the bar
+     *  re-renders through the softkeysSwapped flow; this key already uses the
+     *  new layout, so the very first press does what its new label says. */
+    private fun softkeysSwappedAfter(event: KeyEvent): Boolean {
+        val detected = KeyMap.detectSoftkeys(event.keyCode, userPreferences.softkeyKindSeen.value)
+            ?: return userPreferences.softkeysSwapped.value
+        Log.d(SOFTKEY_LOG_TAG, "softkey layout detected: ${detected.kind} swapped=${detected.swapped}")
+        lifecycleScope.launch {
+            userPreferences.setSoftkeyKindSeen(detected.kind)
+            userPreferences.setSoftkeysSwapped(detected.swapped)
+        }
+        return detected.swapped
+    }
+
     private fun handleAccessibilityKeyEvent(event: KeyEvent): Boolean {
-        val logical = KeyMap.map(event, userPreferences.softkeysSwapped.value) ?: return false
+        val logical = KeyMap.map(event, softkeysSwappedAfter(event)) ?: return false
         val handled = receiver()?.onLogicalKey(logical) ?: false
         // Diagnostic only — see the matching log line in dispatchKeyEvent. This
         // one firing at all proves MatChatKeyAccessibilityService.onKeyEvent was
@@ -406,11 +506,21 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toRoomListRoot() {
         // A successful sign-in means a live session; own sync from here on.
         syncHosts.ensureRunning()
+        toRoomListHome()
+        offerBackgroundSetupIfNeeded()
+    }
+
+    /** The room list as the only screen. Pops the whole graph, not just
+     *  Welcome, so a back stack restored after process death can't sit under
+     *  it (opening the app always lands here — LaunchRouting.kt). */
+    private fun toRoomListHome() {
+        val alreadyHome = navController.currentDestination?.id == R.id.roomListFragment &&
+            navController.previousBackStackEntry == null
+        if (alreadyHome) return // keep the list (and its scroll) as it is
         val options = androidx.navigation.navOptions {
-            popUpTo(R.id.welcomeFragment) { inclusive = true }
+            popUpTo(R.id.nav_graph) { inclusive = true }
         }
         navController.navigate(R.id.roomListFragment, null, options)
-        offerBackgroundSetupIfNeeded()
     }
 
     override fun toWelcomeRoot() {
@@ -497,6 +607,11 @@ class MainActivity : AppCompatActivity(), Navigator {
         // "is dispatchKeyEvent even reachable right now" as closely as a
         // service running independently of the Activity lifecycle can).
         @Volatile private var activeInstance: MainActivity? = null
+
+        /** Set once a MainActivity has routed in this process, to tell an
+         *  in-process recreate (keep the screen) from a restart after process
+         *  death (land on the room list) — both arrive with saved state. */
+        @Volatile private var navStartedThisProcess = false
 
         /** Called by the accessibility service when it intercepts the right
          *  softkey. Returns false (don't consume) if there's no foreground

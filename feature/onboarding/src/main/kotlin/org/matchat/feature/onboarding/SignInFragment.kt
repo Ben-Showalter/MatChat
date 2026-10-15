@@ -38,6 +38,7 @@ class SignInFragment : SoftkeyFragment() {
             viewModel.onAction(SignInAction.ToggleShowPassword)
         }
         b.signInButton.setOnClickListener { submit() }
+        b.moreOptions.setOnClickListener { onOptions() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -90,12 +91,19 @@ class SignInFragment : SoftkeyFragment() {
         else -> getString(R.string.signin_error_generic, error.args.firstOrNull().orEmpty())
     }
 
-    /** LEFT softkey (also tappable on an emulator via the softkey bar): the only
-     *  option before sign-in is checking for a newer app version. */
+    /** The Options softkey, or the "More options" row — the route while a
+     *  text box is focused, since the T9 keyboard takes the softkeys then
+     *  (UX-SPEC S3). Before sign-in: check for a newer app version, or Help. */
     override fun onOptions(): Boolean {
-        val items = listOf(MenuItem(OPT_UPDATE, getString(R.string.signin_opt_update)))
+        val items = listOf(
+            MenuItem(OPT_UPDATE, getString(R.string.signin_opt_update)),
+            MenuItem(OPT_HELP, getString(R.string.signin_opt_help)),
+        )
         MenuSheet.show(requireContext(), items) { selected ->
-            if (selected.id == OPT_UPDATE) navigator.toUpdate()
+            when (selected.id) {
+                OPT_UPDATE -> navigator.toUpdate()
+                OPT_HELP -> navigator.toHelp()
+            }
         }
         return true
     }
@@ -107,5 +115,6 @@ class SignInFragment : SoftkeyFragment() {
 
     private companion object {
         const val OPT_UPDATE = "update"
+        const val OPT_HELP = "help"
     }
 }
