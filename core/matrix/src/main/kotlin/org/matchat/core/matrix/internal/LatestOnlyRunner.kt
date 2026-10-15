@@ -2,6 +2,7 @@ package org.matchat.core.matrix.internal
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 /**
@@ -17,7 +18,8 @@ internal class LatestOnlyRunner(scope: CoroutineScope, private val work: suspend
 
     init {
         scope.launch {
-            for (request in requests) runCatching { work() }
+            // Each signal just means "run again"; the value carries nothing.
+            requests.consumeEach { runCatching { work() } }
         }
     }
 

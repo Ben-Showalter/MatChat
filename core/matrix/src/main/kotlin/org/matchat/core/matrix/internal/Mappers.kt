@@ -1,5 +1,6 @@
 package org.matchat.core.matrix.internal
 
+import android.util.Log
 import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.ReactionSummary
@@ -29,6 +30,8 @@ internal data class MemberInfo(val displayName: String?, val avatarUrl: String?)
  * shape on upgrade, this file is what breaks, by design (ARCHITECTURE.md).
  */
 internal object Mappers {
+
+    private const val TAG = "Mappers"
 
     suspend fun toRoomSummary(room: Room): RoomSummary {
         val info = runCatching { room.roomInfo() }.getOrNull()
@@ -71,6 +74,10 @@ internal object Mappers {
                 else -> null
             }
         } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+            // Best-effort preview — never fail the room row (see KDoc). Record the
+            // failure class so the error isn't silently lost; never the message,
+            // which could carry message content (AGENTS.md §9).
+            Log.w(TAG, "latest-event preview mapping failed: ${e.javaClass.simpleName}")
             null
         } finally {
             runCatching { value.destroy() }
