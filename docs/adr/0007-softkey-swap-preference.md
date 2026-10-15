@@ -187,3 +187,39 @@ certain.
   different problem (an IME swallowing the key before dispatch, not a
   reversed physical layout) — the two are independent and can be enabled in
   any combination.
+
+## Addendum: Auto-detection (Options on the right by default)
+
+**Status:** Accepted · **Date:** 2026-10
+
+By explicit user direction, the layout is now set **automatically**, the way
+FlipWeather does it, and **Options is on the physical right by default** (as
+in FlipWeather and the Flip-DumbPhoneGuide's house rule):
+
+- `UserPreferences.softkeysSwapped` defaults to `true` (Options right, Back
+  left) for a fresh install.
+- `KeyMap.detectSoftkeys(keyCode, seen)` runs on every key-DOWN in
+  `MainActivity` (normal dispatch and the accessibility path), before
+  `KeyMap.map`:
+  - a **MENU** key → Options on the **left** (`swapped = false`),
+    `SoftkeyKind.MENU`;
+  - a **right softkey** (`KEYCODE_SOFT_RIGHT`) on a phone that hasn't shown
+    one yet → Options on the **right**, `SoftkeyKind.SOFT_RIGHT`;
+  - the same kind again → nothing, so a manual choice in Settings > Advanced
+    stands until the phone shows a different kind of key;
+  - once MENU has been seen it is final: a right softkey on the same phone
+    stays Back (the label it shows there), so a phone with both keys can't
+    flip the layout back and forth. Unlike FlipWeather, there is no prompt;
+    the user asked for the move to be automatic.
+- `KEYCODE_MENU` now always maps to Options (`SOFT_LEFT`) and is never
+  swapped, like `KEYCODE_BACK` is always Back: it's a dedicated Options key
+  wherever it appears (Sonim's Options key; the left softkey on AOSP flips
+  that send it).
+- The key that triggers a change is mapped with the new layout, so the first
+  MENU press both moves the label and opens Options.
+
+The known risk recorded above still applies to phones that land on Options
+right: the T9 keyboard can swallow `KEYCODE_SOFT_RIGHT` while composing.
+The accessibility-service mitigation (Addendum above) remains the answer for
+that, and Settings > Advanced can still move Options to the left by hand.
+

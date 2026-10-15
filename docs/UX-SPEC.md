@@ -19,6 +19,12 @@ Every screen has three fixed bands:
 └────────────────────────────┘
 ```
 
+- The phone's own white soft-key label bar (the system navigation bar) is
+  hidden on every screen — our softkey bar replaces it — with no setting to
+  show it (`SystemBars`, per the Flip-DumbPhoneGuide), **except while a text
+  field has focus**: the system T9 keyboard shows its word and mode labels
+  there, so the bar appears when focus moves into a text field and hides
+  again when it leaves.
 - Title bar: scales with Settings > Text size (§S16) like everything else —
   18 sp by default (Normal), 14 sp at Small — single line, ellipsized at the
   end, on the accent surface (`?attr/colorFocusAccent` — the user's chosen
@@ -50,22 +56,24 @@ Every screen has three fixed bands:
 | ↑ ↓ | Move focus. At list end, stop — do not wrap (wrapping disorients on a small viewport). |
 | ← → | Ignored. **No v1 screen declares horizontal focus** — every list, form and grid is traversed with ↑↓ only. Never means "back". |
 | CENTER | Activate focused item — identical to the centre softkey label. |
-| LEFT softkey | **Options** — context menu for the screen + focused item. Blank on a screen that has no options; never reassigned to anything else. |
-| RIGHT softkey | **Back**. On the room list (top level): **Exit**, with confirm. |
+| Options softkey | **Options** — context menu for the screen + focused item. Blank on a screen that has no options; never reassigned to anything else. On the **right** by default; on the **left** on a phone with a MENU key (set automatically, below). A MENU key always opens Options. |
+| Back softkey | **Back** — the other softkey. On the room list (top level): **Exit**, with confirm. |
 | END / BACK | Same as RIGHT softkey. |
 | CALL | Ignored (never places a call from inside the app). |
 | 0–9 | Text entry when an input is focused; otherwise jump to list item *n*. |
 | `#` (hold) | Next unread room. |
 | `*` (hold) | Cycle text size (Small → Normal → Large, §S16). |
 
-"Unchangeable" above means no *screen* ever reassigns LEFT/RIGHT to a
+"Unchangeable" above means no *screen* ever reassigns the softkeys to a
 different meaning (AGENTS.md §4) — Options and Back are always exactly one
-softkey each. Settings > Advanced > "Swap Left/Right keys" (S25, docs/adr/0007)
-is a separate, global exception, **on by default** (Options on the physical
-right, Back on the left) with the toggle still there for anyone who prefers
-the original left-Options layout or has hardware with reversed physical
-softkeys: it flips which *physical* key produces which *logical* one, for
-every screen at once, not a per-screen reassignment.
+softkey each. Which physical side is Options is set **globally and
+automatically**, like FlipWeather (docs/adr/0007, "Auto-detection"):
+**Options on the right, Back on the left by default**; the first MENU key
+press moves Options to the left (and opens it); a right-softkey press keeps
+it on the right. It stays set until the phone shows a different kind of key
+(once a MENU key is seen, it stays on the left). Settings > Advanced >
+"Swap Left/Right keys" (S25) overrides it by hand. The softkey bar's labels
+always match.
 
 **Type floor** (matches `PLAN.md` G5 and `AGENTS.md §5`), at the Small text
 size — the default (Normal) is larger, §S16: body 16 sp · interactive labels
@@ -101,17 +109,21 @@ Error: "Could not reach the server." + Retry (focused) / Sign out.
 Content: app name, one line of purpose text, two buttons.
 Focus order: `Sign in with QR code` → `Sign in with password` → `Help`.
 Softkeys: Options | Select | Exit.
-Options: Help · About.
+Options: Help · Software update. (QR sign-in and an About screen are v1.1
+candidates, not built.)
 (QR button hidden when `policy.qrLoginEnabled = false`.)
 
 ### S3 — Sign in (password)
 Content: homeserver row (read-only when pinned, shown as grey text with a lock
 glyph), `Username` field, `Password` field, `Show password` toggle (directly
 below the password; CENTER flips masking, label reads `Show password` /
-`Hide password`), `Sign in` button.
-Focus order: Username → Password → Show password → Sign in.
+`Hide password`), `Sign in` button, `More options…` row.
+Focus order: Username → Password → Show password → Sign in → More options.
 Softkeys: Options | Select | Back.
-Options: Sign in with QR code · Help · About.
+Options: Software update · Help — from the Options softkey, or from the
+`More options…` row (CENTER). The row is the route while a text box is
+focused: the phone's T9 keyboard owns the softkeys then (its typing-mode menu
+on the left; it can swallow the right one — Flip-DumbPhoneGuide keys.md).
 Errors: inline under the field, red, plain language — "That username or password
 did not work." / "No network. Check signal and try again."
 
@@ -142,6 +154,12 @@ Options: Verify with another device instead · Paste from clipboard.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
+**Opening the app always lands here** — from the launcher, or after leaving
+with Home/End — whatever screen was last open. Exceptions: a notification tap
+opens its own room or call; returning from a screen MatChat opened (gallery,
+ringtone or file picker, a system settings page) goes back where you were;
+closing and opening the flip keeps the screen; an ongoing call keeps its
+screen (`shouldGoHome`, LaunchRouting.kt).
 Rows (44 dp each): a 32 dp room avatar (a plain filled circle placeholder
 until the real image decodes, or when none is set — Avatars round) at the
 start · room name 16 sp bold · last message 13 sp grey, one line
@@ -163,6 +181,11 @@ Offline: title bar `!` plus a 16 dp banner "No connection — showing saved
 messages."
 
 ### S9 — Timeline
+**The newest message sits flush with the bottom of the list.** New and sent
+messages arrive that way — also when a row grows afterwards (an image loading)
+or a band under the list appears — unless the user has scrolled up in the
+thread; scrolling back down to the end follows again, and sending always
+brings your message into view (`followAfterScroll`).
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, a light accent-tinted
@@ -231,7 +254,7 @@ Special rows:
 Empty: "No messages yet. Say hello."
 
 **Full-screen image viewer** (reached from an image message's `Open`): the
-image fills the screen; `*` zooms in, `#` zooms out, the D-pad / 2468 pan, `0`
+image fills the screen; `#` zooms in, `*` zooms out, the D-pad / 2468 pan, `0`
 resets, Back returns. Softkeys: Options | | Back — Options offers `Save to
 gallery` and `Save to files` (same destinations and permission behaviour as
 the S11 items above), acting on the image already on screen.
@@ -495,8 +518,9 @@ here — every room shares the one chosen sound (future work).
 Last, a third toggle row, "Hide message on cover" (same checkmark convention,
 off by default), with an 11 sp subtitle explaining both states. On Kyocera
 flip phones a new message also appears on the small outside (cover) screen,
-scrolling, as "Room: message" (docs/COVER-DISPLAY.md); with this on it reads
-only "MatChat message", so who wrote and what they said aren't visible on a
+beside the MatChat icon, as the time then "Room: message", scrolling on one
+line (docs/COVER-DISPLAY.md); with this on it reads
+only the time and "MatChat message", so who wrote and what they said aren't visible on a
 closed phone.
 Focus order: Notifications → Sound → Hide message on cover. Initial focus:
 Notifications.

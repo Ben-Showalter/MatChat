@@ -36,11 +36,16 @@ import java.lang.reflect.Modifier
  * adb logcat -d > probe.txt
  * Select-String -Path probe.txt -Pattern "probe:","SubLcd"
  * ```
+ * `--ez clockcard true` instead shows 1 a still ruler card (note the last
+ * character visible beside the icon) and 2 a long message through the real
+ * path, which should scroll from the time to "END" before it ends, and does
+ * nothing else — close the flip first.
+ *
  * `callback` also registers a listener on Kyocera's cover service
  * (`ISubLcdCallback`, compiled against :stubs:kyocera-sublcd) that only logs
  * cover on/off and forwarded keys, answering every key "not handled".
  *
- * It never posts to the cover. (A tray-icon test that called
+ * Apart from `clockcard`, it never posts to the cover. (A tray-icon test that called
  * `notifyIconToAnnunciatorTray` was removed — it crashed SystemUI.)
  *
  * Results (scrolling: no native marquee, app-side ticker works;
@@ -52,6 +57,10 @@ class CoverProbeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // A BroadcastReceiver's own context can't register receivers; the app's can.
         val app = context.applicationContext
+        if (intent.getBooleanExtra("clockcard", false)) {
+            clockCardTest(app)
+            return
+        }
         dumpClass("jp.kyocera.sublcd.SubLcdManager")
         dumpClass("jp.kyocera.sublcd.SubLcdNotificationExtender")
         // The callback SubLcdManager.registerCallback takes — likely how
@@ -63,6 +72,31 @@ class CoverProbeReceiver : BroadcastReceiver() {
         dumpDisplays(app)
         watchWake(app)
         if (intent.getBooleanExtra("callback", false)) callbackTest(app)
+    }
+
+    /** Two cover checks, each under its own id and cleared before the next:
+     *  1 a still ruler card (`0123456789ABCDEFGHIJ`) — note the last character
+     *  visible beside the icon, which sets the ticker's window; 2 a long
+     *  message through the live path (CoverScreenNotifier.notify), which
+     *  should scroll from the time to its last word, hold, and only then end
+     *  (docs/COVER-DISPLAY.md). Step 2 is cleared when its scroll is done. */
+    private fun clockCardTest(context: Context) {
+        val main = Handler(Looper.getMainLooper())
+        val rulerId = CLOCK_TEST_ID + 1
+        val scrollId = CLOCK_TEST_ID + 2
+        Log.d(TAG, "probe: step 1 ruler")
+        CoverScreenNotifier.postRulerCard(context, rulerId, CLOCK_TEST_MS.toInt())
+        main.postDelayed({ CoverScreenNotifier.cancel(context, rulerId) }, CLOCK_TEST_MS)
+        main.postDelayed({
+            Log.d(TAG, "probe: step 2 scrolling")
+            CoverScreenNotifier.notify(
+                context,
+                scrollId,
+                "Probe: this long message should scroll all the way to its very last word, END",
+            )
+        }, CLOCK_TEST_MS + CLOCK_TEST_GAP_MS)
+        // Long enough for the whole pass; also stops the re-show on flip close.
+        main.postDelayed({ CoverScreenNotifier.cancel(context, scrollId) }, SCROLL_TEST_CLEAR_MS)
     }
 
     /** Registers a listener on Kyocera's cover service for [WATCH_MS] and only
@@ -197,6 +231,15 @@ class CoverProbeReceiver : BroadcastReceiver() {
         val LAYOUT_HINT = Regex("sub|lcd|marquee|ticker|scroll", RegexOption.IGNORE_CASE)
 
         const val WATCH_MS = 120_000L
+
+        /** The clock-card test: each step shows for 6 s, 3 s apart, under
+         *  ids CLOCK_TEST_ID + step. */
+        const val CLOCK_TEST_ID = 0x4d43 // "MC"
+        const val CLOCK_TEST_MS = 6_000L
+        const val CLOCK_TEST_GAP_MS = 3_000L
+
+        /** When step 2 is cleared: well after its scroll finishes (~40 s). */
+        const val SCROLL_TEST_CLEAR_MS = 75_000L
     }
 }
 

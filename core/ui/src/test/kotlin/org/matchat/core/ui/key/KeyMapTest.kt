@@ -54,8 +54,62 @@ class KeyMapTest {
     @Test
     fun `swapped, the two positional codes flip`() {
         assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_SOFT_LEFT), swapped = true))
-        assertEquals(LogicalKey.SOFT_RIGHT, KeyMap.map(down(KeyEvent.KEYCODE_MENU), swapped = true))
         assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_SOFT_RIGHT), swapped = true))
+    }
+
+    @Test
+    fun `MENU always means Options, never swapped`() {
+        // A dedicated Options key, like BACK is a dedicated Back key.
+        assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_MENU), swapped = false))
+        assertEquals(LogicalKey.SOFT_LEFT, KeyMap.map(down(KeyEvent.KEYCODE_MENU), swapped = true))
+    }
+
+    @Test
+    fun `only MENU is kept away from the platform for its whole press`() {
+        assertEquals(true, KeyMap.isMenuKey(KeyEvent.KEYCODE_MENU))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_SOFT_LEFT))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_SOFT_RIGHT))
+        assertEquals(false, KeyMap.isMenuKey(KeyEvent.KEYCODE_BACK))
+    }
+
+    // --- detectSoftkeys — automatic layout (docs/adr/0007, "Auto-detection") ---
+
+    @Test
+    fun `a MENU key puts Options on the left`() {
+        val d = KeyMap.detectSoftkeys(KeyEvent.KEYCODE_MENU, SoftkeyKind.NONE)
+        assertEquals(SoftkeyDetection(SoftkeyKind.MENU, swapped = false), d)
+    }
+
+    @Test
+    fun `a right softkey puts Options on the right`() {
+        val d = KeyMap.detectSoftkeys(KeyEvent.KEYCODE_SOFT_RIGHT, SoftkeyKind.NONE)
+        assertEquals(SoftkeyDetection(SoftkeyKind.SOFT_RIGHT, swapped = true), d)
+    }
+
+    @Test
+    fun `a MENU key on a phone that showed a right softkey moves Options left`() {
+        val d = KeyMap.detectSoftkeys(KeyEvent.KEYCODE_MENU, SoftkeyKind.SOFT_RIGHT)
+        assertEquals(SoftkeyDetection(SoftkeyKind.MENU, swapped = false), d)
+    }
+
+    @Test
+    fun `the same kind again changes nothing, so a manual choice stands`() {
+        assertNull(KeyMap.detectSoftkeys(KeyEvent.KEYCODE_MENU, SoftkeyKind.MENU))
+        assertNull(KeyMap.detectSoftkeys(KeyEvent.KEYCODE_SOFT_RIGHT, SoftkeyKind.SOFT_RIGHT))
+    }
+
+    @Test
+    fun `once MENU is seen a right softkey stays Back, so the layout never flip-flops`() {
+        assertNull(KeyMap.detectSoftkeys(KeyEvent.KEYCODE_SOFT_RIGHT, SoftkeyKind.MENU))
+    }
+
+    @Test
+    fun `other keys never change the layout`() {
+        listOf(
+            KeyEvent.KEYCODE_SOFT_LEFT, KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_5,
+        ).forEach { code ->
+            SoftkeyKind.entries.forEach { seen -> assertNull(KeyMap.detectSoftkeys(code, seen)) }
+        }
     }
 
     @Test

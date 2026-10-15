@@ -64,11 +64,22 @@ on the DuraXV. Findings:
 
 Implemented in `CoverScreenNotifier`:
 
-- Text is cut to 40 characters, ending in "…" when longer (`coverDisplayText`).
-  If it's wider than the 14-character cover it scrolls: holds the start, steps
-  one character at a time to the end, holds the end, then starts over from the
-  beginning (`tickerFrames`) for the card's 15 s. An earlier version wrapped the
-  end back into the start, which read as broken text on the second pass.
+- The message is cut to 120 characters, ending in "…" when longer
+  (`coverDisplayText`; it was 40, which cut ordinary messages short). If the
+  line is wider than the cover it scrolls: holds the start, steps two characters
+  at a time to the end, holds the end, then starts over from the beginning
+  (`tickerFrames`). It runs **whole passes only** (`tickerFrameCount`): at
+  least the card's 15 s, then the current pass finishes, so the card never
+  ends partway through the message (a fixed 15 s used to stop long lines
+  before their end). A re-show waits for the whole showing
+  (`lastShowingMs`). An earlier version wrapped the end back into the start,
+  which read as broken text on the second pass.
+- `TICKER_WINDOW` (9) is the characters visible beside the 96 px MatChat
+  icon, measured with the probe's ruler card (`0`–`8` show). It was 14 with the
+  small message icon; frames wider than the cover lost their ends. The ticker
+  moves `TICKER_SCROLL_STEP` (2) characters per frame (user's call), and its
+  last frame always lands exactly on the end of the line. Each pass logs
+  `cover pass N id=… frames=…` under `MatChatCover`.
 - The card comes back **whenever the cover screen turns on** — flip closed,
   or an outside button pressed with the flip shut — until the room is read
   (`MessageNotifier.cancel*` → `CoverScreenNotifier.cancel`), and stops when the
@@ -86,6 +97,48 @@ an outside-button wake was invisible. An accessibility-service attempt saw no
 keys with the flip shut and was removed. The debug probe
 (`CoverProbeReceiver --ez callback true`) then showed Kyocera's callback
 reporting cover on/off (1/0) cleanly; it does not forward cover keys.
+
+### Clock on the card
+
+The card covers the cover screen's own idle clock for its 15 s, so it carries
+the time. The template draws **one text line and an icon**, so the card is:
+
+- **icon**: the MatChat mark in black on transparent
+  (`drawable-nodpi/ic_cover_matchat.png`, 96×96, drawn from
+  `ic_launcher.xml`'s bubble by `tools/gen_cover_icon.py`; re-run it when the
+  launcher mark changes);
+- **text**: the time, then the message, e.g. `1:05 PM · Ann: see you at six`
+  (`coverLine`). It scrolls when it's wider than the cover, starting from the
+  time. The time is taken at each showing, so a re-show on flip close is
+  current.
+
+What the DuraXV probe found, so nobody retries the dead ends:
+
+| Tried | Result |
+|---|---|
+| `setText` | drawn — one line only |
+| `setText2` | not drawn |
+| `setTitle` | not drawn |
+| `"time\nmessage"` in `setText` | only the first line shows |
+| `setRemoteViews` (own layout: `TextClock` or plain `TextView`s, any colors, with or without `setFullScreen(true)`) | blank cover, every time |
+| `setIcon(resId)` | drawn — app images work (TurboText's symbol is one); a square image fills the slot, a wide one draws small; 96 px nodpi drew best |
+| runtime `Bitmap`/`Icon` to any extender image setter or `setLargeIcon` | not drawn — resource ids only |
+
+A big clock *image* would need one built-in image per minute (resource ids
+only); the one-line time was chosen instead.
+
+Check the live card (PowerShell in Android Studio's Terminal; the first line
+puts `adb` on the path for that window):
+
+```
+$env:Path += ";$env:LOCALAPPDATA\Android\Sdk\platform-tools"
+adb shell am broadcast -n org.matchat.client/.notify.CoverProbeReceiver --ez clockcard true
+```
+
+Close the flip first: 1 a still ruler card, `0123456789ABCDEFGHIJ` — note
+the last character visible beside the icon (that sets `TICKER_WINDOW`); 2 a
+long message that should scroll from the time all the way to "END", hold, and
+only then end (~40 s). In Android Studio's Logcat, filter `tag:MatChatCover`.
 
 Still open:
 

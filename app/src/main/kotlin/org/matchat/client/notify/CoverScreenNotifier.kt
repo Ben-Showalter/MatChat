@@ -8,9 +8,11 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.text.format.DateFormat
 import android.util.Log
 import androidx.core.content.ContextCompat
 import org.matchat.client.R
+import java.util.Date
 
 /**
  * Posts a transient alert card to the Kyocera **cover (sub-LCD) screen** via the
@@ -56,12 +58,18 @@ internal object CoverScreenNotifier {
      *  15 s per the user's call (re-shown on every flip close anyway). */
     private const val CARD_DURATION_MS = 15_000
 
-    /** Characters visible on the cover at once — longer text scrolls. */
-    private const val TICKER_WINDOW = 14
+    /** Characters visible beside the MatChat icon at once — longer text
+     *  scrolls. Measured on the DuraXV with the probe's ruler card (0–8 show). */
+    private const val TICKER_WINDOW = 9
 
-    /** Longest text the cover shows; anything past it is cut and ends in "…"
-     *  (user's call — one scroll pass stays short enough to read). */
-    private const val COVER_MAX_CHARS = 40
+    /** Characters the ticker moves per frame (user's call: twice the old one). */
+    private const val TICKER_SCROLL_STEP = 2
+
+    /** Longest message the cover shows; anything past it is cut and ends in
+     *  "…". High enough for the whole of an ordinary message (the user asked
+     *  for the whole message), low enough that one pass (~50 s at
+     *  [TICKER_STEP_MS]) doesn't hold the cover on for minutes. */
+    private const val COVER_MAX_CHARS = 120
     private const val TICKER_STEP_MS = 400L
 
     /** Frames to hold still at the start and end of each scroll pass, so the
@@ -83,6 +91,10 @@ internal object CoverScreenNotifier {
     /** When the last card went up (elapsedRealtime), so a cover-on event
      *  doesn't restart a card that's still on screen. 0 = none up. */
     private var lastShownAt = 0L
+
+    /** How long the last showing runs: [CARD_DURATION_MS], or longer when a
+     *  scroll needs whole passes to finish (tickerFrameCount). */
+    private var lastShowingMs = CARD_DURATION_MS.toLong()
 
     /** Shows (and keeps re-showing on flip close) a cover card for [id] with
      *  [text] until [cancel]. [id] matches the notification id. */
@@ -113,29 +125,41 @@ internal object CoverScreenNotifier {
      *  post also wakes the cover, so this debounce is what stops a loop. */
     private fun maybeReshow(context: Context, reason: String) {
         val sinceShown = SystemClock.elapsedRealtime() - lastShownAt
-        if (!shouldReshow(active.isNotEmpty(), sinceShown, CARD_DURATION_MS.toLong())) return
+        if (!shouldReshow(active.isNotEmpty(), sinceShown, lastShowingMs)) return
         val latest = active.entries.last()
         Log.d(TAG, "$reason — re-showing id=${latest.key}")
         show(context, latest.key, latest.value)
     }
 
     /** Only one card is on screen at a time: stop any other scroll, then show
-     *  [text] (cut to [COVER_MAX_CHARS]) once if it fits, or as a ticker that
-     *  scrolls to the end, pauses, and starts over from the beginning. */
+     *  the time followed by [text] (cut to [COVER_MAX_CHARS]) — the card hides
+     *  the cover's own clock, and its one text line is all the template draws
+     *  (docs/COVER-DISPLAY.md, "Clock on the card") — once if it fits, or as
+     *  a ticker that scrolls to the end, pauses, and starts over from the
+     *  beginning. The time is taken at each showing, so a re-show is current. */
     private fun show(context: Context, id: Int, text: String) {
         tickers.keys.toList().forEach(::stopTicker)
         lastShownAt = SystemClock.elapsedRealtime()
-        val shown = coverDisplayText(text, COVER_MAX_CHARS)
+        val time = DateFormat.getTimeFormat(context).format(Date())
+        val shown = coverLine(time, text, COVER_MAX_CHARS)
         if (shown.length <= TICKER_WINDOW) {
+            lastShowingMs = CARD_DURATION_MS.toLong()
             post(context, id, shown, CARD_DURATION_MS)
             Log.d(TAG, "cover card shown id=$id scrolling=false")
             return
         }
-        val cycle = tickerFrames(shown, TICKER_WINDOW, TICKER_PAUSE_STEPS)
-        val frames = (CARD_DURATION_MS / TICKER_STEP_MS).toInt()
+        val cycle = tickerFrames(shown, TICKER_WINDOW, TICKER_PAUSE_STEPS, TICKER_SCROLL_STEP)
+        // Whole passes only, so the card never ends partway through the
+        // message: at least CARD_DURATION_MS, then the current pass finishes.
+        val frames = tickerFrameCount(cycle.size, TICKER_STEP_MS, CARD_DURATION_MS.toLong())
+        lastShowingMs = frames * TICKER_STEP_MS
         val ticker = object : Runnable {
             private var frame = 0
             override fun run() {
+                // No PII: the id, pass number and frame counts only.
+                if (frame % cycle.size == 0) {
+                    Log.d(TAG, "cover pass ${frame / cycle.size + 1} id=$id frames=${cycle.size}")
+                }
                 post(context, id, cycle[frame % cycle.size], TICKER_HOLD_MS)
                 frame++
                 if (frame < frames) main.postDelayed(this, TICKER_STEP_MS) else tickers.remove(id)
@@ -204,7 +228,9 @@ internal object CoverScreenNotifier {
     }
 
     /** A Notification carrying the sub-LCD extender (icon, text, template,
-     *  duration). */
+     *  duration). The icon is the MatChat mark in black
+     *  (drawable-nodpi/ic_cover_matchat.png, tools/gen_cover_icon.py): the
+     *  slot takes a resource id only, and a 96 px square drew best. */
     @Suppress("DEPRECATION")
     private fun buildCard(context: Context, text: String, durationMs: Int): Notification {
         val extenderClass = Class.forName("jp.kyocera.sublcd.SubLcdNotificationExtender")
@@ -212,7 +238,7 @@ internal object CoverScreenNotifier {
         extenderClass.getMethod("setCategory", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_CATEGORY_MESSAGE)
         extenderClass.getMethod("setLayout", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_LAYOUT_RICH_CARD)
         extenderClass.getMethod("setPriority", Int::class.javaPrimitiveType).invoke(extender, SUBLCD_PRIORITY)
-        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, R.drawable.ic_stat_message)
+        extenderClass.getMethod("setIcon", Int::class.javaPrimitiveType).invoke(extender, R.drawable.ic_cover_matchat)
         extenderClass.getMethod("setText", CharSequence::class.java).invoke(extender, text)
         extenderClass.getMethod("setDuration", Int::class.javaPrimitiveType).invoke(extender, durationMs)
 
@@ -224,6 +250,13 @@ internal object CoverScreenNotifier {
             .invoke(builder, extender)
         return builder.build()
     }
+
+    /** DEBUG probe: a still card reading `0123456789ABCDEFGHIJ`, to count the
+     *  characters the cover shows beside the icon ([TICKER_WINDOW]). */
+    fun postRulerCard(context: Context, id: Int, durationMs: Int) =
+        post(context.applicationContext, id, RULER, durationMs)
+
+    private const val RULER = "0123456789ABCDEFGHIJ"
 
     private fun cancelCard(context: Context, id: Int) {
         runCatching {
@@ -253,14 +286,30 @@ internal fun shouldReshow(
 internal fun coverDisplayText(text: String, maxChars: Int): String =
     if (text.length <= maxChars) text else text.take(maxChars - 1).trimEnd() + "…"
 
+/** The cover's one line: [time], then [text] cut by [coverDisplayText] to
+ *  [maxChars] — e.g. "1:05 PM · Ann: see you at six". */
+internal fun coverLine(time: String, text: String, maxChars: Int): String =
+    "$time · ${coverDisplayText(text, maxChars)}"
+
+/** Frames to post so a scroll runs at least [minDurationMs] and stops only
+ *  at the end of a pass: the fewest whole passes of [passLength] frames
+ *  ([stepMs] apart) that cover the minimum, and at least one. */
+internal fun tickerFrameCount(passLength: Int, stepMs: Long, minDurationMs: Long): Int {
+    val minFrames = ((minDurationMs + stepMs - 1) / stepMs).toInt()
+    val passes = maxOf(1, (minFrames + passLength - 1) / passLength)
+    return passes * passLength
+}
+
 /** One scroll pass over [text] as the frames the cover shows, [window]
- *  characters each: the start held for [pauseSteps] frames, one character per
- *  frame to the end, the end held for [pauseSteps] frames. The ticker repeats
- *  this pass, so it always starts over cleanly from the beginning instead of
- *  wrapping the end into the start. Text that fits is a single frame. */
-internal fun tickerFrames(text: String, window: Int, pauseSteps: Int): List<String> {
+ *  characters each: the start held for [pauseSteps] frames, [step] characters
+ *  per frame to the end (the last frame always lands exactly on the end), the
+ *  end held for [pauseSteps] frames. The ticker repeats this pass, so it
+ *  always starts over cleanly from the beginning instead of wrapping the end
+ *  into the start. Text that fits is a single frame. */
+internal fun tickerFrames(text: String, window: Int, pauseSteps: Int, step: Int = 1): List<String> {
     if (text.length <= window) return listOf(text)
     val lastStart = text.length - window
-    val starts = List(pauseSteps) { 0 } + (1 until lastStart) + List(pauseSteps) { lastStart }
+    val moving = (step until lastStart step step).toList()
+    val starts = List(pauseSteps) { 0 } + moving + List(pauseSteps) { lastStart }
     return starts.map { text.substring(it, it + window) }
 }

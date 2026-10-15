@@ -106,4 +106,15 @@
         android:text="@string/signin_submit"
         android:textSize="?attr/textSizeLabel"
         android:textColor="?attr/colorTextOnFocus" />
+
+    <!-- Opens Options (UX-SPEC S3): the T9 keyboard owns the softkeys while a
+         text box is focused, so this row is the D-pad route to the menu. -->
+    <TextView
+        android:id="@+id/more_options"
+        style="@style/Widget.MatChat.Row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/signin_more_options"
+        android:textSize="?attr/textSizeLabel"
+        android:textColor="?attr/colorTextOnFocus" />
 </LinearLayout>
