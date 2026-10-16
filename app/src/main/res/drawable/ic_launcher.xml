@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Launcher mark, drawn back-to-front:
-       1. a white rounded-square (radius 5) filling the whole 48x48 canvas —
-          the outer ring;
-       2. a black rounded-square inset ~2.5 (the ring width) so a thin white
-          ring shows at the edge — the controlled black surround;
+       1. a black rounded-square (radius 5) filling the whole 48x48 canvas —
+          the outer border;
+       2. a light-grey rounded-square inset ~2.5 (the border width) so a thin
+          black border shows at the edge — the controlled light surround that
+          lets the indigo bubble read (indigo on black was dark-on-dark);
        3+4. the MatChat bubble (indigo #303E7C) + black "M", wrapped in a
-          <group> that scales them to ~0.78 and recentres them inside the black
+          <group> that scales them to ~0.78 and recentres them inside the
           interior. The bubble+M geometry was drawn to fill the whole canvas
           (for the frameless cover/status marks), so without this group it
-          overflows the frame and the tail pokes through the bottom ring.
-     Edit path 1/2 fills for the ring/interior colours; edit the group's scale
+          overflows the frame and the tail pokes through the bottom border.
+     Edit path 1/2 fills for the border/interior colours; edit the group's scale
      to resize the mark within the frame. The cover-screen mark
      (drawable-nodpi/ic_cover_matchat.png, tools/gen_cover_icon.py) and the
      status-bar mark (ic_stat_matchat.xml) use the same bubble+M paths at full
@@ -19,13 +20,13 @@
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
-    <!-- 1. White ring base: full-canvas rounded square, radius 5. -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M5,0 h38 a5,5 0 0 1 5,5 v38 a5,5 0 0 1 -5,5 h-38 a5,5 0 0 1 -5,-5 v-38 a5,5 0 0 1 5,-5 z" />
-    <!-- 2. Black interior: inset ~2.5 so a white ring shows at the edge. -->
+    <!-- 1. Black border base: full-canvas rounded square, radius 5. -->
     <path
         android:fillColor="#000000"
+        android:pathData="M5,0 h38 a5,5 0 0 1 5,5 v38 a5,5 0 0 1 -5,5 h-38 a5,5 0 0 1 -5,-5 v-38 a5,5 0 0 1 5,-5 z" />
+    <!-- 2. Light-grey interior: inset ~2.5 so a thin black border shows at the edge. -->
+    <path
+        android:fillColor="#E8E8E8"
         android:pathData="M5,2.5 h38 a2.5,2.5 0 0 1 2.5,2.5 v38 a2.5,2.5 0 0 1 -2.5,2.5 h-38 a2.5,2.5 0 0 1 -2.5,-2.5 v-38 a2.5,2.5 0 0 1 2.5,-2.5 z" />
     <!-- 3+4. Bubble + "M", scaled down and recentred inside the interior.
          Pivot is the mark's own bbox centre (24,28); translateY -4 lifts that
