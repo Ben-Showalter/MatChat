@@ -275,11 +275,8 @@ internal object CoverScreenNotifier {
  *  still unread, and the last showing has run its course (our own post also
  *  wakes the cover — this is what keeps that from looping). A pure function so
  *  the rule is unit-testable without a device. */
-internal fun shouldReshow(
-    hasPending: Boolean,
-    msSinceLastShown: Long,
-    cardDurationMs: Long,
-): Boolean = hasPending && msSinceLastShown >= cardDurationMs
+internal fun shouldReshow(hasPending: Boolean, msSinceLastShown: Long, cardDurationMs: Long): Boolean =
+    hasPending && msSinceLastShown >= cardDurationMs
 
 /** [text] as the cover shows it: unchanged up to [maxChars], otherwise cut to
  *  fit [maxChars] including a trailing "…". */

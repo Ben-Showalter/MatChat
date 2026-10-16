@@ -10,10 +10,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.matchat.core.testing.FakeBackgroundSync
-import org.matchat.core.testing.FakeUserPreferences
 import org.matchat.core.model.background.BackgroundSyncStatus
 import org.matchat.core.model.background.HelperStatus
+import org.matchat.core.testing.FakeBackgroundSync
+import org.matchat.core.testing.FakeUserPreferences
 
 class AdvancedViewModelTest {
 

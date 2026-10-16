@@ -66,10 +66,18 @@ internal object Mappers {
         return try {
             when (value) {
                 is LatestEventValue.Remote -> previewOf(
-                    value.content, value.sender, value.profile, value.isOwn, value.timestamp.toLong(),
+                    value.content,
+                    value.sender,
+                    value.profile,
+                    value.isOwn,
+                    value.timestamp.toLong(),
                 )
                 is LatestEventValue.Local -> previewOf(
-                    value.content, value.sender, value.profile, isOwn = true, value.timestamp.toLong(),
+                    value.content,
+                    value.sender,
+                    value.profile,
+                    isOwn = true,
+                    value.timestamp.toLong(),
                 )
                 else -> null
             }
