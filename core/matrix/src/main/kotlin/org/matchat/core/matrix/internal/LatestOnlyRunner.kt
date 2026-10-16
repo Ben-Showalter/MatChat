@@ -2,7 +2,6 @@ package org.matchat.core.matrix.internal
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 /**
@@ -13,13 +12,16 @@ import kotlinx.coroutines.launch
  * Because runs are serial and [work] reads its input when it starts, the last
  * run always sees the latest state.
  */
+// The for-loop below iterates the channel only to re-trigger [work]; each
+// element is a bare "run again" signal with no value, so detekt's
+// UnusedPrivateProperty on the loop variable is expected and suppressed here.
+@Suppress("UnusedPrivateProperty")
 internal class LatestOnlyRunner(scope: CoroutineScope, private val work: suspend () -> Unit) {
     private val requests = Channel<Unit>(Channel.CONFLATED)
 
     init {
         scope.launch {
-            // Each signal just means "run again"; the value carries nothing.
-            requests.consumeEach { runCatching { work() } }
+            for (request in requests) runCatching { work() }
         }
     }
 
