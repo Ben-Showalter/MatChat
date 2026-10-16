@@ -6,11 +6,18 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 import java.io.ByteArrayOutputStream
 
 /** decodeAndCache round-crops real photo avatars — see class doc on
  *  [AvatarCache]. Needs a real Bitmap/Canvas, so this runs under Robolectric
  *  (same convention as KeyMapTest/ThemeColorTest). */
+// decodeAndCache really draws (Canvas.drawCircle with a shader), so it needs
+// Robolectric's NATIVE graphics. The default legacy mode no-ops the draw, leaving
+// the output fully transparent and failing the "centre keeps the colour"
+// assertion. Scoped to this class; the module's logic-only Robolectric tests
+// (KeyMapTest, ThemeColorTest) stay on the default mode.
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @RunWith(RobolectricTestRunner::class)
 class AvatarCacheTest {
 
