@@ -122,7 +122,11 @@ Non-negotiables:
 - `render(state: State)` is a **pure function of state**. Never read a view's
   current value to decide what to do. Never mutate a view outside `render`.
 - The ViewModel never imports `android.view`, `android.widget`, or anything from
-  `:core:ui`.
+  `:core:ui` — **except `org.matchat.core.ui.prefs`** (`UserPreferences`,
+  `ThemeMode`, `TextSizePreference`, …), which are settings *data* types a
+  ViewModel legitimately reads, not Android UI or rendering code. The settings
+  ViewModels depend on them, and `ArchitectureTest` carves out exactly that
+  package. The rest of `:core:ui` stays banned.
 - The Fragment never imports anything from `:core:matrix`.
 - State classes carry display-ready values (`"3:42 PM"`, not `Instant`). Formatting
   happens in the ViewModel so it is unit-testable.

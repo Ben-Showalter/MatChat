@@ -54,7 +54,14 @@ class ArchitectureTest {
                 klass.containingFile.imports.any {
                     it.name.startsWith("android.view") ||
                         it.name.startsWith("android.widget") ||
-                        it.name.startsWith("org.matchat.core.ui")
+                        // core.ui.prefs is carved out: UserPreferences/ThemeMode/
+                        // TextSizePreference are settings DATA types a ViewModel
+                        // legitimately reads, not Android UI or rendering code
+                        // (AGENTS.md §3). The rest of :core:ui stays banned.
+                        (
+                            it.name.startsWith("org.matchat.core.ui") &&
+                                !it.name.startsWith("org.matchat.core.ui.prefs")
+                            )
                 }
             }
     }
