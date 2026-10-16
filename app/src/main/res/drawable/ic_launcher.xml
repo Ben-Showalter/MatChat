@@ -26,7 +26,7 @@
         android:pathData="M5,0 h38 a5,5 0 0 1 5,5 v38 a5,5 0 0 1 -5,5 h-38 a5,5 0 0 1 -5,-5 v-38 a5,5 0 0 1 5,-5 z" />
     <!-- 2. Light-grey interior: inset ~2.5 so a thin black border shows at the edge. -->
     <path
-        android:fillColor="#E8E8E8"
+        android:fillColor="#929292"
         android:pathData="M5,2.5 h38 a2.5,2.5 0 0 1 2.5,2.5 v38 a2.5,2.5 0 0 1 -2.5,2.5 h-38 a2.5,2.5 0 0 1 -2.5,-2.5 v-38 a2.5,2.5 0 0 1 2.5,-2.5 z" />
     <!-- 3+4. Bubble + "M", scaled down and recentred inside the interior.
          Pivot is the mark's own bbox centre (24,28); translateY -4 lifts that
