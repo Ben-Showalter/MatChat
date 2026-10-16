@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launcher mark: the MatChat chat bubble in indigo (#303E7C, the user's
-     chosen colour) with a solid BLACK "M" on top, on a transparent
-     background. The bubble's body is centred in the icon and its tail hangs
-     below (the user's pick of two centrings). The "M" is a second, separate
-     path filled black — NOT a transparent cut-out — so it reads on every
-     launcher background/wallpaper (black on the indigo bubble) instead of
-     depending on whatever shows through behind the icon. Placeholder until
-     the final asset before M7 (signed APK). Vector so no density PNGs are
-     needed. The cover-screen mark (drawable-nodpi/ic_cover_matchat.png,
-     tools/gen_cover_icon.py) and the status-bar mark (ic_stat_matchat.xml)
-     are the same bubble+M geometry in monochrome (the cover/outer screen and
-     the status bar are both single-colour) — keep the three in step. -->
+<!-- Launcher mark: a full-canvas background square, then the MatChat chat
+     bubble in indigo (#303E7C, the user's chosen colour) with a solid BLACK
+     "M" on top. The background square (first path below) fills the whole 48x48
+     canvas so the area around the bubble is a controlled colour rather than
+     transparent — change its fillColor to recolour the surround. The bubble's
+     body is centred and its tail hangs below (the user's pick of two
+     centrings). The "M" is a second, separate path filled black — NOT a
+     transparent cut-out — so it reads on the indigo bubble regardless. Vector
+     so no density PNGs are needed. The cover-screen mark
+     (drawable-nodpi/ic_cover_matchat.png, tools/gen_cover_icon.py) and the
+     status-bar mark (ic_stat_matchat.xml) are the same bubble+M geometry in
+     monochrome (the cover/outer screen and the status bar are both
+     single-colour) — keep the three in step; they have no background square. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
+    <!-- Background square — the colour surrounding the bubble. Change this
+         fillColor (e.g. "#FFFFFF", "#F6F4EE", or a brand colour) to recolour
+         the area around the mark. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,0h48v48h-48z" />
     <path
         android:fillColor="#303E7C"
         android:pathData="M10,10h28a5,5 0,0 1,5 5v18a5,5 0,0 1,-5 5h-18l-7,8v-8h-3a5,5 0,0 1,-5 -5v-18a5,5 0,0 1,5 -5z" />
