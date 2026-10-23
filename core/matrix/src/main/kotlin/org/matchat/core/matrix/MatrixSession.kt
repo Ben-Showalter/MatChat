@@ -5,11 +5,14 @@ import org.matchat.core.model.CallState
 import org.matchat.core.model.DeviceTrust
 import org.matchat.core.model.EventId
 import org.matchat.core.model.InviteSummary
+import org.matchat.core.model.JoinOutcome
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.Profile
 import org.matchat.core.model.RoomDetails
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomLink
 import org.matchat.core.model.RoomMemberSummary
+import org.matchat.core.model.RoomPreview
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncStateSource
 import org.matchat.core.model.TimelineItem
@@ -58,6 +61,19 @@ interface MatrixSession : SyncStateSource {
 
     suspend fun acceptInvite(roomId: RoomId): Result<Unit>
     suspend fun declineInvite(roomId: RoomId, ignoreSender: Boolean): Result<Unit>
+
+    // --- Joining a linked room (S28) ---------------------------------------
+    // A link the user was sent names one known room; these look at, join, or
+    // ask to join that room. None of them takes a query (AGENTS.md §0).
+
+    /** Name, topic, size and join rule of the linked room, before joining. */
+    suspend fun previewRoom(link: RoomLink): Result<RoomPreview>
+
+    /** Join the linked room (or accept a pending invitation to it). */
+    suspend fun joinRoom(link: RoomLink): JoinOutcome
+
+    /** Ask to join (knock): the room's members decide whether to let us in. */
+    suspend fun knockRoom(link: RoomLink): Result<Unit>
 
     /** Our own Matrix user id, or null before login (used for call membership). */
     suspend fun ownUserId(): UserId?

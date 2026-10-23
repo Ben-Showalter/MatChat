@@ -40,6 +40,10 @@ interface Navigator {
     fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean)
     fun toInvites()
     fun toInvite(roomId: RoomId)
+
+    /** S28: preview a room linked in a message, then join or ask to join.
+     *  [link] is the link's matrix.to form (RoomLink.toMatrixTo). */
+    fun toJoinRoom(link: String)
     fun toNewChat()
     fun toTypeAddress()
     fun toVerification()

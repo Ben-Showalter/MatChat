@@ -65,6 +65,23 @@ class TimelineViewModelTest {
     }
 
     @Test
+    fun `a message linking a room carries the link for Join group`() = runTest {
+        val fake = session.timeline(roomId) as org.matchat.core.testing.FakeTimeline
+        fake.emit(
+            listOf(
+                message("a", "@wayne:s", "Wayne", "join us https://matrix.to/#/!abc?via=unredacted.org"),
+                message("b", "@wayne:s", "Wayne", "no link here"),
+            ),
+        )
+        subject().state.test {
+            val rows = expectMostRecentItem().rows.filterIsInstance<TimelineRow.Message>()
+            assertEquals("https://matrix.to/#/!abc?via=unredacted.org", rows[0].roomLink)
+            assertNull(rows[1].roomLink)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `empty timeline is the empty state`() = runTest {
         subject().state.test {
             assertTrue(expectMostRecentItem().isEmpty)

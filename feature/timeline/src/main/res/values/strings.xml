@@ -45,6 +45,8 @@
     <!-- Media rows only (image/attachment) — reaches the same viewer/opener
          a direct tap used to jump to before media rows got this menu too. -->
     <string name="timeline_msg_open">Open</string>
+    <!-- Message menu: the message links to a group; opens the Join group screen. -->
+    <string name="timeline_msg_join">Join group</string>
     <string name="timeline_msg_reply">Reply</string>
     <string name="timeline_msg_edit">Edit</string>
     <string name="timeline_msg_react">React</string>

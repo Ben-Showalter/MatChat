@@ -106,6 +106,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/joinRoomFragment"
+        android:name="org.matchat.feature.invites.JoinRoomFragment"
+        android:label="Join group">
+        <argument
+            android:name="link"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/newChatFragment"
         android:name="org.matchat.feature.newchat.NewChatFragment"
         android:label="New message" />

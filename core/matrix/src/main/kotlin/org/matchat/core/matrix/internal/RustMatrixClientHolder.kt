@@ -16,6 +16,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.matchat.core.matrix.DraftStore
 import org.matchat.core.matrix.MatrixDevConfig
+import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SyncState
@@ -61,11 +62,18 @@ internal class RustMatrixClientHolder @Inject constructor(
     private var syncService: SyncService? = null
     private var roomList: RoomList? = null
     private var entriesResult: RoomListEntriesWithDynamicAdaptersResult? = null
+    private var invitesResult: RoomListEntriesWithDynamicAdaptersResult? = null
 
     /** Ordered room entries maintained from the sliding-sync diff stream. */
     private val entries = mutableListOf<Room>()
 
+    /** Invited rooms, from a second stream over the same list (Invite filter). */
+    private val inviteEntries = mutableListOf<Room>()
+
     val rooms = MutableStateFlow<List<RoomSummary>>(emptyList())
+
+    /** Pending invitations (S18), untagged by policy — RustMatrixSession tags them. */
+    val invites = MutableStateFlow<List<InviteSummary>>(emptyList())
 
     /** SYNCING means "session active, sync loop running" in this codebase (set
      *  once in [startSync], never cleared except by [logout]) — there's no
@@ -243,7 +251,7 @@ internal class RustMatrixClientHolder @Inject constructor(
 
         val listener = object : RoomListEntriesListener {
             override fun onUpdate(roomEntriesUpdate: List<RoomListEntriesUpdate>) {
-                applyUpdates(roomEntriesUpdate)
+                applyUpdates(entries, roomEntriesUpdate)
                 recompute()
             }
         }
@@ -251,6 +259,18 @@ internal class RustMatrixClientHolder @Inject constructor(
         // Joined = the user's joined rooms (no args); All takes a filter list.
         result.controller().setFilter(RoomListEntriesDynamicFilterKind.Joined)
         entriesResult = result // keep alive so the stream is not dropped
+
+        // Invitations: a second stream over the same room list, filtered to
+        // Invited membership. Accepting one moves the room to the Joined stream.
+        val inviteListener = object : RoomListEntriesListener {
+            override fun onUpdate(roomEntriesUpdate: List<RoomListEntriesUpdate>) {
+                applyUpdates(inviteEntries, roomEntriesUpdate)
+                inviteMapper.request()
+            }
+        }
+        val invitesStream = list.entriesWithDynamicAdapters(pageSize = PAGE_SIZE, listener = inviteListener)
+        invitesStream.controller().setFilter(RoomListEntriesDynamicFilterKind.Invite)
+        invitesResult = invitesStream
     }
 
     /**
@@ -326,7 +346,9 @@ internal class RustMatrixClientHolder @Inject constructor(
         networkCallback = null
         teardownClient()
         synchronized(entries) { entries.clear() }
+        synchronized(inviteEntries) { inviteEntries.clear() }
         rooms.value = emptyList()
+        invites.value = emptyList()
         syncState.value = SyncState.IDLE
         draftStore.clearAll()
         store.clear()
@@ -345,10 +367,12 @@ internal class RustMatrixClientHolder @Inject constructor(
         runCatching { syncStateHandle?.destroy() }
         syncStateHandle = null
         runCatching { entriesResult?.destroy() }
+        runCatching { invitesResult?.destroy() }
         runCatching { roomList?.destroy() }
         runCatching { syncService?.destroy() }
         runCatching { client?.destroy() }
         entriesResult = null
+        invitesResult = null
         roomList = null
         syncService = null
         client = null
@@ -386,23 +410,23 @@ internal class RustMatrixClientHolder @Inject constructor(
         }
     }
 
-    private fun applyUpdates(updates: List<RoomListEntriesUpdate>) = synchronized(entries) {
+    private fun applyUpdates(target: MutableList<Room>, updates: List<RoomListEntriesUpdate>) = synchronized(target) {
         updates.forEach { update ->
             when (update) {
-                is RoomListEntriesUpdate.Append -> entries.addAll(update.values)
-                is RoomListEntriesUpdate.PushBack -> entries.add(update.value)
-                is RoomListEntriesUpdate.PushFront -> entries.add(0, update.value)
-                is RoomListEntriesUpdate.Insert -> entries.add(update.index.toInt(), update.value)
-                is RoomListEntriesUpdate.Set -> entries[update.index.toInt()] = update.value
-                is RoomListEntriesUpdate.Remove -> entries.removeAt(update.index.toInt())
-                is RoomListEntriesUpdate.PopBack -> entries.removeAt(entries.lastIndex)
-                is RoomListEntriesUpdate.PopFront -> entries.removeAt(0)
-                is RoomListEntriesUpdate.Truncate -> entries.subList(update.length.toInt(), entries.size).clear()
+                is RoomListEntriesUpdate.Append -> target.addAll(update.values)
+                is RoomListEntriesUpdate.PushBack -> target.add(update.value)
+                is RoomListEntriesUpdate.PushFront -> target.add(0, update.value)
+                is RoomListEntriesUpdate.Insert -> target.add(update.index.toInt(), update.value)
+                is RoomListEntriesUpdate.Set -> target[update.index.toInt()] = update.value
+                is RoomListEntriesUpdate.Remove -> target.removeAt(update.index.toInt())
+                is RoomListEntriesUpdate.PopBack -> target.removeAt(target.lastIndex)
+                is RoomListEntriesUpdate.PopFront -> target.removeAt(0)
+                is RoomListEntriesUpdate.Truncate -> target.subList(update.length.toInt(), target.size).clear()
                 is RoomListEntriesUpdate.Reset -> {
-                    entries.clear()
-                    entries.addAll(update.values)
+                    target.clear()
+                    target.addAll(update.values)
                 }
-                is RoomListEntriesUpdate.Clear -> entries.clear()
+                is RoomListEntriesUpdate.Clear -> target.clear()
             }
         }
     }
@@ -415,6 +439,11 @@ internal class RustMatrixClientHolder @Inject constructor(
     }
 
     private fun recompute() = roomMapper.request()
+
+    private val inviteMapper = LatestOnlyRunner(scope) {
+        val snapshot = synchronized(inviteEntries) { inviteEntries.toList() }
+        invites.value = snapshot.map { Mappers.toInviteSummary(it) }
+    }
 
     private companion object {
         const val PAGE_SIZE: UInt = 100u

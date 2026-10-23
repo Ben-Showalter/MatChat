@@ -36,6 +36,9 @@ sealed interface TimelineRow {
          *  📌, the same compact idiom sendGlyph already uses (Pinned
          *  messages round). */
         val isPinned: Boolean = false,
+        /** The first room link in [body] (matrix.to form), or null — adds
+         *  "Join group" to the message menu (S11 → S28). */
+        val roomLink: String? = null,
     ) : TimelineRow {
         override val stableId: String get() = eventId.value
     }

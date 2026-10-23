@@ -22,6 +22,7 @@ import org.matchat.core.model.EventId
 import org.matchat.core.model.MediaKind
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.RoomId
+import org.matchat.core.model.RoomLink
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
@@ -308,6 +309,7 @@ class TimelineViewModel @Inject constructor(
                         seenBy = item.seenBy,
                         reactions = item.reactions,
                         isPinned = item.isPinned,
+                        roomLink = RoomLink.findIn(item.body)?.toMatrixTo(),
                     )
                 }
                 is TimelineItem.Media -> {

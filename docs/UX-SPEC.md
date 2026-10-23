@@ -272,7 +272,9 @@ rows, each 26 dp, dismiss with RIGHT softkey.
 `Unpin message` · `Copy text` · `Save to gallery` (image messages only) ·
 `Save to files` (any image/video/file/voice attachment) · `Message info`.
 Image and other-attachment rows prepend an `Open` item (image viewer / external
-open). Voice messages do **not**: they play from their own in-bubble play/pause
+open). A text message containing a room link (`https://matrix.to/#/…`, a
+`matrix:` URI, or a web client's `…/#/room/…` link) prepends `Join group`,
+which opens S28 for the first such link in the message. Voice messages do **not**: they play from their own in-bubble play/pause
 button (S9), so CENTER on a voice bubble opens this menu with no `Open`.
 `Save to gallery` writes the image to the public Pictures folder (Pictures/
 MatChat); `Save to files` writes any attachment to Downloads (Downloads/
@@ -393,6 +395,8 @@ right and still opens — the reason belongs on S19, not in a silent omission.
 Focus order: row 1 → row *n*. Initial focus row 1.
 Softkeys: (blank) | Open | Back.
 Empty: this screen is never reachable with zero invitations; the band is absent.
+When the last invitation is accepted or declined (here or on another device),
+the screen returns to the room list on its own.
 
 ### S19 — Invitation detail
 Content, in order: room or person name (17 sp bold) · "Invited by
@@ -542,6 +546,41 @@ means "not now" and returns to the room list; the S25 rows remain the way
 back to this later. On Android 13+ a sideloaded app may need Settings > Apps
 > MatChat > ⋮ > "Allow restricted settings" before the switch takes effect;
 the helper's own system description says so.
+
+### S28 — Join group
+Reached from a message's `Join group` item (S11). The link names one known
+room; this screen never searches for rooms (`AGENTS.md §0`).
+Content, in order: the group's name (17 sp bold; the link's address until the
+preview arrives) · the address from the link (13 sp, wraps, never truncated;
+hidden when it is the name) · "12 members" (11 sp) · the topic (13 sp, 3 lines
+max) · one plain-language line saying where the user stands · then one action
+button.
+
+| Situation | Line | Button |
+|---|---|---|
+| Anyone may join, or the rule is unknown | — | `Join` |
+| Members let people in (knock) | "A member must let you in. Ask to join and they will see your request." | `Ask to join` |
+| Join refused with 403 ("not invited") | "You need an invitation to join this group. You can ask its members to let you in." | `Ask to join` |
+| Invite-only | "Only people a member invites can join this group." | — |
+| Already invited | "You have an invitation to this group." | `Join` |
+| Request already sent | "Request sent. The group will appear in your list once a member lets you in." | — |
+| Already a member | "You are already in this group." | `Open` |
+| Banned | "You are not allowed to join this group." | — |
+| No preview available | "Could not show details for this group. You can still try to join." | `Join` |
+| Not a room link | "This link does not lead to a group." | — |
+
+`Join` (or `Open`) replaces this screen with the room (S9), so Back from the
+room returns to the conversation the link was in. `Ask to join` sends the
+request with no message (typing one is not worth it on a keypad).
+**Blocked by policy** (the room's server — its alias or id server, else the
+first `via` server — is not in `allowedDomains`): no button; in its place
+"Your organization does not allow messages from example.org." Observed live.
+Focus: the button, when there is one; otherwise none.
+Softkeys: (blank) | Select | Back.
+Loading: "Loading…"; while joining or asking: "Please wait…".
+Errors, inline, the button stays as the retry: "Could not join. Check your
+connection and try again." / "Could not send your request. Try again, or ask a
+member to invite you."
 
 ## 4. Content voice
 

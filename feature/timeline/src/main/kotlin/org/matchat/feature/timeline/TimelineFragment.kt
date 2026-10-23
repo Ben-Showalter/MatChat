@@ -666,6 +666,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
      *  already restore focus correctly via Fragment view recreation. */
     private fun openMessageMenu(ctx: MessageMenuContext) {
         val items = buildList {
+            if (ctx.roomLink != null) add(MenuItem(MSG_JOIN, getString(R.string.timeline_msg_join)))
             if (ctx.openAction != null) add(MenuItem(MSG_OPEN, getString(R.string.timeline_msg_open)))
             add(MenuItem(MSG_REACT, getString(R.string.timeline_msg_react)))
             add(MenuItem(MSG_REPLY, getString(R.string.timeline_msg_reply)))
@@ -685,6 +686,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         }
         val menu = MenuSheet.show(requireContext(), items) { selected ->
             when (selected.id) {
+                MSG_JOIN -> ctx.roomLink?.let { navigator.toJoinRoom(it) }
                 MSG_OPEN -> ctx.openAction?.invoke()
                 MSG_REACT -> openReactionPicker(ctx.eventId, ctx.reactions)
                 MSG_EDIT -> ctx.editAction?.invoke()
@@ -722,6 +724,8 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         val saveToGallery: (() -> Unit)? = null,
         /** Any media: write to Downloads. Null hides the item (text messages). */
         val saveToFiles: (() -> Unit)? = null,
+        /** A room linked in the message (S28). Null hides "Join group". */
+        val roomLink: String? = null,
     )
 
     private fun menuContextFor(row: TimelineRow.Message) = MessageMenuContext(
@@ -733,6 +737,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         reactions = row.reactions,
         copyText = row.body,
         openAction = null,
+        roomLink = row.roomLink,
         editAction = {
             org.matchat.core.ui.menu.TextPromptSheet.show(
                 requireContext(),
@@ -1145,6 +1150,7 @@ class TimelineFragment : SoftkeyFragment(), DirectionalKeyReceiver {
         const val PLAYBACK_TICK_MS = 200L // ~5 Hz progress updates while playing
         const val MIN_VOICE_MS = 1_000L // ignore accidental sub-second taps
         const val ARG_ROOM_ID = "roomId"
+        const val MSG_JOIN = "join"
         const val MSG_OPEN = "open"
         const val MSG_REPLY = "reply"
         const val MSG_EDIT = "edit"

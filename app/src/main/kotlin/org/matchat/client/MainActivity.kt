@@ -572,6 +572,8 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toInvite(roomId: RoomId) =
         navController.navigate(R.id.inviteDetailFragment, bundleOf(ARG_ROOM_ID to roomId.value))
 
+    override fun toJoinRoom(link: String) = navController.navigate(R.id.joinRoomFragment, bundleOf(ARG_LINK to link))
+
     override fun toNewChat() = navController.navigate(R.id.newChatFragment)
     override fun toTypeAddress() = navController.navigate(R.id.typeAddressFragment)
     override fun toVerification() = navController.navigate(R.id.verificationFragment)
@@ -594,6 +596,7 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_SENDER_ID = "senderId"
         const val ARG_TIMESTAMP = "timestamp"
         const val ARG_USER_ID = "userId"
+        const val ARG_LINK = "link"
 
         // Diagnostic logging for the right-softkey/Options on-device report —
         // see the log call sites (dispatchKeyEvent, handleAccessibilityKeyEvent)
