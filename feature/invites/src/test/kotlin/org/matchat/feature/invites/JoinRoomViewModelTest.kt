@@ -53,15 +53,29 @@ class JoinRoomViewModelTest {
     }
 
     @Test
-    fun `a knock room offers Ask to join, and asking sends the request`() = runTest {
+    fun `a knock room offers Ask to join, which prompts for a message and sends it`() = runTest {
         session.previewResult = { Result.success(preview(JoinRule.KNOCK)) }
         val vm = subject()
         assertEquals(JoinButton.ASK, vm.state.value.button)
         assertEquals(JoinNote.KNOCK_ROOM, vm.state.value.note)
 
-        vm.onAction(JoinRoomAction.Activate)
+        vm.navEvents.test {
+            vm.onAction(JoinRoomAction.Activate)
+            assertEquals(JoinRoomNav.PromptForMessage, awaitItem())
+        }
+        vm.onAction(JoinRoomAction.SendRequest("  Hi, it's Wayne from the barn  "))
+        assertEquals("Hi, it's Wayne from the barn", session.lastKnockMessage)
         assertEquals(JoinNote.REQUEST_SENT, vm.state.value.note)
         assertEquals(JoinButton.NONE, vm.state.value.button)
+    }
+
+    @Test
+    fun `a blank message sends the request without one`() = runTest {
+        session.previewResult = { Result.success(preview(JoinRule.KNOCK)) }
+        val vm = subject()
+        vm.onAction(JoinRoomAction.SendRequest("   "))
+        assertNull(session.lastKnockMessage)
+        assertEquals(JoinNote.REQUEST_SENT, vm.state.value.note)
     }
 
     @Test
@@ -81,7 +95,7 @@ class JoinRoomViewModelTest {
         session.previewResult = { Result.success(preview(JoinRule.KNOCK)) }
         session.knockResult = { Result.failure(IllegalStateException()) }
         val vm = subject()
-        vm.onAction(JoinRoomAction.Activate)
+        vm.onAction(JoinRoomAction.SendRequest(""))
         assertEquals(JoinError.KNOCK_FAILED, vm.state.value.error)
         assertEquals(JoinButton.ASK, vm.state.value.button)
     }

@@ -67,12 +67,16 @@ class FakeMatrixSession(
     var previewResult: (RoomLink) -> Result<RoomPreview> = { Result.failure(IllegalStateException("no preview")) }
     var joinResult: (RoomLink) -> JoinOutcome = { JoinOutcome.Joined(RoomId(it.idOrAlias)) }
     var knockResult: (RoomLink) -> Result<Unit> = { Result.success(Unit) }
+    var lastKnockMessage: String? = null
 
     override suspend fun previewRoom(link: RoomLink): Result<RoomPreview> = previewResult(link)
 
     override suspend fun joinRoom(link: RoomLink): JoinOutcome = joinResult(link)
 
-    override suspend fun knockRoom(link: RoomLink): Result<Unit> = knockResult(link)
+    override suspend fun knockRoom(link: RoomLink, message: String?): Result<Unit> {
+        lastKnockMessage = message
+        return knockResult(link)
+    }
 
     var ownUser: UserId? = UserId("@me:local")
     override suspend fun ownUserId(): UserId? = ownUser

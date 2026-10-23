@@ -104,9 +104,9 @@ internal class RustMatrixSession @Inject constructor(
         )
     }
 
-    override suspend fun knockRoom(link: RoomLink): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun knockRoom(link: RoomLink, message: String?): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            holder.requireClient().knock(link.idOrAlias, null, link.via)
+            holder.requireClient().knock(link.idOrAlias, message, link.via)
             Unit
         }
     }

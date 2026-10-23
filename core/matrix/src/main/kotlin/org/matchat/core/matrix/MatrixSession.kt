@@ -72,8 +72,9 @@ interface MatrixSession : SyncStateSource {
     /** Join the linked room (or accept a pending invitation to it). */
     suspend fun joinRoom(link: RoomLink): JoinOutcome
 
-    /** Ask to join (knock): the room's members decide whether to let us in. */
-    suspend fun knockRoom(link: RoomLink): Result<Unit>
+    /** Ask to join (knock): the room's members decide whether to let us in.
+     *  [message] is the optional note they see with the request. */
+    suspend fun knockRoom(link: RoomLink, message: String?): Result<Unit>
 
     /** Our own Matrix user id, or null before login (used for call membership). */
     suspend fun ownUserId(): UserId?

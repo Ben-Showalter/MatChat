@@ -9,6 +9,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.ui.focus.FocusEngine
+import org.matchat.core.ui.menu.TextPromptSheet
 import org.matchat.core.ui.nav.Navigator
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.feature.invites.databinding.FragmentJoinRoomBinding
@@ -42,6 +43,11 @@ class JoinRoomFragment : SoftkeyFragment() {
                                 navigator.back()
                                 navigator.toRoom(nav.roomId)
                             }
+                            JoinRoomNav.PromptForMessage -> TextPromptSheet.show(
+                                requireContext(),
+                                getString(R.string.join_message_prompt),
+                                singleLine = false,
+                            ) { viewModel.onAction(JoinRoomAction.SendRequest(it)) }
                         }
                     }
                 }

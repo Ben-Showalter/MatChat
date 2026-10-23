@@ -71,6 +71,7 @@ class JoinRoomViewModel @Inject constructor(
     fun onAction(action: JoinRoomAction) {
         when (action) {
             JoinRoomAction.Activate -> activate()
+            is JoinRoomAction.SendRequest -> sendRequest(action.message)
         }
     }
 
@@ -92,7 +93,7 @@ class JoinRoomViewModel @Inject constructor(
         if (link == null || current.isBusy || current.blockedDomain != null) return
         when (current.button) {
             JoinButton.JOIN -> join(link)
-            JoinButton.ASK -> knock(link)
+            JoinButton.ASK -> viewModelScope.launch { navChannel.send(JoinRoomNav.PromptForMessage) }
             JoinButton.OPEN -> roomId?.let { viewModelScope.launch { navChannel.send(JoinRoomNav.OpenRoom(it)) } }
             JoinButton.NONE -> Unit
         }
@@ -119,10 +120,12 @@ class JoinRoomViewModel @Inject constructor(
         }
     }
 
-    private fun knock(link: RoomLink) {
+    private fun sendRequest(message: String) {
+        val current = state.value
+        if (link == null || current.isBusy || current.blockedDomain != null || current.button != JoinButton.ASK) return
         base.update { it.copy(isBusy = true, error = null) }
         viewModelScope.launch {
-            session.knockRoom(link).fold(
+            session.knockRoom(link, message.trim().ifEmpty { null }).fold(
                 onSuccess = {
                     base.update {
                         it.copy(isBusy = false, note = JoinNote.REQUEST_SENT, button = JoinButton.NONE)

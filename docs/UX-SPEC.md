@@ -570,8 +570,11 @@ button.
 | Not a room link | "This link does not lead to a group." | — |
 
 `Join` (or `Open`) replaces this screen with the room (S9), so Back from the
-room returns to the conversation the link was in. `Ask to join` sends the
-request with no message (typing one is not worth it on a keypad).
+room returns to the conversation the link was in. `Ask to join` opens a text
+prompt (TextPromptSheet) titled "Message to the group (optional)"; the members
+see the message with the request. Confirming a blank prompt sends the request
+without one; Back cancels and sends nothing. No room can require a message —
+it is optional in the protocol.
 **Blocked by policy** (the room's server — its alias or id server, else the
 first `via` server — is not in `allowedDomains`): no button; in its place
 "Your organization does not allow messages from example.org." Observed live.
