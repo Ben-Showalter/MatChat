@@ -166,6 +166,12 @@ start · room name 16 sp bold · last message 13 sp grey, one line
 ellipsized · relative time 11 sp top-right · unread badge (inverse pill, count)
 right of the name.
 Sorted by most recent activity. Focus = the standard focus highlight (§2).
+**Spaces** (S29) appear as folder rows above the rooms — same row shape, with
+"Space · 3 groups" as the preview line, the latest activity and the summed
+unread count of every joined group inside it (at any depth). A room that
+belongs to a joined space is shown **only inside that space**, never at top
+level; a room whose space the user is not in stays at top level. CENTER on a
+space row opens S29.
 **Pending invitations** appear as an 18 dp band directly under the title bar —
 "1 invitation" / "3 invitations", with the count in an inverse pill. It is
 the *first* focus stop and opens S18; when focused it uses the
@@ -569,7 +575,8 @@ button.
 | No preview available | "Could not show details for this group. You can still try to join." | `Join` |
 | Not a room link | "This link does not lead to a group." | — |
 
-`Join` (or `Open`) replaces this screen with the room (S9), so Back from the
+`Join` (or `Open`) replaces this screen with the room (S9), or with S29 when
+the link is to a space, so Back from the
 room returns to the conversation the link was in. `Ask to join` opens a text
 prompt (TextPromptSheet) titled "Message to the group (optional)"; the members
 see the message with the request. Confirming a blank prompt sends the request
@@ -584,6 +591,22 @@ Loading: "Loading…"; while joining or asking: "Please wait…".
 Errors, inline, the button stays as the retry: "Could not join. Check your
 connection and try again." / "Could not send your request. Try again, or ask a
 member to invite you."
+
+### S29 — Space
+Reached from a space row on S8, or from another space's row (nested spaces).
+Title: the space's name. Rows: its joined subspaces (folder rows, as on S8),
+then its joined groups — the same rows and order as S8, scoped to this space.
+**Only rooms and spaces the user has joined are listed.** A space's other
+rooms are never shown or browsable: a space is a folder, not a directory
+(`AGENTS.md §0`). Membership arrives, as everywhere, by invitation or a link
+(S28 — a link to a space opens it here once joined).
+Focus order: row 1 → row *n*. Initial focus row 1.
+Softkeys: Options | Open | Back. Options: Leave space → a confirmation row
+"Leave space (your groups stay)". Leaving a space keeps its groups; they move
+to the top level of S8. A failed leave shows "Could not leave the space. Try
+again." above the list.
+Empty: "You are not in any group in this space yet. A member can invite you."
+If the space is left (here or on another device) the screen returns on its own.
 
 ## 4. Content voice
 

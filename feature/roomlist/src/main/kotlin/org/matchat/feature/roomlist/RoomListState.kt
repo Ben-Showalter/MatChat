@@ -18,6 +18,10 @@ data class RoomRow(
      *  "Draft: …" (or "Draft: Attachment") from it and shows that instead
      *  of [preview] when non-null and non-empty. */
     val draft: Draft? = null,
+    /** A space folder (S29), not a chat: CENTER opens the space. */
+    val isSpace: Boolean = false,
+    /** Spaces only: how many groups are inside, at any depth. */
+    val groupCount: Int = 0,
 ) {
     val isUnread: Boolean get() = unreadCount > 0
     val isDraft: Boolean get() = draft != null && !draft.isEmpty

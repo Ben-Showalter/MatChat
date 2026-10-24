@@ -19,6 +19,9 @@ interface Navigator {
     fun toWelcomeRoot()
     fun toRoom(roomId: RoomId)
 
+    /** S29: a joined space as a folder of its joined rooms and subspaces. */
+    fun toSpace(spaceId: RoomId)
+
     /** Full-screen image viewer for a timeline image (D-pad pan, * / # zoom). */
     fun toImageViewer(eventId: EventId)
 

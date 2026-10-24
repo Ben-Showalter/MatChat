@@ -139,6 +139,8 @@ data class RoomPreview(
     val memberCount: Int?,
     val joinRule: JoinRule,
     val membership: PreviewMembership,
+    /** A space (S29) rather than a chat room: joining opens the space. */
+    val isSpace: Boolean = false,
 )
 
 /** The result of joining a linked room. */

@@ -106,6 +106,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/spaceFragment"
+        android:name="org.matchat.feature.roomlist.SpaceFragment"
+        android:label="Space">
+        <argument
+            android:name="spaceId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/joinRoomFragment"
         android:name="org.matchat.feature.invites.JoinRoomFragment"
         android:label="Join group">

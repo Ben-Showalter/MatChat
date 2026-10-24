@@ -33,6 +33,9 @@ data class RoomSummary(
     /** True while the latest message is encrypted and not yet decrypted — its
      *  text is not readable yet, so a notification for it waits (docs/ARCHITECTURE.md). */
     val lastMessageUndecrypted: Boolean = false,
+    /** Joined spaces that list this room as a child (Spaces round). Non-empty
+     *  means the room list shows it inside those spaces, not at top level. */
+    val parentSpaceIds: List<RoomId> = emptyList(),
 )
 
 /** An invitation (a room whose membership state is Invited). See S18/S19. */

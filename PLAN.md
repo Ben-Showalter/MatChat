@@ -33,7 +33,7 @@ we write **UI only**.
 
 ### Explicit non-goals (v1)
 
-Voice/video calls · spaces · threads · widgets · stickers · location sharing ·
+Voice/video calls · browsing a space's rooms (joined spaces are folders, UX-SPEC S29) · threads · widgets · stickers · location sharing ·
 public room directory · user directory search · browsing or searching for people
 or rooms in any form · in-app browser or link previews · custom keyboard/T9 (the
 system IME already does this) · tablet or smartphone layouts.

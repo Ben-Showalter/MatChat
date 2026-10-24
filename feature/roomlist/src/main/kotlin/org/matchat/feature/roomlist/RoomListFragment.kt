@@ -113,6 +113,7 @@ class RoomListFragment : SoftkeyFragment() {
     private fun navigate(nav: RoomListNav) {
         when (nav) {
             is RoomListNav.Room -> navigator.toRoom(nav.roomId)
+            is RoomListNav.Space -> navigator.toSpace(nav.spaceId)
             RoomListNav.Invites -> navigator.toInvites()
             RoomListNav.NewChat -> navigator.toNewChat()
             RoomListNav.Settings -> navigator.toSettings()

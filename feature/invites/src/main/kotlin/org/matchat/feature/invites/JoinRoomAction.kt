@@ -13,6 +13,9 @@ sealed interface JoinRoomAction {
 sealed interface JoinRoomNav {
     data class OpenRoom(val roomId: RoomId) : JoinRoomNav
 
+    /** The link was a space: open it as a folder (S29). */
+    data class OpenSpace(val spaceId: RoomId) : JoinRoomNav
+
     /** Ask to join: show the optional-message prompt (cancel sends nothing). */
     data object PromptForMessage : JoinRoomNav
 }

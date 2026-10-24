@@ -43,6 +43,10 @@ class JoinRoomFragment : SoftkeyFragment() {
                                 navigator.back()
                                 navigator.toRoom(nav.roomId)
                             }
+                            is JoinRoomNav.OpenSpace -> {
+                                navigator.back()
+                                navigator.toSpace(nav.spaceId)
+                            }
                             JoinRoomNav.PromptForMessage -> TextPromptSheet.show(
                                 requireContext(),
                                 getString(R.string.join_message_prompt),

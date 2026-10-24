@@ -17,6 +17,7 @@ import org.matchat.core.model.RoomLink
 import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomPreview
 import org.matchat.core.model.RoomSummary
+import org.matchat.core.model.SpaceSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
@@ -30,10 +31,12 @@ class FakeMatrixSession(
     val invitesFlow: MutableStateFlow<List<InviteSummary>> = MutableStateFlow(emptyList()),
     val syncFlow: MutableStateFlow<SyncState> = MutableStateFlow(SyncState.IDLE),
     val deviceFlow: MutableStateFlow<DeviceTrust> = MutableStateFlow(DeviceTrust.VERIFIED),
+    val spacesFlow: MutableStateFlow<List<SpaceSummary>> = MutableStateFlow(emptyList()),
 ) : MatrixSession {
 
     override val rooms: Flow<List<RoomSummary>> = roomsFlow
     override val invites: Flow<List<InviteSummary>> = invitesFlow
+    override val spaces: Flow<List<SpaceSummary>> = spacesFlow
     override val syncState: Flow<SyncState> = syncFlow
     override val ownDevice: Flow<DeviceTrust> = deviceFlow
 

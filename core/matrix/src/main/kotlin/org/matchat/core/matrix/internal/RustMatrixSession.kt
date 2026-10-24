@@ -22,6 +22,7 @@ import org.matchat.core.model.RoomLink
 import org.matchat.core.model.RoomMemberSummary
 import org.matchat.core.model.RoomPreview
 import org.matchat.core.model.RoomSummary
+import org.matchat.core.model.SpaceSummary
 import org.matchat.core.model.SyncState
 import org.matchat.core.model.UserId
 import org.matchat.core.policy.PolicyProvider
@@ -47,6 +48,7 @@ internal class RustMatrixSession @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val rooms: Flow<List<RoomSummary>> = holder.rooms
+    override val spaces: Flow<List<SpaceSummary>> = holder.spaces
     override val syncState: Flow<SyncState> = holder.syncState
 
     override fun isActive(): Boolean = holder.isActive()

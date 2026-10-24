@@ -42,6 +42,7 @@ class JoinRoomViewModel @Inject constructor(
 
     private val link: RoomLink? = savedStateHandle.get<String>("link")?.let(RoomLink::parse)
     private var roomId: RoomId? = null
+    private var isSpace = false
 
     private val base = MutableStateFlow(
         JoinRoomState(name = link?.idOrAlias.orEmpty(), address = link?.idOrAlias.orEmpty()),
@@ -79,6 +80,7 @@ class JoinRoomViewModel @Inject constructor(
         session.previewRoom(link).fold(
             onSuccess = { preview ->
                 roomId = preview.roomId
+                isSpace = preview.isSpace
                 base.update { it.withPreview(preview) }
             },
             // No preview (the server may not offer one): still let the user try.
@@ -94,7 +96,7 @@ class JoinRoomViewModel @Inject constructor(
         when (current.button) {
             JoinButton.JOIN -> join(link)
             JoinButton.ASK -> viewModelScope.launch { navChannel.send(JoinRoomNav.PromptForMessage) }
-            JoinButton.OPEN -> roomId?.let { viewModelScope.launch { navChannel.send(JoinRoomNav.OpenRoom(it)) } }
+            JoinButton.OPEN -> roomId?.let { viewModelScope.launch { navChannel.send(openNav(it)) } }
             JoinButton.NONE -> Unit
         }
     }
@@ -104,13 +106,15 @@ class JoinRoomViewModel @Inject constructor(
         viewModelScope.launch {
             when (val outcome = session.joinRoom(link)) {
                 is JoinOutcome.Joined -> {
-                    // Wait (briefly) for sync to list the room, so the timeline
-                    // opens on a room the session knows about.
+                    // Wait (briefly) for sync to list the room or space, so the
+                    // next screen opens on something the session knows about.
                     withTimeoutOrNull(ROOM_WAIT_MS) {
-                        session.rooms.first { rooms -> rooms.any { it.id == outcome.roomId } }
+                        combine(session.rooms, session.spaces) { rooms, spaces ->
+                            rooms.any { it.id == outcome.roomId } || spaces.any { it.id == outcome.roomId }
+                        }.first { it }
                     }
                     base.update { it.copy(isBusy = false) }
-                    navChannel.send(JoinRoomNav.OpenRoom(outcome.roomId))
+                    navChannel.send(openNav(outcome.roomId))
                 }
                 JoinOutcome.NeedsInvite -> base.update {
                     it.copy(isBusy = false, note = JoinNote.NEEDS_INVITE, button = JoinButton.ASK)
@@ -135,6 +139,8 @@ class JoinRoomViewModel @Inject constructor(
             )
         }
     }
+
+    private fun openNav(id: RoomId): JoinRoomNav = if (isSpace) JoinRoomNav.OpenSpace(id) else JoinRoomNav.OpenRoom(id)
 
     private fun JoinRoomState.withPreview(preview: RoomPreview): JoinRoomState {
         val (note, button) = when (preview.membership) {

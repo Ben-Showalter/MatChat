@@ -12,15 +12,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.matchat.core.matrix.Draft
 import org.matchat.core.matrix.DraftStore
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.InviteSummary
 import org.matchat.core.model.MillisClock
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomSummary
+import org.matchat.core.model.SpaceTree
 import org.matchat.core.model.SyncState
-import org.matchat.core.model.format.RelativeTime
 import org.matchat.core.policy.PolicyProvider
 import javax.inject.Inject
 
@@ -66,10 +65,12 @@ class RoomListViewModel @Inject constructor(
                 RoomListContext(rooms, invites, sync, policy.allowDirectChat, focus)
             },
             draftStore.drafts,
-        ) { ctx, drafts ->
+            session.spaces,
+        ) { ctx, drafts, spaces ->
             RoomListState(
-                isLoading = ctx.sync == SyncState.SYNCING && ctx.rooms.isEmpty(),
-                rooms = ctx.rooms.map { it.toRow(drafts[it.id.value]) },
+                isLoading = ctx.sync == SyncState.SYNCING && ctx.rooms.isEmpty() && spaces.isEmpty(),
+                // Rooms in a joined space live inside its folder (S29), not here.
+                rooms = SpaceTree(ctx.rooms, spaces).rowsIn(null, drafts, clock.now()),
                 inviteBand = ctx.invites.toBand(),
                 isOffline = ctx.sync == SyncState.OFFLINE || ctx.sync == SyncState.ERROR,
                 focusedIndex = ctx.focus,
@@ -80,7 +81,13 @@ class RoomListViewModel @Inject constructor(
     fun onAction(action: RoomListAction) {
         when (action) {
             is RoomListAction.RoomFocused -> focusedIndex.value = action.index
-            is RoomListAction.OpenRoom -> emit(RoomListNav.Room(action.roomId))
+            is RoomListAction.OpenRoom -> emit(
+                if (state.value.rooms.any { it.id == action.roomId && it.isSpace }) {
+                    RoomListNav.Space(action.roomId)
+                } else {
+                    RoomListNav.Room(action.roomId)
+                },
+            )
             RoomListAction.OpenInvites -> emit(RoomListNav.Invites)
             RoomListAction.NewMessage -> emit(RoomListNav.NewChat)
             RoomListAction.OpenSettings -> emit(RoomListNav.Settings)
@@ -103,21 +110,6 @@ class RoomListViewModel @Inject constructor(
         viewModelScope.launch { navChannel.send(nav) }
     }
 
-    /** [draft] is this room's live draft, if any (draft messages round) — a
-     *  plain passthrough of the domain data; the Fragment/Adapter (which
-     *  already own every `getString`/resource call in this module — the
-     *  ViewModel has none) decide the actual "Draft: …" display text and
-     *  styling from it, same boundary as everywhere else here. */
-    private fun RoomSummary.toRow(draft: Draft?) = RoomRow(
-        id = id,
-        name = name,
-        preview = lastMessage.orEmpty(),
-        time = lastActivityEpochMs?.let { RelativeTime.roomListLabel(it, clock.now()) }.orEmpty(),
-        unreadCount = unreadCount,
-        avatarUrl = avatarUrl,
-        draft = draft,
-    )
-
     /** Download an avatar's bytes by its `mxc://` URI (Avatars round). */
     suspend fun loadAvatar(mxcUrl: String): ByteArray? = session.loadAvatar(mxcUrl)
 
@@ -131,6 +123,7 @@ class RoomListViewModel @Inject constructor(
 /** One-shot navigation intents from the room list. */
 sealed interface RoomListNav {
     data class Room(val roomId: RoomId) : RoomListNav
+    data class Space(val spaceId: RoomId) : RoomListNav
     data object Invites : RoomListNav
     data object NewChat : RoomListNav
     data object Settings : RoomListNav

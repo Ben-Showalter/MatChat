@@ -19,6 +19,7 @@ import org.matchat.core.model.PreviewMembership
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.RoomPreview
 import org.matchat.core.model.RoomSummary
+import org.matchat.core.model.SpaceSummary
 import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeMatrixSession
 import org.matchat.core.testing.FakePolicyProvider
@@ -118,6 +119,17 @@ class JoinRoomViewModelTest {
         vm.navEvents.test {
             vm.onAction(JoinRoomAction.Activate)
             assertEquals(JoinRoomNav.OpenRoom(roomId), awaitItem())
+        }
+    }
+
+    @Test
+    fun `joining a space opens it as a folder`() = runTest {
+        session.previewResult = { Result.success(preview().copy(isSpace = true)) }
+        session.spacesFlow.value = listOf(SpaceSummary(roomId, "Farm"))
+        val vm = subject()
+        vm.navEvents.test {
+            vm.onAction(JoinRoomAction.Activate)
+            assertEquals(JoinRoomNav.OpenSpace(roomId), awaitItem())
         }
     }
 

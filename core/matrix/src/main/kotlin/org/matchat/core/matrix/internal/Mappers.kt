@@ -12,6 +12,7 @@ import org.matchat.core.model.RoomPreview
 import org.matchat.core.model.RoomSummary
 import org.matchat.core.model.SeenBy
 import org.matchat.core.model.SendState
+import org.matchat.core.model.SpaceSummary
 import org.matchat.core.model.TimelineItem
 import org.matchat.core.model.UserId
 import org.matrix.rustcomponents.sdk.EventOrTransactionId
@@ -23,6 +24,7 @@ import org.matrix.rustcomponents.sdk.MsgLikeKind
 import org.matrix.rustcomponents.sdk.ProfileDetails
 import org.matrix.rustcomponents.sdk.Room
 import org.matrix.rustcomponents.sdk.RoomPreviewInfo
+import org.matrix.rustcomponents.sdk.RoomType
 import org.matrix.rustcomponents.sdk.TimelineItemContent
 import org.matrix.rustcomponents.sdk.JoinRule as RustJoinRule
 import org.matrix.rustcomponents.sdk.TimelineItem as RustTimelineItem
@@ -40,7 +42,7 @@ internal object Mappers {
 
     private const val TAG = "Mappers"
 
-    suspend fun toRoomSummary(room: Room): RoomSummary {
+    suspend fun toRoomSummary(room: Room, parentSpaceIds: List<RoomId> = emptyList()): RoomSummary {
         val info = runCatching { room.roomInfo() }.getOrNull()
         val encrypted = runCatching { room.isEncrypted() }.getOrDefault(true)
         val latest = latestPreview(room)
@@ -57,6 +59,18 @@ internal object Mappers {
             lastMessageIsOwn = latest?.isOwn ?: false,
             lastMessageMedia = latest?.media,
             lastMessageUndecrypted = latest?.undecrypted ?: false,
+            parentSpaceIds = parentSpaceIds,
+        )
+    }
+
+    /** A joined space as a folder (S29). */
+    suspend fun toSpaceSummary(room: Room, parentSpaceIds: List<RoomId>): SpaceSummary {
+        val info = runCatching { room.roomInfo() }.getOrNull()
+        return SpaceSummary(
+            id = RoomId(room.id()),
+            name = info?.displayName ?: room.displayName() ?: room.id(),
+            avatarUrl = info?.avatarUrl ?: runCatching { room.avatarUrl() }.getOrNull(),
+            parentSpaceIds = parentSpaceIds,
         )
     }
 
@@ -95,6 +109,7 @@ internal object Mappers {
             Membership.LEFT -> PreviewMembership.LEFT
             null -> PreviewMembership.NONE
         },
+        isSpace = info.roomType is RoomType.Space,
     )
 
     private fun joinRuleOf(rule: RustJoinRule?): JoinRule = when (rule) {
