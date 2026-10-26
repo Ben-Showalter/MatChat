@@ -23,14 +23,14 @@ import org.matchat.core.ui.theme.themeDimenPx
 import org.matchat.feature.newchat.databinding.FragmentNewChatBinding
 import org.matchat.core.ui.R as UiR
 
-/** S20 New message. Each row is a focus stop; Options appears only while a
- *  contact row has focus (UX-SPEC S20). */
+/** S20 Contacts. Each row is a focus stop; CENTER on a person opens their
+ *  menu (Send message, …), CENTER on "Type an address" messages someone new.
+ *  LEFT is blank — the menu is on CENTER (UX-SPEC S20). */
 @AndroidEntryPoint
 class NewChatFragment : SoftkeyFragment() {
 
     override val contentLayoutId: Int = R.layout.fragment_new_chat
-    override val leftLabel: CharSequence
-        get() = getString(if (state.hasOptions) UiR.string.softkey_options else UiR.string.softkey_blank)
+    override val leftLabel: CharSequence get() = getString(UiR.string.softkey_blank)
     override val centerLabel: CharSequence get() = getString(org.matchat.core.ui.R.string.softkey_select)
 
     private val viewModel: NewChatViewModel by viewModels()
@@ -38,9 +38,9 @@ class NewChatFragment : SoftkeyFragment() {
     private val navigator: Navigator get() = requireActivity() as Navigator
     private var state = NewChatState()
 
-    // The lists last drawn: rows are rebuilt only when these change, so a
-    // focus move (which only changes focusedContact) never resets focus.
-    private var drawnLists: Triple<List<ContactRow>, List<ContactRow>, Boolean>? = null
+    // The state last drawn: rows are rebuilt only when it changes, so an
+    // unrelated re-emission never moves focus back to the first row.
+    private var drawnState: NewChatState? = null
 
     /** "Add to a phone contact…" with the contacts permission: the phone's own
      *  contact picker; the ViewModel adds the Matrix address to the one picked. */
@@ -63,33 +63,33 @@ class NewChatFragment : SoftkeyFragment() {
 
     private fun render(newState: NewChatState) {
         state = newState
-        refreshSoftkeys()
         val container = binding?.newchatContainer ?: return
-        val lists = Triple(newState.contacts, newState.recents, newState.isLoading)
-        if (lists == drawnLists) return
-        drawnLists = lists
+        if (newState == drawnState) return
+        drawnState = newState
         container.removeAllViews()
 
         if (newState.contacts.isNotEmpty()) {
             container.addView(header(getString(R.string.newchat_section_contacts)))
-            newState.contacts.forEach { container.addView(contactRow(it, isContact = true)) }
+            newState.contacts.forEach { container.addView(contactRow(it)) }
         }
         if (newState.recents.isNotEmpty()) {
             container.addView(header(getString(R.string.newchat_section_recent)))
-            newState.recents.forEach { container.addView(contactRow(it, isContact = false)) }
+            newState.recents.forEach { container.addView(contactRow(it)) }
         }
         if (!newState.isLoading && !newState.hasSavedContacts) {
             container.addView(header(getString(R.string.newchat_empty)))
         }
-        val typeRow = actionRow(getString(R.string.newchat_type_address)) {
-            viewModel.onAction(NewChatAction.TypeAnAddress)
-        }.apply {
-            setOnFocusChangeListener { _, hasFocus -> if (hasFocus) viewModel.onAction(NewChatAction.Focused(null)) }
+        // Messaging someone new is hidden when policy turns direct chat off.
+        val typeRow = if (newState.canMessage) {
+            actionRow(getString(R.string.newchat_type_address)) { viewModel.onAction(NewChatAction.TypeAnAddress) }
+                .also { container.addView(it) }
+        } else {
+            null
         }
-        container.addView(typeRow)
 
         if (container.findFocus() == null) {
-            FocusEngine.requestInitialFocus(container.getChildAt(0)?.takeIf { it.isFocusable } ?: typeRow)
+            val first = (0 until container.childCount).map(container::getChildAt).firstOrNull { it.isFocusable }
+            (first ?: typeRow)?.let { FocusEngine.requestInitialFocus(it) }
         }
     }
 
@@ -108,27 +108,35 @@ class NewChatFragment : SoftkeyFragment() {
     }
 
     private fun messageRes(key: NewChatMessage): Int = when (key) {
+        NewChatMessage.CONTACT_SAVED -> R.string.newchat_contact_saved
         NewChatMessage.CONTACT_REMOVED -> R.string.newchat_contact_removed
+        NewChatMessage.MESSAGE_FAILED -> R.string.newchat_message_failed
         NewChatMessage.PHONE_MERGED -> R.string.newchat_phone_merged
         NewChatMessage.PHONE_MERGE_FAILED -> R.string.newchat_phone_merge_failed
         NewChatMessage.PHONE_CONTACTS_UNAVAILABLE -> R.string.newchat_phone_contacts_unavailable
     }
 
-    /** Options on the focused contact (UX-SPEC S20): add to a phone contact,
-     *  and remove — saved contacts only, not admin-pushed ones. */
-    override fun onOptions(): Boolean {
-        val contact = state.focusedContact ?: return true
+    /** A person's menu (UX-SPEC S20): Send message (when policy allows), then
+     *  for a contact Add to a phone contact… and Remove contact (saved ones
+     *  only, not admin-pushed), or for a recent Save contact. */
+    private fun personMenu(row: ContactRow) {
         val items = buildList {
-            add(MenuItem(OPTION_PHONE, getString(R.string.newchat_add_to_phone_contact)))
-            if (contact.isRemovable) add(MenuItem(OPTION_REMOVE, getString(R.string.newchat_remove_contact)))
+            if (state.canMessage) add(MenuItem(OPTION_MESSAGE, getString(R.string.newchat_send_message)))
+            if (row.isSaved) {
+                add(MenuItem(OPTION_PHONE, getString(R.string.newchat_add_to_phone_contact)))
+                if (row.isRemovable) add(MenuItem(OPTION_REMOVE, getString(R.string.newchat_remove_contact)))
+            } else {
+                add(MenuItem(OPTION_SAVE, getString(R.string.newchat_save_contact)))
+            }
         }
         MenuSheet.show(requireContext(), items) { item ->
             when (item.id) {
-                OPTION_PHONE -> viewModel.onAction(NewChatAction.AddToPhoneContact(contact.address))
-                OPTION_REMOVE -> viewModel.onAction(NewChatAction.RemoveContact(contact.address))
+                OPTION_MESSAGE -> viewModel.onAction(NewChatAction.Message(row.address))
+                OPTION_SAVE -> viewModel.onAction(NewChatAction.SaveContact(row.address))
+                OPTION_PHONE -> viewModel.onAction(NewChatAction.AddToPhoneContact(row.address))
+                OPTION_REMOVE -> viewModel.onAction(NewChatAction.RemoveContact(row.address))
             }
         }
-        return true
     }
 
     private fun header(text: String): TextView = TextView(requireContext()).apply {
@@ -140,13 +148,7 @@ class NewChatFragment : SoftkeyFragment() {
         setPadding(0, pad, 0, 2)
     }
 
-    private fun contactRow(row: ContactRow, isContact: Boolean): View =
-        actionRow(row.primary, row.secondary) { viewModel.onAction(NewChatAction.Select(row.address)) }.apply {
-            // Options follows focus: a contact row offers it, a recent doesn't.
-            setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) viewModel.onAction(NewChatAction.Focused(row.address.takeIf { isContact }))
-            }
-        }
+    private fun contactRow(row: ContactRow): View = actionRow(row.primary, row.secondary) { personMenu(row) }
 
     private fun actionRow(primary: String, secondary: String = "", onClick: () -> Unit): View {
         val layout = LinearLayout(requireContext()).apply {
@@ -181,11 +183,13 @@ class NewChatFragment : SoftkeyFragment() {
 
     override fun onDestroyView() {
         binding = null
-        drawnLists = null
+        drawnState = null
         super.onDestroyView()
     }
 
     private companion object {
+        const val OPTION_MESSAGE = "message"
+        const val OPTION_SAVE = "save_contact"
         const val OPTION_PHONE = "phone_contact"
         const val OPTION_REMOVE = "remove_contact"
     }

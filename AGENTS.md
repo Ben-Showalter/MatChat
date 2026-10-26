@@ -67,7 +67,7 @@ feature/onboarding/      Welcome, sign in, encryption setup
 feature/roomlist/        Room list + pending-invitation band
 feature/timeline/        Timeline + compose + message menu
 feature/invites/         Invitation list, invitation detail, accept / decline
-feature/newchat/         New message: contacts, recents, type an address, blocked address
+feature/newchat/         Contacts (send message, save, phone contact), recents, type an address, blocked address
 feature/settings/        Settings, help, sign out
 feature/verification/    Emoji SAS, recovery key
 stubs/kyocera-sublcd/    Compile-only declaration of Kyocera's cover-screen callback (docs/adr/0009).

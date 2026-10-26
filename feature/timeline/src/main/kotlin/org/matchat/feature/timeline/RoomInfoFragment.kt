@@ -91,6 +91,7 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
                     ToastKey.PHONE_MERGED -> R.string.roominfo_phone_merged
                     ToastKey.PHONE_MERGE_FAILED -> R.string.roominfo_phone_merge_failed
                     ToastKey.PHONE_CONTACTS_UNAVAILABLE -> R.string.roominfo_phone_contacts_unavailable
+                    ToastKey.MESSAGE_FAILED -> R.string.msginfo_message_failed
                 }
                 Toast.makeText(requireContext(), res, Toast.LENGTH_SHORT).show()
             }

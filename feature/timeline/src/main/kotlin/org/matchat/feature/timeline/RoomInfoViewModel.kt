@@ -251,4 +251,7 @@ enum class ToastKey {
     PHONE_MERGED,
     PHONE_MERGE_FAILED,
     PHONE_CONTACTS_UNAVAILABLE,
+
+    /** Message info (S11) "Send message" couldn't start the chat. */
+    MESSAGE_FAILED,
 }

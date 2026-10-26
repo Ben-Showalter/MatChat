@@ -238,7 +238,7 @@ Rows: room name, last message preview (1 line, ellipsized), relative time, unrea
 count badge. Sorted by activity. Focus = full-row inverse.
 Pending invitations sit in a bordered band directly under the title bar —
 "1 invitation" — which is the first focus stop and opens S18.
-Options menu: New message · Mark all read · Settings · Sign out. **No "join
+Options menu: Contacts · Mark all read · Settings · Sign out. **No "join
 room", no search, no directory.** If the user is in zero rooms the empty state
 says *"Your groups will appear here. Ask your administrator to add you, or start
 a message from Options."*
@@ -358,7 +358,7 @@ list by membership state and render the two groups differently.
 
 ### 6.9 Direct chat by address
 
-Options → **New message** (S20) offers, in order: **Contacts** (admin-pushed +
+Options → **Contacts** (S20, formerly "New message") offers, in order: **Contacts** (admin-pushed +
 people already chatted with), **Recent** (last 8 addresses used), **Type an
 address** (S21).
 

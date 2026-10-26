@@ -3,65 +3,90 @@ package org.matchat.feature.newchat
 import app.cash.turbine.test
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.matchat.core.model.Contact
+import org.matchat.core.model.RoomId
 import org.matchat.core.model.UserId
+import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeContactsRepository
 import org.matchat.core.testing.FakeMatrixSession
+import org.matchat.core.testing.FakePolicyProvider
 
-/** S20: saved contacts, Options on a focused contact, phone-contact hand-off. */
+/** S20 Contacts: a person's menu (Send message, save, remove, phone contact). */
 class NewChatViewModelTest {
 
     private val wayne = UserId("@wayne:example.org")
     private val boss = UserId("@boss:example.org")
+    private val session = FakeMatrixSession()
 
     @BeforeEach fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
     @AfterEach fun tearDown() = Dispatchers.resetMain()
 
-    private fun subject(contacts: FakeContactsRepository) = NewChatViewModel(FakeMatrixSession(), contacts)
+    private fun subject(contacts: FakeContactsRepository, policy: Policy = Policy.UNMANAGED) =
+        NewChatViewModel(session, contacts, FakePolicyProvider(policy))
 
     @Test
-    fun `Options appear only while a contact row has focus`() = runTest {
-        val vm = subject(FakeContactsRepository(initial = listOf(Contact(wayne, "Wayne", Contact.Source.LOCAL))))
-        backgroundScope.launch { vm.state.collect {} }
-        advanceUntilIdle()
-        assertFalse(vm.state.value.hasOptions)
-
-        vm.onAction(NewChatAction.Focused(wayne))
-        advanceUntilIdle()
-        assertEquals(wayne, vm.state.value.focusedContact?.address)
-
-        vm.onAction(NewChatAction.Focused(null))
-        advanceUntilIdle()
-        assertNull(vm.state.value.focusedContact)
+    fun `Send message opens the direct chat`() = runTest {
+        session.startDirectChatResult = { Result.success(RoomId("!dm:s")) }
+        val vm = subject(FakeContactsRepository())
+        vm.state.first { !it.isLoading } // the policy check needs a live state
+        vm.navEvents.test {
+            vm.onAction(NewChatAction.Message(wayne))
+            assertEquals(NewChatNav.OpenRoom(RoomId("!dm:s")), awaitItem())
+        }
     }
 
     @Test
-    fun `saved contacts can be removed, admin ones can't`() = runTest {
-        val vm = subject(
-            FakeContactsRepository(
-                initial = listOf(
-                    Contact(boss, "Boss", Contact.Source.ADMIN),
-                    Contact(wayne, "Wayne", Contact.Source.LOCAL),
-                ),
+    fun `a chat that can't be started says so`() = runTest {
+        session.startDirectChatResult = { Result.failure(IllegalStateException()) }
+        val vm = subject(FakeContactsRepository())
+        vm.state.first { !it.isLoading }
+        vm.navEvents.test {
+            vm.onAction(NewChatAction.Message(wayne))
+            assertEquals(NewChatNav.Message(NewChatMessage.MESSAGE_FAILED), awaitItem())
+        }
+    }
+
+    @Test
+    fun `with direct chat turned off there is no messaging`() = runTest {
+        val vm = subject(FakeContactsRepository(), Policy.UNMANAGED.copy(allowDirectChat = false))
+        assertFalse(vm.state.first { !it.isLoading }.canMessage)
+    }
+
+    @Test
+    fun `saved contacts can be removed, admin ones can't, recents aren't saved`() = runTest {
+        val contacts = FakeContactsRepository(
+            initial = listOf(
+                Contact(boss, "Boss", Contact.Source.ADMIN),
+                Contact(wayne, "Wayne", Contact.Source.LOCAL),
             ),
         )
-        val rows = vm.state.first { !it.isLoading }.contacts
-        assertFalse(rows.single { it.address == boss }.isRemovable)
-        assertTrue(rows.single { it.address == wayne }.isRemovable)
+        contacts.recordRecent(UserId("@new:s"))
+        val state = subject(contacts).state.first { !it.isLoading }
+        assertFalse(state.contacts.single { it.address == boss }.isRemovable)
+        assertTrue(state.contacts.single { it.address == wayne }.isRemovable)
+        assertFalse(state.recents.single().isSaved)
+    }
+
+    @Test
+    fun `saving a recent makes it a contact`() = runTest {
+        val contacts = FakeContactsRepository()
+        val vm = subject(contacts)
+        vm.navEvents.test {
+            vm.onAction(NewChatAction.SaveContact(wayne))
+            assertEquals(NewChatNav.Message(NewChatMessage.CONTACT_SAVED), awaitItem())
+        }
+        assertEquals(listOf(wayne), contacts.contacts.first().map { it.address })
     }
 
     @Test

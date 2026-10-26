@@ -113,9 +113,9 @@ class RoomListFragment : SoftkeyFragment() {
 
     override fun onOptions(): Boolean {
         val items = buildList {
-            if (viewModel.state.value.newMessageEnabled) {
-                add(MenuItem(OPT_NEW, getString(R.string.roomlist_opt_new_message)))
-            }
+            // Contacts (S20) is always offered; with direct chat turned off by
+            // policy it still lists contacts, just without messaging them.
+            add(MenuItem(OPT_NEW, getString(R.string.roomlist_opt_contacts)))
             add(MenuItem(OPT_READ, getString(R.string.roomlist_opt_mark_read)))
             add(MenuItem(OPT_SETTINGS, getString(R.string.roomlist_opt_settings)))
             add(MenuItem(OPT_HELP, getString(R.string.roomlist_opt_help)))

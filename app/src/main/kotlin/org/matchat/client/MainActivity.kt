@@ -578,9 +578,6 @@ class MainActivity : AppCompatActivity(), Navigator {
             ),
         )
 
-    override fun toProfile(userId: UserId) =
-        navController.navigate(R.id.profileFragment, bundleOf(ARG_USER_ID to userId.value))
-
     override fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean) = navController.navigate(
         R.id.callFragment,
         bundleOf(
@@ -622,7 +619,6 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_EVENT_ID = "eventId"
         const val ARG_SENDER_ID = "senderId"
         const val ARG_TIMESTAMP = "timestamp"
-        const val ARG_USER_ID = "userId"
         const val ARG_LINK = "link"
         const val ARG_SPACE_ID = "spaceId"
 

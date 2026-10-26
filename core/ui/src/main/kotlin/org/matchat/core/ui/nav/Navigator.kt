@@ -36,9 +36,6 @@ interface Navigator {
      *  reacted, by name — a follow-up to the Reactions round). */
     fun toMessageInfo(roomId: RoomId, eventId: EventId, senderId: UserId, timestampEpochMs: Long)
 
-    /** A sender's profile, reached from message info. */
-    fun toProfile(userId: UserId)
-
     /** Voice call screen (docs/VOICE.md). [incoming] true rings; false dials out. */
     fun toCall(roomId: RoomId, peerName: String?, incoming: Boolean)
     fun toInvites()

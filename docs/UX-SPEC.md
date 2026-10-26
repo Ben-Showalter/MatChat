@@ -182,7 +182,7 @@ else). No band when there are none.
 Focus order: invitation band (if any) → row 1 → row *n*. Initial focus:
 invitation band, else first unread, else row 1.
 Softkeys: Options | Open | Exit.
-Options: New message · Mark all as read · Settings · Help · Sign out.
+Options: Contacts · Mark all as read · Settings · Help · Sign out.
 Empty: "Your groups will appear here. Ask your administrator to add you, or
 start a message from Options."
 Offline: title bar `!` plus a 16 dp banner "No connection — showing saved
@@ -310,6 +310,16 @@ Focus starts on `Reply`.
 Softkeys: (blank) | Select | Back — the menu *is* the options list, so LEFT is
 blank here.
 
+**Message info** (the menu's last item) shows, read-only: `Sent by` (the
+sender's display name) · `Address` (@user:server) · `Sent` (date and time) ·
+`Event ID` · then `Reactions` (who reacted with what) when there are any. Then
+the actions for the sender — merged in from the old separate profile screen,
+which no longer exists: `Send message` (opens or starts the direct chat;
+hidden when policy turns direct chat off) · `Save contact` (or `Remove from
+contacts` when already saved) · `Add to a phone contact…` (as in S20). None of
+the actions show on your own messages.
+Softkeys: (blank) | Select | Back.
+
 ### S12 — Room info
 Content: room name, member count, encryption state line ("Encrypted — only
 members can read this"), a **Notification sound** row (primary line: the
@@ -436,17 +446,19 @@ on `Decline`.
 Errors: accept can fail (room gone, server unreachable) → inline message plus
 Retry, and the invitation stays in the list.
 
-### S20 — New message
-Reached from room-list Options → New message.
+### S20 — Contacts
+Reached from room-list Options → Contacts (formerly "New message").
 Three sections, each a header row (11 sp, uppercase, not focusable) followed by
 rows: **Contacts** (name 16 sp, address 11 sp) · **Recent** (address 16 sp,
 "3 days ago" 11 sp) · a final row **Type an address**.
 Focus order: contacts → recents → Type an address. Initial focus: first contact,
 or `Type an address` when both lists are empty.
-Softkeys: Options | Select | Back — Options only while a contact row is
-focused (blank on recents and `Type an address`): `Add to a phone contact…` ·
-`Remove contact` (saved contacts only; an admin-pushed contact can't be
-removed). Removing a contact never deletes the phone's copy.
+CENTER on a contact opens its menu: `Send message` (opens or starts the direct
+chat) · `Add to a phone contact…` · `Remove contact` (saved contacts only; an
+admin-pushed contact can't be removed). CENTER on a recent: `Send message` ·
+`Save contact`. CENTER on `Type an address` messages someone new (S21).
+Removing a contact never deletes the phone's copy.
+Softkeys: (blank) | Select | Back — the menu is on CENTER.
 **No search box** — the two lists are short by construction (see `AGENTS.md §0`).
 Empty: only `Type an address` shows, with the line "No saved contacts yet."
 
@@ -466,8 +478,8 @@ made a separate phone contact for them, that copy is removed so they aren't
 listed twice. Without the contacts permission it opens the phone's own "add to
 existing contact" screen instead, with the Matrix address filled in. If the
 phone has no Contacts app that can do this, a short message says so.
-Hidden entirely when `policy.allowDirectChat` is false; then room-list Options
-has no New message entry either.
+When `policy.allowDirectChat` is false the screen still lists contacts, but
+`Send message` and `Type an address` are hidden.
 
 ### S21 — Type an address
 Content: label "Address", a field pre-filled `@` … `:` with the cursor in the

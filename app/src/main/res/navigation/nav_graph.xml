@@ -80,13 +80,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/profileFragment"
-        android:name="org.matchat.feature.timeline.ProfileFragment"
-        android:label="Profile">
-        <argument android:name="userId" app:argType="string" />
-    </fragment>
-
-    <fragment
         android:id="@+id/callFragment"
         android:name="org.matchat.feature.call.CallFragment"
         android:label="Call">
