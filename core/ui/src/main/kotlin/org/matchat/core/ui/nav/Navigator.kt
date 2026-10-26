@@ -63,6 +63,9 @@ interface Navigator {
      *  (docs/adr/0008). */
     fun toBackgroundHelper()
 
+    /** S30: the one-time "save contacts to this phone?" prompt after sign-in. */
+    fun toContactsPrompt()
+
     /** Settings > Notifications: on/off + sound. */
     fun toNotifications()
     fun toPolicy()

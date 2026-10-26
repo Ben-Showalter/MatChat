@@ -318,6 +318,10 @@ sound's name — "Default (app sound)", "Silent", or the picked sound; caption
 placeholder-until-decoded treatment as S8/S9 — plus a power label), then two
 action rows: `Pinned messages` (Pinned messages round, below) and `Add
 member`/`Leave room`.
+CENTER on a member row (not yourself) opens a menu: `Save contact` (or
+`Remove from contacts` when already saved) · `Add to a phone contact…` (see
+Contacts below) · `Remove member`. This works the same in a group as in a direct
+chat, so anyone you share a room with can be saved.
 Focus order: name, topic, notification sound, member rows, then the action
 rows. CENTER on Notification sound opens Android's sound picker for this room
 only. Its "Default" entry means the app sound from S26 (removes the room's
@@ -337,7 +341,8 @@ message yet, so this is a deliberate scope cut, not a broken link. Empty:
 
 ### S13 — Settings
 Rows: `Notifications` (opens S26) · `Text size` · `Theme` (opens S24) ·
-`Advanced` (opens S25) · `Encryption` (verification status) ·
+`Advanced` (opens S25) · `Save contacts to phone: Off/On` · `Encryption`
+(verification status) ·
 `About this phone's session` ·
 `Policy` · `Help` · `Sign out`.
 The `Policy` row reads "Managed by your organization" or "Not managed" and opens
@@ -346,6 +351,12 @@ allowed"), and whether direct chat is on. A user who cannot message someone must
 be able to find out why without calling anyone.
 Softkeys: Options | Select | Back.
 Sign out confirms: "Sign out? Messages on this phone will be removed."
+`Save contacts to phone`: CENTER on Off asks Android for the contacts
+permission (one system dialog). Allowed → On, and every saved contact is also
+written to the phone's Contacts app. Not allowed → stays Off with the line
+"Contacts stay in MatChat only". CENTER on On turns it off; nothing already on
+the phone is deleted. If the permission is later taken away in system
+settings, the row reads Off.
 
 ### S14 — Help
 A static, scrollable-by-focus list of key hints, one per row, in the same
@@ -432,9 +443,29 @@ rows: **Contacts** (name 16 sp, address 11 sp) · **Recent** (address 16 sp,
 "3 days ago" 11 sp) · a final row **Type an address**.
 Focus order: contacts → recents → Type an address. Initial focus: first contact,
 or `Type an address` when both lists are empty.
-Softkeys: (blank) | Select | Back.
+Softkeys: Options | Select | Back — Options only while a contact row is
+focused (blank on recents and `Type an address`): `Add to a phone contact…` ·
+`Remove contact` (saved contacts only; an admin-pushed contact can't be
+removed). Removing a contact never deletes the phone's copy.
 **No search box** — the two lists are short by construction (see `AGENTS.md §0`).
 Empty: only `Type an address` shows, with the line "No saved contacts yet."
+
+**Contacts** (PLAN.md §6.10) are saved on the phone, never uploaded, and kept
+across restarts. Everyone you have a direct (1-to-1) chat with is saved
+automatically, whoever started it, under the chat's name; a contact you removed
+is not added back automatically, and a name already saved is never replaced.
+Anyone else you share a room with can be saved from S12. With Settings > "Save
+contacts to phone" on, each saved contact is also written to the phone's
+Contacts app (name, the Matrix address as an IM entry labelled "Matrix", and a
+matrix.to link).
+`Add to a phone contact…` adds the Matrix address to a contact already on the
+phone: it opens the phone's own contact picker and adds only the Matrix address
+and link to the one picked — **the phone contact's name is never changed** —
+and MatChat then shows that contact's name for them. If MatChat had already
+made a separate phone contact for them, that copy is removed so they aren't
+listed twice. Without the contacts permission it opens the phone's own "add to
+existing contact" screen instead, with the Matrix address filled in. If the
+phone has no Contacts app that can do this, a short message says so.
 Hidden entirely when `policy.allowDirectChat` is false; then room-list Options
 has no New message entry either.
 
@@ -629,3 +660,17 @@ what to do next, in that order, in one sentence each.
 
 `loading` · `empty` · `error` · `offline` · `focused` — all five are fields of
 the screen's `State` data class, all five appear in the screenshot suite.
+
+### S30 — Save contacts to this phone?
+Shown **once per install**, after the post-sign-in setup (after S27 when S27
+shows; existing installs: once after updating), and only when the contacts
+permission isn't already granted (if it is, the setting is simply turned on).
+Content: one short paragraph ("MatChat saves the people you chat with. It can
+also save them in this phone's Contacts app, with their Matrix address. You can
+change this later in Settings."), one focusable row `Save to phone contacts`,
+and an 11 sp status line. CENTER on the row asks Android for the contacts
+permission. Allowed → the S13 setting turns on, saved contacts are copied, and
+the screen closes. Not allowed → the status line reads "Contacts stay in
+MatChat only" and the screen stays, so the user can read it and press Back.
+Initial focus: the row. Softkeys: (blank) | Select | Back. Back means "not
+now"; S13's row remains the way to turn it on later.

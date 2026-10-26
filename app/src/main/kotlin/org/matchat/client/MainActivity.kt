@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity(), Navigator {
 
     @Inject lateinit var backgroundStatus: BackgroundSyncStatusProvider
 
+    @Inject lateinit var contacts: org.matchat.core.contacts.ContactsRepository
+
     // Read via an EntryPoint, not @Inject: Hilt's own field injection runs
     // inside super.onCreate(), too late to setTheme() before it.
     private lateinit var userPreferences: UserPreferences
@@ -217,7 +219,11 @@ class MainActivity : AppCompatActivity(), Navigator {
 
     /** Offered once per install (existing installs see it once after updating). */
     private fun offerBackgroundSetupIfNeeded() {
-        if (backgroundStatus.setupOffered) return
+        if (backgroundStatus.setupOffered) {
+            // Existing installs: S30 once after updating (UX-SPEC §S30).
+            offerContactsPromptIfNeeded()
+            return
+        }
         backgroundStatus.markSetupOffered()
         backgroundStatus.refresh()
         if (backgroundStatus.status.value.batteryExempt || !requestBatteryExemption()) {
@@ -244,7 +250,22 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun continueBackgroundSetup() {
         backgroundStatus.refresh()
         syncHosts.ensureRunning()
+        // S30 goes on the back stack first, under S27, so leaving S27 (Back)
+        // lands on it — after S27 when S27 shows, otherwise on its own.
+        offerContactsPromptIfNeeded()
         if (!backgroundStatus.status.value.helperConnected) toBackgroundHelper()
+    }
+
+    /** S30, once per install (UX-SPEC §S30). Already allowed (e.g. granted
+     *  earlier in system settings): just turn the phone copy on, no prompt. */
+    private fun offerContactsPromptIfNeeded() {
+        if (contacts.isPhonePromptOffered()) return
+        contacts.markPhonePromptOffered()
+        if (contacts.canUsePhoneContacts()) {
+            lifecycleScope.launch { contacts.turnOnPhoneSync() }
+        } else {
+            toContactsPrompt()
+        }
     }
 
     // Own presence: online while the app is foregrounded, unavailable when it
@@ -586,6 +607,8 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toTextSize() = navController.navigate(R.id.textSizeFragment)
     override fun toAdvanced() = navController.navigate(R.id.advancedFragment)
     override fun toBackgroundHelper() = navController.navigate(R.id.backgroundHelperFragment)
+
+    override fun toContactsPrompt() = navController.navigate(R.id.contactsPromptFragment)
     override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
     override fun toUpdate() = navController.navigate(R.id.updateFragment)

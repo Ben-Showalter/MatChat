@@ -12,6 +12,11 @@
     <string name="settings_update_available">Software update — Available ›</string>
     <string name="settings_help">Help</string>
     <string name="settings_sign_out">Sign out</string>
+    <!-- S13 row: also save MatChat's contacts in the phone's own Contacts app. -->
+    <string name="settings_phone_contacts_off">Save contacts to phone: Off</string>
+    <string name="settings_phone_contacts_on">Save contacts to phone: On</string>
+    <!-- Under that row after the user refuses the contacts permission. -->
+    <string name="settings_phone_contacts_refused">Contacts stay in MatChat only</string>
     <string name="settings_sign_out_confirm">Sign out? Messages on this phone will be removed.</string>
     <string name="settings_policy_managed">Policy — Managed by your organization</string>
     <string name="settings_policy_unmanaged">Policy — Not managed</string>
