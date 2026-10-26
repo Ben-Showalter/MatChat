@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A received message bubble (S9): a fill rounded only on the trailing
-     side (square on the leading/start side, where the accent stripe sits
-     flush — a "flag" shape, not a full rounded rect) plus a colored accent
-     stripe on the leading edge (?attr/colorFocusAccent — the user's chosen
-     accent, Settings > Theme, not a hardcoded color). The border recolors
-     and thickens on focus instead of the row's usual flat fill + trailing
-     bar (focus_indicator.xml) — a deliberate, scoped exception to the
-     one-focus-style rule (AGENTS.md §4 note), since item_message.xml
-     leaves the row's own background transparent and lets this drawable
-     carry focus instead. Reacts to the row's focus via
+<!-- A received message bubble (S9), TurboText-style: a fully rounded
+     bubble whose leading edge is a colored stripe running inside the same
+     rounded outline (bottom layers: the stripe color over the whole shape;
+     then the fill, inset by the stripe width on the leading side). The
+     stripe is the user's accent (Settings > Theme), lightened in Dark by
+     ?attr/colorBubbleStripeVeil so it reads on black; transparent veil in
+     Light. The border recolors and thickens on focus instead of the row's
+     usual flat fill + trailing bar (focus_indicator.xml) — a deliberate,
+     scoped exception to the one-focus-style rule (AGENTS.md §4 note), since
+     item_message.xml leaves the row's own background transparent and lets
+     this drawable carry focus instead. Reacts to the row's focus via
      android:duplicateParentState on message_bubble/image_bubble (their
      direct parent), not by being focusable itself. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
@@ -16,20 +17,38 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="?attr/colorBubbleReceived" />
-                    <corners
-                        android:topLeftRadius="0dp"
-                        android:bottomLeftRadius="0dp"
-                        android:topRightRadius="@dimen/bubble_corner_radius"
-                        android:bottomRightRadius="@dimen/bubble_corner_radius" />
-                    <stroke
-                        android:width="@dimen/bubble_border_width_focused"
-                        android:color="?attr/colorFocusAccent" />
+                    <solid android:color="?attr/colorFocusAccent" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
                 </shape>
             </item>
-            <item android:width="@dimen/bubble_stripe_width" android:gravity="start">
+            <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="?attr/colorFocusAccent" />
+                    <solid android:color="?attr/colorBubbleStripeVeil" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
+                </shape>
+            </item>
+            <item android:start="@dimen/bubble_stripe_width">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorBubbleReceived" />
+                    <corners
+                        android:topLeftRadius="@dimen/bubble_corner_radius_inner"
+                        android:bottomLeftRadius="@dimen/bubble_corner_radius_inner"
+                        android:topRightRadius="@dimen/bubble_corner_radius"
+                        android:bottomRightRadius="@dimen/bubble_corner_radius" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
+                    <stroke android:width="@dimen/bubble_border_width_focused" android:color="?attr/colorFocusAccent" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
+                    <stroke android:width="@dimen/bubble_border_width_focused" android:color="?attr/colorBubbleStripeVeil" />
                 </shape>
             </item>
         </layer-list>
@@ -38,20 +57,31 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="?attr/colorBubbleReceived" />
-                    <corners
-                        android:topLeftRadius="0dp"
-                        android:bottomLeftRadius="0dp"
-                        android:topRightRadius="@dimen/bubble_corner_radius"
-                        android:bottomRightRadius="@dimen/bubble_corner_radius" />
-                    <stroke
-                        android:width="@dimen/bubble_border_width"
-                        android:color="?attr/colorDivider" />
+                    <solid android:color="?attr/colorFocusAccent" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
                 </shape>
             </item>
-            <item android:width="@dimen/bubble_stripe_width" android:gravity="start">
+            <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="?attr/colorFocusAccent" />
+                    <solid android:color="?attr/colorBubbleStripeVeil" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
+                </shape>
+            </item>
+            <item android:start="@dimen/bubble_stripe_width">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorBubbleReceived" />
+                    <corners
+                        android:topLeftRadius="@dimen/bubble_corner_radius_inner"
+                        android:bottomLeftRadius="@dimen/bubble_corner_radius_inner"
+                        android:topRightRadius="@dimen/bubble_corner_radius"
+                        android:bottomRightRadius="@dimen/bubble_corner_radius" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/bubble_corner_radius" />
+                    <stroke android:width="@dimen/bubble_border_width" android:color="?attr/colorBubbleBorder" />
                 </shape>
             </item>
         </layer-list>

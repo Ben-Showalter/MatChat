@@ -28,9 +28,11 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <!-- The Accent color row's own label doubles as its section header
-         ("Accent color: Green ›") — CENTER opens a picker of all 16
+         ("Accent color: Green ›") — CENTER opens a picker of all 17
          (MenuSheet, the same shape as the reaction picker). -->
     <string name="theme_accent_row_format">Accent color: %1$s ›</string>
+    <!-- The default accent: the indigo of the MatChat app icon. -->
+    <string name="theme_accent_matchat">MatChat blue</string>
     <string name="theme_accent_green">Green</string>
     <string name="theme_accent_amber">Amber</string>
     <string name="theme_accent_blue">Blue</string>

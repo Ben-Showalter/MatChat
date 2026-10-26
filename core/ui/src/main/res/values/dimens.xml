@@ -64,7 +64,9 @@
          chrome text: the title bar's own text now defaults to 18sp
          (?attr/textSizeLabel, Size.Normal) and softkey_bar_height needs
          room for the bumped, fixed 16sp text_softkey_label above. -->
-    <dimen name="title_bar_height">24dp</dimen>
+    <!-- 28dp (from 24): the title is now centred and bold (TurboText), and
+         needs a little air above and below. -->
+    <dimen name="title_bar_height">28dp</dimen>
     <dimen name="softkey_bar_height">26dp</dimen>
 
     <!-- Rows use minHeight, never a fixed height (UX-SPEC S16), specifically
@@ -88,22 +90,23 @@
          screenshot — only a hairline gap on the unoccupied side), on the
          240dp-wide reference portrait viewport (PLAN.md §8.2) — this app
          targets one fixed screen class, not a range, so a dp cap (not a
-         percentage) matches every other dimension here. Corners are
-         rounded only on the side away from the accent stripe (a "flag"
-         shape — square where the stripe sits, so it's flush, not
-         interrupted by a curve); bubble_received.xml/bubble_own.xml split
-         bubble_corner_radius per-corner rather than using it on all four. -->
-    <dimen name="bubble_corner_radius">8dp</dimen>
+         percentage) matches every other dimension here. Fully rounded, with
+         the accent stripe running inside the rounded outline on the sender's
+         side (TurboText, per the user's reference clip). -->
+    <dimen name="bubble_corner_radius">12dp</dimen>
+    <!-- The fill's corners on the stripe side: the outer radius less the
+         stripe width, so the stripe follows the rounded outline (TurboText). -->
+    <dimen name="bubble_corner_radius_inner">7dp</dimen>
     <!-- Accent stripe on the leading/trailing edge (own messages: trailing;
          received: leading — both get one). -->
-    <dimen name="bubble_stripe_width">3dp</dimen>
+    <dimen name="bubble_stripe_width">5dp</dimen>
     <dimen name="bubble_max_width">220dp</dimen>
-    <dimen name="bubble_pad_h">8dp</dimen>
-    <dimen name="bubble_pad_v">4dp</dimen>
+    <dimen name="bubble_pad_h">10dp</dimen>
+    <dimen name="bubble_pad_v">6dp</dimen>
     <!-- Border-based focus cue (replaces the row-wide flat fill for message
          bubbles specifically — AGENTS.md §4 exception, see its note). -->
     <dimen name="bubble_border_width">1dp</dimen>
-    <dimen name="bubble_border_width_focused">2dp</dimen>
+    <dimen name="bubble_border_width_focused">2.5dp</dimen>
 
     <!-- Avatars round: a placeholder/decoded circle next to a name. Three
          sizes for three contexts — a room-list row (item_room.xml,

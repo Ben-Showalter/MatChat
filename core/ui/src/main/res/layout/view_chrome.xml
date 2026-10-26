@@ -27,9 +27,11 @@
             android:layout_weight="1"
             android:paddingStart="@dimen/content_pad"
             android:paddingEnd="4dp"
+            android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="?attr/colorTextOnInverse"
+            android:textStyle="bold"
             android:textSize="?attr/textSizeLabel" />
 
         <!-- Online indicator round: a small colored dot alongside the sync/

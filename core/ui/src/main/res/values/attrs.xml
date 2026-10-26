@@ -38,6 +38,15 @@
          user's chosen accent (Settings > Theme). -->
     <attr name="colorBubbleReceived" format="color" />
     <attr name="colorBubbleOwn" format="color" />
+    <!-- Per-mode (Base.Light/Base.Dark, not per accent) parts of the
+         TurboText-style bubbles (bubble_received.xml/bubble_own.xml): the
+         unfocused outline; a veil laid over the accent stripe and the focus
+         border (Dark lightens them so they read on black); and a veil over
+         an own bubble's accent fill (Light: paper, giving the pale wash;
+         Dark: a little black, keeping white text >= 7:1 on every accent). -->
+    <attr name="colorBubbleBorder" format="color" />
+    <attr name="colorBubbleStripeVeil" format="color" />
+    <attr name="colorBubbleOwnVeil" format="color" />
 
     <!-- Text size setting (Settings > Text size, Normal/Large — UX-SPEC §S16).
          Layered at runtime the same way accent is (Theme.MatChat.Size.{Normal,

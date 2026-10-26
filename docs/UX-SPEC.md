@@ -26,8 +26,8 @@ Every screen has three fixed bands:
   there, so the bar appears when focus moves into a text field and hides
   again when it leaves.
 - Title bar: scales with Settings > Text size (§S16) like everything else —
-  18 sp by default (Normal), 14 sp at Small — single line, ellipsized at the
-  end, on the accent surface (`?attr/colorFocusAccent` — the user's chosen
+  18 sp by default (Normal), 14 sp at Small — bold, centred, single line,
+  ellipsized at the end (TurboText style), on the accent surface (`?attr/colorFocusAccent` — the user's chosen
   accent, Settings > Theme, not the inverse/near-black surface used
   elsewhere). Right side shows sync state (`⟳` syncing, `!` offline) —
   nothing else.
@@ -194,8 +194,9 @@ thread; scrolling back down to the end follows again, and sending always
 brings your message into view (`followAfterScroll`).
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
-device's own SMS app) — own messages trail (right, a light accent-tinted
-fill) and others lead (left, a neutral fill); a 16 dp sender avatar sits
+device's own SMS app) — own messages trail (right, an accent fill: a pale
+accent wash in Light, a solid accent bubble in Dark) and others lead (left, a
+neutral fill: warm off-white in Light, `#333` in Dark); a 16 dp sender avatar sits
 beside the sender name (Avatars round), shown/hidden together. A member
 with no avatar set shows a colored circle with their initial instead of a
 flat placeholder (AvatarFallback round) — a deterministic color per user
@@ -211,11 +212,12 @@ offer several separately focusable chips). A message another member (besides the
 read also shows a short "seen by" row of small avatars (up to 4, then
 "+N", each overlapping the previous one) under the time line — shown for
 both own and received messages. Every bubble carries a
-colored stripe (the user's chosen accent, Settings > Theme) on its leading
-edge for received messages, trailing edge for own — the bubble is rounded
-only on the side away from its stripe (square where the stripe sits, so it
-sits flush, not a full rounded rect). A focused bubble's border recolors to
-the accent and thickens, in place of the app's usual flat-fill-plus-bar
+colored stripe (the user's chosen accent, Settings > Theme; lightened in Dark
+so it reads on black) on its leading edge for received messages, trailing
+edge for own. Bubbles are fully rounded (12 dp) and the stripe runs inside the
+rounded outline, matching TurboText (per the user's reference clip). In Light a
+thin divider outlines each bubble; in Dark there is none. A focused bubble's
+border recolors to the accent (lightened in Dark) and thickens, in place of the app's usual flat-fill-plus-bar
 focus style (AGENTS.md §4's named exception) — the row itself has no
 background.
 **Voice messages** render as a bubble too (a waveform + duration), with their
@@ -471,8 +473,8 @@ immediately — no separate confirm — and the change takes effect right away
 (the app recreates itself once, keeping the same screen). The selected row
 carries a trailing checkmark; selection is never conveyed by color alone.
 **Accent color** is a single row below Appearance, labeled with the current
-choice ("Accent color: Green ›"). CENTER opens a scrollable picker (16
-choices: `Green` · `Amber` · `Blue` · `Plum` · `Teal` · `Cyan` · `Indigo` ·
+choice ("Accent color: MatChat blue ›"). CENTER opens a scrollable picker (17
+choices: `MatChat blue` (the app icon's indigo, the default) · `Green` · `Amber` · `Blue` · `Plum` · `Teal` · `Cyan` · `Indigo` ·
 `Violet` · `Orchid` · `Rose` · `Rust` · `Ochre` · `Olive` · `Forest` ·
 `Slate` · `Wine`) — the same shape as the reaction picker — with the
 current accent carrying the trailing checkmark; selecting one closes the
@@ -481,6 +483,9 @@ The accent color governs only the focus-highlight bar (§2) and the system
 accent tint. It never changes the "encrypted" green or the link color —
 those stay fixed so they keep meaning what they mean regardless of the
 user's taste.
+**Dark** follows TurboText's Classic Dark: a pure black background, `#222`
+dialogs and menus, `#333` dividers and received bubbles, and `#AAA` secondary
+text. **Light** is the warm paper palette. Light is the default.
 Focus order: Light → Dark → Accent color. Initial focus: Light. Softkeys:
 (blank) | Select | Back.
 

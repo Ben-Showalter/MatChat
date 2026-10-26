@@ -149,6 +149,7 @@ class MainActivity : AppCompatActivity(), Navigator {
     private fun accentStyleFor(accent: AccentColor): Int = accentStyles.getValue(accent)
 
     private val accentStyles: Map<AccentColor, Int> = mapOf(
+        AccentColor.MATCHAT to org.matchat.core.ui.R.style.Theme_MatChat_Accent_MatChat,
         AccentColor.GREEN to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Green,
         AccentColor.AMBER to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Amber,
         AccentColor.BLUE to org.matchat.core.ui.R.style.Theme_MatChat_Accent_Blue,
