@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- S8 room list. -->
-    <string name="roomlist_title">MatChat</string>
+    <!-- S8 room list: the title bar text ("Chats", per the user). -->
+    <string name="roomlist_title">Chats</string>
     <!-- Empty state (UX-SPEC S8). -->
     <string name="roomlist_empty">Your groups will appear here. Ask your administrator to add you, or start a message from Options.</string>
     <!-- Offline banner. -->

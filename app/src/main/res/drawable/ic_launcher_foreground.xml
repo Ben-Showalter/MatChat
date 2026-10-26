@@ -3,9 +3,10 @@
      drawable/ic_launcher.xml (keep the geometry in step), drawn large. The
      paths are in that file's 48-unit space; the launcher shows the middle
      72 of these 108 units, so the outer group maps 48 units onto those 72
-     (scale 1.5, offset 18) and the inner group is the legacy icon's own
-     lift (translateY -4) with no shrink, so the bubble fills the tile the
-     way the user picked (mockup A1). -->
+     (scale 1.5, offset 18). The inner group centres the bubble's rounded
+     body (x 5-43, y 10-38: centre 24,24) on the tile and shrinks it to 0.85
+     about that centre, so the tail (down to y 46) stays inside the
+     launcher's mask. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -16,7 +17,11 @@
         android:scaleY="1.5"
         android:translateX="18"
         android:translateY="18">
-        <group android:translateY="-4">
+        <group
+            android:pivotX="24"
+            android:pivotY="24"
+            android:scaleX="0.85"
+            android:scaleY="0.85">
             <path
                 android:fillColor="#303E7C"
                 android:pathData="M10,10h28a5,5 0,0 1,5 5v18a5,5 0,0 1,-5 5h-18l-7,8v-8h-3a5,5 0,0 1,-5 -5v-18a5,5 0,0 1,5 -5z" />

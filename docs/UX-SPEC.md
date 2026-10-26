@@ -9,10 +9,10 @@ Every screen has three fixed bands:
 
 ```
 ┌────────────────────────────┐  ← 240 wide
-│ Title bar            24 dp │  title left, sync/battery glyphs right
+│ Title bar            28 dp │  title centred (bold), sync glyphs right
 ├────────────────────────────┤
 │                            │
-│ Content            270 dp  │  scrolls by focus movement only
+│ Content            266 dp  │  scrolls by focus movement only
 │                            │
 ├────────────────────────────┤
 │ Options | Select |  Back   │  softkey bar, 26 dp
@@ -31,12 +31,12 @@ Every screen has three fixed bands:
   accent, Settings > Theme, not the inverse/near-black surface used
   elsewhere). Right side shows sync state (`⟳` syncing, `!` offline) —
   nothing else.
-- Softkey bar: three cells, left-aligned / centre / right-aligned, 16 sp (its
-  own dedicated size, `text_softkey_label` — not the shared 11 sp metadata
-  floor). Fixed, unlike the title bar — it does NOT scale with Settings >
-  Text size (§S16): a chrome band, not a row, so it stays this one size
-  regardless of the Normal/Small setting, to avoid clipping a band that's
-  already nearly full. On the same accent surface as the title bar so it is
+- Softkey bar: three cells, left-aligned / centre / right-aligned, 16 sp by
+  default (its own role, `?attr/textSizeSoftkey` — not the shared 11 sp
+  metadata floor). Scales with Settings > Text size (§S16) like the title
+  bar: 13 / 16 / 20 sp at Small / Normal / Large, with both bars growing in
+  height to match (24/26/32 dp softkey bar, 24/28/34 dp title bar). On the
+  same accent surface as the title bar so it is
   never confused with content. Each non-blank cell is also a touch target:
   tapping it fires the same logical key as the matching hardware softkey
   (Options / Select / Back, mirrored with the swap preference), and a tapped
@@ -154,6 +154,8 @@ Options: Verify with another device instead · Paste from clipboard.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
+Title: **Chats**. Rows have no divider line between them; the focus highlight
+(§2) alone marks the current row.
 **Opening the app always lands here** — from the launcher, or after leaving
 with Home/End — whatever screen was last open. Exceptions: a notification tap
 opens its own room or call; returning from a screen MatChat opened (gallery,
@@ -192,6 +194,8 @@ messages arrive that way — also when a row grows afterwards (an image loading)
 or a band under the list appears — unless the user has scrolled up in the
 thread; scrolling back down to the end follows again, and sending always
 brings your message into view (`followAfterScroll`).
+Title: the room's avatar (the person's, in a DM — same image or colored-initial
+fallback as its S8 row) just left of the room name, the pair centred.
 Content: day separator rows (centred, 11 sp, grey rule); message rows shown
 as bubbles reaching nearly the full row width (matching the reference
 device's own SMS app) — own messages trail (right, an accent fill: a pale
@@ -214,8 +218,10 @@ read also shows a short "seen by" row of small avatars (up to 4, then
 both own and received messages. Every bubble carries a
 colored stripe (the user's chosen accent, Settings > Theme; lightened in Dark
 so it reads on black) on its leading edge for received messages, trailing
-edge for own. Bubbles are fully rounded (12 dp) and the stripe runs inside the
-rounded outline, matching TurboText (per the user's reference clip). In Light a
+edge for own. Bubbles are fully rounded (12 dp) with a small tail off the
+bottom corner on the sender's side (bottom-left received, bottom-right own),
+and the stripe runs inside the rounded outline, matching TurboText (per the
+user's reference clip). In Light a
 thin divider outlines each bubble; in Dark there is none. A focused bubble's
 border recolors to the accent (lightened in Dark) and thickens, in place of the app's usual flat-fill-plus-bar
 focus style (AGENTS.md §4's named exception) — the row itself has no

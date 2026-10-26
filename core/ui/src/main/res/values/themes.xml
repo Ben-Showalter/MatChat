@@ -216,6 +216,9 @@
         <item name="avatarSizeSeenBy">@dimen/avatar_size_seen_by_large</item>
         <item name="rowMinHeight">@dimen/row_min_height_large</item>
         <item name="rowMinHeightCompact">@dimen/row_min_height_compact_large</item>
+        <item name="textSizeSoftkey">@dimen/text_softkey_label_large</item>
+        <item name="softkeyBarHeight">@dimen/softkey_bar_height_large</item>
+        <item name="titleBarHeight">@dimen/title_bar_height_large</item>
     </style>
     <style name="Theme.MatChat.Size.Small" parent="">
         <item name="textSizeBody">@dimen/text_body</item>
@@ -231,6 +234,9 @@
         <item name="avatarSizeSeenBy">@dimen/avatar_size_seen_by</item>
         <item name="rowMinHeight">@dimen/row_min_height</item>
         <item name="rowMinHeightCompact">@dimen/row_min_height_compact</item>
+        <item name="textSizeSoftkey">@dimen/text_softkey_label</item>
+        <item name="softkeyBarHeight">@dimen/softkey_bar_height</item>
+        <item name="titleBarHeight">@dimen/title_bar_height</item>
     </style>
     <style name="Theme.MatChat.Size.Large" parent="">
         <item name="textSizeBody">@dimen/text_body_xlarge</item>
@@ -246,6 +252,9 @@
         <item name="avatarSizeSeenBy">@dimen/avatar_size_seen_by_xlarge</item>
         <item name="rowMinHeight">@dimen/row_min_height_xlarge</item>
         <item name="rowMinHeightCompact">@dimen/row_min_height_compact_xlarge</item>
+        <item name="textSizeSoftkey">@dimen/text_softkey_label_xlarge</item>
+        <item name="softkeyBarHeight">@dimen/softkey_bar_height_xlarge</item>
+        <item name="titleBarHeight">@dimen/title_bar_height_xlarge</item>
     </style>
 
     <!-- Manifest default / fallback — see the file header. Baked with the
@@ -269,6 +278,9 @@
         <item name="avatarSizeSeenBy">@dimen/avatar_size_seen_by_large</item>
         <item name="rowMinHeight">@dimen/row_min_height_large</item>
         <item name="rowMinHeightCompact">@dimen/row_min_height_compact_large</item>
+        <item name="textSizeSoftkey">@dimen/text_softkey_label_large</item>
+        <item name="softkeyBarHeight">@dimen/softkey_bar_height_large</item>
+        <item name="titleBarHeight">@dimen/title_bar_height_large</item>
     </style>
 
     <!-- A focusable row: full-width inverse focus block, no touch feedback.
