@@ -98,6 +98,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:verification"))
     implementation(project(":feature:call"))
+    implementation(project(":feature:scan"))
 
     // Kyocera cover-screen callback declarations: compile-only, never packaged —
     // the phone supplies the real classes (docs/adr/0009).

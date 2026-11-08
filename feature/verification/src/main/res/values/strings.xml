@@ -12,6 +12,10 @@
     <string name="verify_recovery_explanation">Enter your recovery key to read encrypted messages on this phone.</string>
     <string name="verify_recovery_hint">Recovery key</string>
     <string name="verify_continue">Verify</string>
+    <!-- S7 rows: read the recovery key from a QR code (plain or a MatChat setup
+         code) or from the clipboard, instead of typing 48 characters. -->
+    <string name="verify_scan_key">Scan recovery key</string>
+    <string name="verify_paste_key">Paste recovery key</string>
     <string name="verify_error">That did not work. Check and try again.</string>
     <string name="verify_done">This phone can now read encrypted messages.</string>
 </resources>

@@ -4,7 +4,8 @@
 
     <!-- S2 Welcome. -->
     <string name="welcome_purpose">Private group messaging for your phone.</string>
-    <string name="welcome_qr">Sign in with QR code</string>
+    <!-- S2: opens S4, signing in with a setup code (QR code or link). -->
+    <string name="welcome_qr">Sign in with setup code</string>
     <string name="welcome_password">Sign in with password</string>
     <string name="welcome_help">Help</string>
 
@@ -49,4 +50,32 @@
     <string name="contacts_prompt_save">Save to phone contacts</string>
     <!-- Shown after the user refuses the contacts permission. -->
     <string name="contacts_prompt_refused">Contacts stay in MatChat only</string>
+    <!-- Setup codes (UX-SPEC S3/S4/S32): a QR code or link made on a computer
+         holding the sign-in details and/or recovery key, so nothing long is
+         typed on the keypad. -->
+    <string name="setup_scan">Scan setup code</string>
+    <string name="setup_paste">Paste setup link</string>
+    <string name="setup_code_title">Sign in with setup code</string>
+    <string name="setup_code_question">Do you have a QR setup code ready?</string>
+    <string name="setup_code_scan">Scan QR setup code</string>
+    <string name="setup_code_help">No, help me set it up</string>
+    <string name="setup_not_a_setup_code">That isn\'t a MatChat setup code.</string>
+    <string name="setup_too_new">That code was made for a newer MatChat. Update MatChat first.</string>
+    <string name="setup_nothing_to_paste">There\'s nothing to paste. Copy the setup link first.</string>
+    <!-- S32 "Setup code found". -->
+    <string name="setup_found_title">Setup code found</string>
+    <!-- %1$s server, %2$s username, %3$s password state, %4$s recovery-key state. -->
+    <string name="setup_found_details">Server: %1$s\nUsername: %2$s\nPassword: %3$s\nRecovery key: %4$s</string>
+    <!-- The password is never shown, only that the code has one. -->
+    <string name="setup_found_hidden">••••••</string>
+    <string name="setup_found_included">included</string>
+    <string name="setup_found_not_included">not included</string>
+    <!-- %1$s the code's server, %2$s the one the organization requires. -->
+    <string name="setup_found_blocked_server">This code is for %1$s. Your organization only allows %2$s.</string>
+    <string name="setup_found_incomplete">This code doesn\'t have everything needed to sign in.</string>
+    <string name="setup_found_fill">Use these and type the rest</string>
+    <string name="setup_found_cancel">Cancel</string>
+    <!-- Under the sign-in form while a scanned recovery key waits for sign-in. -->
+    <string name="setup_recovery_pending">The recovery key from the setup code will be used after you sign in.</string>
+    <string name="setup_recovery_failed">Signed in, but that recovery key didn\'t work. Enter it again.</string>
 </resources>

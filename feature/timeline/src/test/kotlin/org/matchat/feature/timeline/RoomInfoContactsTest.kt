@@ -111,4 +111,12 @@ class RoomInfoContactsTest {
         advanceUntilIdle()
         assertTrue(contacts.contacts.first().isEmpty())
     }
+
+    @Test
+    fun `members can be added by QR code as well as by typing`() = runTest {
+        val vm = subject(FakeContactsRepository())
+        advanceUntilIdle()
+        val keys = vm.state.value.rows.filterIsInstance<RoomInfoRow.Action>().map { it.key }
+        assertTrue(RoomInfoViewModel.KEY_ADD in keys && RoomInfoViewModel.KEY_ADD_QR in keys)
+    }
 }

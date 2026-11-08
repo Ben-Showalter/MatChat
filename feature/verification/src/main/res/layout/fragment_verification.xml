@@ -139,6 +139,26 @@
                 android:text="@string/verify_continue"
                 android:textSize="?attr/textSizeLabel"
                 android:textColor="?attr/colorTextOnFocus" />
+
+            <!-- Rows, not Options items: while the key field has focus the T9
+                 keyboard owns the softkeys (UX-SPEC S7, as S3's More options). -->
+            <TextView
+                android:id="@+id/recovery_scan"
+                style="@style/Widget.MatChat.Row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/verify_scan_key"
+                android:textSize="?attr/textSizeLabel"
+                android:textColor="?attr/colorTextOnFocus" />
+
+            <TextView
+                android:id="@+id/recovery_paste"
+                style="@style/Widget.MatChat.Row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/verify_paste_key"
+                android:textSize="?attr/textSizeLabel"
+                android:textColor="?attr/colorTextOnFocus" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

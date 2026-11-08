@@ -107,11 +107,11 @@ Error: "Could not reach the server." + Retry (focused) / Sign out.
 
 ### S2 — Welcome
 Content: app name, one line of purpose text, two buttons.
-Focus order: `Sign in with QR code` → `Sign in with password` → `Help`.
+Focus order: `Sign in with setup code` → `Sign in with password` → `Help`.
 Softkeys: Options | Select | Exit.
-Options: Help · Software update. (QR sign-in and an About screen are v1.1
-candidates, not built.)
-(QR button hidden when `policy.qrLoginEnabled = false`.)
+Options: Help · Software update. (An About screen is a v1.1 candidate, not
+built. Matrix's own device-linking QR sign-in, MSC4108, is a later option —
+docs/adr/0010; `Sign in with setup code` is a different thing, S4.)
 
 ### S3 — Sign in (password)
 Content: homeserver row (read-only when pinned, shown as grey text with a lock
@@ -120,18 +120,26 @@ below the password; CENTER flips masking, label reads `Show password` /
 `Hide password`), `Sign in` button, `More options…` row.
 Focus order: Username → Password → Show password → Sign in → More options.
 Softkeys: Options | Select | Back.
-Options: Software update · Help — from the Options softkey, or from the
-`More options…` row (CENTER). The row is the route while a text box is
+Options: Scan setup code (S31) · Paste setup link · Software update · Help —
+from the Options softkey, or from the `More options…` row (CENTER). A scanned
+or pasted setup code shows S32 in place of the form. The row is the route while a text box is
 focused: the phone's T9 keyboard owns the softkeys then (its typing-mode menu
 on the left; it can swallow the right one — Flip-DumbPhoneGuide keys.md).
 Errors: inline under the field, red, plain language — "That username or password
 did not work." / "No network. Check signal and try again."
 
-### S4 — Sign in (QR)
-Content: camera viewfinder framed to 200 × 200, instruction line beneath:
-"On your other device: Settings → Link a device."
-Softkeys: blank | blank | Back.
-Error: "Camera unavailable — use password sign-in instead." (action focused)
+### S4 — Sign in with setup code
+Reached from S2 `Sign in with setup code`. A setup code is a QR code or link,
+made on a computer with the offline setup page (S33, docs/adr/0010), holding
+the homeserver, username, password and/or recovery key — so none of it is
+typed on the keypad.
+Content: "Do you have a QR setup code ready?", then three rows: `Scan QR setup
+code` (S31) · `Paste setup link` · `No, help me set it up` (S33). Asked before
+the camera opens, so nobody lands in a viewfinder with nothing to point it at.
+A usable code goes on to S3, which shows it as S32. A paste that isn't a setup
+code, a code from a newer MatChat, or an empty clipboard gets a one-line
+explanation under the rows. The clipboard is cleared after a paste.
+Focus order: Scan → Paste → Help. Softkeys: (blank) | Select | Back.
 
 ### S5 — Encryption setup
 Content: heading "Protect your messages", explanation (2 lines, 8th-grade
@@ -150,7 +158,11 @@ Timeout state: "Verification timed out." + Try again.
 ### S7 — Recovery key entry
 Content: label, single field showing the key in 4-character groups with
 auto-advance, character counter `12 / 48`, `Continue` button.
-Options: Verify with another device instead · Paste from clipboard.
+Below `Verify`: `Scan recovery key` (S31 — the plain key or a setup code that
+holds one) · `Paste recovery key` (the clipboard is cleared after). Rows, not
+Options items: the T9 keyboard owns the softkeys while the key field has focus.
+Either one is used exactly like a typed key; a QR code or paste with no
+recovery key in it shows the usual error line.
 Softkeys: Options | Select | Back.
 
 ### S8 — Room list *(home)*
@@ -326,8 +338,9 @@ members can read this"), a **Notification sound** row (primary line: the
 sound's name — "Default (app sound)", "Silent", or the picked sound; caption
 "Notification sound"), member list (a 16 dp avatar beside each name — same
 placeholder-until-decoded treatment as S8/S9 — plus a power label), then two
-action rows: `Pinned messages` (Pinned messages round, below) and `Add
-member`/`Leave room`.
+action rows: `Pinned messages` (Pinned messages round, below), `Add member`,
+`Add member by QR code` (S31: an @user:server address, a matrix.to link, or a
+setup code holding one — invited exactly as if typed) and `Leave room`.
 CENTER on a member row (not yourself) opens a menu: `Save contact` (or
 `Remove from contacts` when already saved) · `Add to a phone contact…` (see
 Contacts below) · `Remove member`. This works the same in a group as in a direct
@@ -497,6 +510,10 @@ Errors, all inline, all plain: "That does not look like an address." /
 "Could not reach example.org." / "No one at that address." — the last is a
 warning, not a block: `Start anyway` remains available, because a server may
 simply not publish profiles.
+`Scan address QR code` (a row under `Continue`, since the T9 keyboard owns the
+softkeys while the field has focus) opens S31; a scanned @user:server address,
+matrix.to link, or setup code holding one goes through the same steps as a
+typed address (shape, policy, profile lookup, confirmation).
 
 ### S22 — Address not allowed
 Reached from S21 or from a blocked invitation.
@@ -686,3 +703,50 @@ the screen closes. Not allowed → the status line reads "Contacts stay in
 MatChat only" and the screen stays, so the user can read it and press Back.
 Initial focus: the row. Softkeys: (blank) | Select | Back. Back means "not
 now"; S13's row remains the way to turn it on later.
+
+### S31 — Scan QR code
+MatChat's own camera screen (docs/adr/0010) — never a scanner app, never ML
+Kit. Opened from S3, S4, S7, S12 and S21, each asking for one kind of value:
+a setup code, a recovery key, or an address.
+Content: the camera picture fitted to the space above (never squashed), one
+status line ("Point the camera at the QR code."), and one row, `Scan again`
+(initial focus). A QR code of the kind asked for closes the screen and hands
+the value back; anything else gets a plain line ("That QR code isn't a MatChat
+setup code." / "…doesn't hold a recovery key." / "…doesn't hold a Matrix
+address." / "That code was made for a newer MatChat. Update MatChat first.")
+and scanning goes on. The same wrong code doesn't re-announce until `Scan
+again`. Light-on-dark codes (a phone screen) are read too.
+The camera permission is asked on first use. Refused, or no camera: "MatChat
+isn't allowed to use the camera." / "The camera isn't available. Type it in
+instead." and the row reads `Try again`.
+Options: Scan again · How to make a setup code (S33).
+Softkeys: Options | Select | Back.
+
+### S32 — Setup code found
+Shown inside S3 in place of the form, after a setup code is scanned or pasted.
+Nothing is used until `Sign in`.
+Content: "Setup code found", then Server · Username · Password `••••••` (never
+shown) · Recovery key `included` / `not included`.
+Rows: `Sign in` (when the code has a username and password) · `Use these and
+type the rest` (when it doesn't: copies the server and username into the form;
+a recovery key in the code is still used after sign-in) · `Cancel`.
+With a pinned homeserver (policy) and a code for a different server: "This code
+is for X. Your organization only allows Y." and no `Sign in` — explained, never
+silently swapped.
+After `Sign in`, a recovery key in the code is applied straight away, so
+encrypted history is readable without the encryption setup screens. If the key
+doesn't work, sign-in still completes and S7 opens with "Signed in, but that
+recovery key didn't work. Enter it again."
+Softkeys: Options | Select | Back (S3's).
+
+### S33 — Make a setup code
+Reached from S4 `No, help me set it up` or S31 Options.
+Content: a `Save setup page to phone` row (to Download; the line under it says
+where, e.g. "Saved to Download › matchat-setup.html"), then the steps: save the
+page, move it to a computer (USB cable, Bluetooth or SD card), open it in a
+browser and fill it in (it works offline and sends nothing anywhere), scan the
+QR code it shows.
+Options: Save to SD card · Send by Bluetooth. Every outcome is said on screen
+(no SD card, couldn't save, no way to send, storage access refused on
+Android 7–9).
+Softkeys: Options | Select | Back.

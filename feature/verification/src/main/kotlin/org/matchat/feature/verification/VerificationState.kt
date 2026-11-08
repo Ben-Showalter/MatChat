@@ -19,6 +19,10 @@ sealed interface VerificationAction {
     data object DeclineSas : VerificationAction
     data object ChooseRecovery : VerificationAction
     data class SubmitRecovery(val recoveryKey: String) : VerificationAction
+
+    /** A recovery key scanned (S31) or pasted — plain, or inside a setup code;
+     *  [text] null = the clipboard was empty. Never logged. */
+    data class RecoveryKeyFromCode(val text: String?) : VerificationAction
     data object Cancel : VerificationAction
 }
 

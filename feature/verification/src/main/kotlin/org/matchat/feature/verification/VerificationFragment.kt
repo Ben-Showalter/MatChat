@@ -14,8 +14,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.model.SasEmoji
+import org.matchat.core.model.setup.ScanKind
+import org.matchat.core.ui.clipboard.SecretClipboard
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.nav.ScanRequest
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.core.ui.theme.themeColor
 import org.matchat.core.ui.theme.themeDimenPx
@@ -46,6 +49,13 @@ class VerificationFragment : SoftkeyFragment() {
         b.sasNoMatch.setOnClickListener { viewModel.onAction(VerificationAction.DeclineSas) }
         b.recoverySubmit.setOnClickListener {
             viewModel.onAction(VerificationAction.SubmitRecovery(b.recoveryKey.text.toString()))
+        }
+        b.recoveryScan.setOnClickListener { navigator.toScan(ScanKind.RECOVERY_KEY) }
+        b.recoveryPaste.setOnClickListener {
+            viewModel.onAction(VerificationAction.RecoveryKeyFromCode(SecretClipboard.take(requireContext())))
+        }
+        ScanRequest.listen(this, viewLifecycleOwner, ScanKind.RECOVERY_KEY) {
+            viewModel.onAction(VerificationAction.RecoveryKeyFromCode(it))
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

@@ -212,6 +212,7 @@ class RoomInfoViewModel @Inject constructor(
             }
         rows += RoomInfoRow.Action(KEY_PINNED, "Pinned messages")
         rows += RoomInfoRow.Action(KEY_ADD, "Add member")
+        rows += RoomInfoRow.Action(KEY_ADD_QR, "Add member by QR code")
         rows += RoomInfoRow.Action(KEY_LEAVE, "Leave room")
         return rows
     }
@@ -221,6 +222,7 @@ class RoomInfoViewModel @Inject constructor(
         const val KEY_TOPIC = "topic"
         const val KEY_PINNED = "pinned"
         const val KEY_ADD = "add"
+        const val KEY_ADD_QR = "add_qr"
         const val KEY_LEAVE = "leave"
     }
 }

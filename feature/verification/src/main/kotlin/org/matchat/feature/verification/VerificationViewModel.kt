@@ -15,6 +15,7 @@ import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.matrix.SessionVerification
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.SasState
+import org.matchat.core.model.setup.ScannedValue
 import javax.inject.Inject
 
 /**
@@ -48,6 +49,12 @@ class VerificationViewModel @Inject constructor(
             VerificationAction.ChooseRecovery ->
                 _state.update { it.copy(phase = Phase.RECOVERY_KEY, error = null) }
             is VerificationAction.SubmitRecovery -> recover(action.recoveryKey.trim())
+            is VerificationAction.RecoveryKeyFromCode -> {
+                // Same as typing it and pressing Verify; nothing usable is the
+                // usual "that did not work" line.
+                _state.update { it.copy(phase = Phase.RECOVERY_KEY) }
+                recover(ScannedValue.recoveryKey(action.text).orEmpty())
+            }
             VerificationAction.Cancel -> cancel()
         }
     }

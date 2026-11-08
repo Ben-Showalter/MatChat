@@ -29,6 +29,23 @@
         android:label="Background helper" />
 
     <fragment
+        android:id="@+id/setupCodeFragment"
+        android:name="org.matchat.feature.onboarding.SetupCodeFragment"
+        android:label="Setup code" />
+
+    <fragment
+        android:id="@+id/scanFragment"
+        android:name="org.matchat.feature.scan.ScanFragment"
+        android:label="Scan">
+        <argument android:name="kind" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/setupHelpFragment"
+        android:name="org.matchat.feature.scan.SetupHelpFragment"
+        android:label="Make a setup code" />
+
+    <fragment
         android:id="@+id/contactsPromptFragment"
         android:name="org.matchat.feature.onboarding.ContactsPromptFragment"
         android:label="Phone contacts" />

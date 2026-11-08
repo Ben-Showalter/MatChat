@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.matchat.core.model.ErrorText
 import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeMatrixAuth
+import org.matchat.core.testing.FakeMatrixSession
 import org.matchat.core.testing.FakePolicyProvider
 
 class SignInViewModelTest {
@@ -27,7 +28,9 @@ class SignInViewModelTest {
     fun `pinned homeserver is read-only`() {
         val vm = SignInViewModel(
             FakeMatrixAuth(),
+            FakeMatrixSession(),
             FakePolicyProvider(Policy.UNMANAGED.copy(pinnedHomeserver = "srv.example")),
+            PendingSetupCode(),
         )
         assertEquals("srv.example", vm.state.value.homeserver)
         assertTrue(vm.state.value.homeserverPinned)
@@ -36,7 +39,7 @@ class SignInViewModelTest {
     @Test
     fun `empty credentials produce an error, no network call`() {
         val auth = FakeMatrixAuth()
-        val vm = SignInViewModel(auth, FakePolicyProvider())
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
         vm.onAction(SignInAction.Submit("", "", "srv.example"))
         assertNotNull(vm.state.value.error)
     }
@@ -44,7 +47,7 @@ class SignInViewModelTest {
     @Test
     fun `successful sign in emits Success and passes the homeserver`() = runTest {
         val auth = FakeMatrixAuth(signInResult = Result.success(Unit))
-        val vm = SignInViewModel(auth, FakePolicyProvider())
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
         vm.navEvents.test {
             vm.onAction(SignInAction.Submit("wayne", "hunter2", "srv.example"))
             assertEquals(SignInNav.Success, awaitItem())
@@ -55,7 +58,7 @@ class SignInViewModelTest {
 
     @Test
     fun `toggle flips showPassword and is reversible`() {
-        val vm = SignInViewModel(FakeMatrixAuth(), FakePolicyProvider())
+        val vm = SignInViewModel(FakeMatrixAuth(), FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
         assertEquals(false, vm.state.value.showPassword)
         vm.onAction(SignInAction.ToggleShowPassword)
         assertTrue(vm.state.value.showPassword)
@@ -66,7 +69,7 @@ class SignInViewModelTest {
     @Test
     fun `network failure maps to a retryable network error`() = runTest {
         val auth = FakeMatrixAuth(signInResult = Result.failure(java.io.IOException("down")))
-        val vm = SignInViewModel(auth, FakePolicyProvider())
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
         vm.onAction(SignInAction.Submit("wayne", "hunter2", "srv.example"))
         // Let the launched coroutine run.
         testScheduler.advanceUntilIdle()

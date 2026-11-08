@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WelcomeViewModel @Inject constructor() : ViewModel() {
 
-    private val _state = MutableStateFlow(WelcomeState(qrEnabled = false))
+    private val _state = MutableStateFlow(WelcomeState(qrEnabled = true))
     val state: StateFlow<WelcomeState> = _state.asStateFlow()
 
     private val navChannel = Channel<WelcomeNav>(Channel.BUFFERED)
@@ -24,7 +24,7 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
     fun onAction(action: WelcomeAction) {
         val nav = when (action) {
             WelcomeAction.SignInWithPassword -> WelcomeNav.Password
-            WelcomeAction.SignInWithQr -> WelcomeNav.Qr
+            WelcomeAction.SignInWithSetupCode -> WelcomeNav.SetupCode
             WelcomeAction.Help -> WelcomeNav.Help
         }
         viewModelScope.launch { navChannel.send(nav) }

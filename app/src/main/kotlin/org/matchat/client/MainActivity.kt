@@ -606,6 +606,13 @@ class MainActivity : AppCompatActivity(), Navigator {
     override fun toBackgroundHelper() = navController.navigate(R.id.backgroundHelperFragment)
 
     override fun toContactsPrompt() = navController.navigate(R.id.contactsPromptFragment)
+
+    override fun toScan(kind: org.matchat.core.model.setup.ScanKind) =
+        navController.navigate(R.id.scanFragment, bundleOf(ARG_SCAN_KIND to kind.name))
+
+    override fun toSetupHelp() = navController.navigate(R.id.setupHelpFragment)
+
+    override fun toSetupCode() = navController.navigate(R.id.setupCodeFragment)
     override fun toNotifications() = navController.navigate(R.id.notificationsFragment)
     override fun toPolicy() = navController.navigate(R.id.policyFragment)
     override fun toUpdate() = navController.navigate(R.id.updateFragment)
@@ -621,6 +628,7 @@ class MainActivity : AppCompatActivity(), Navigator {
         const val ARG_TIMESTAMP = "timestamp"
         const val ARG_LINK = "link"
         const val ARG_SPACE_ID = "spaceId"
+        const val ARG_SCAN_KIND = "kind"
 
         // Diagnostic logging for the right-softkey/Options on-device report —
         // see the log call sites (dispatchKeyEvent, handleAccessibilityKeyEvent)

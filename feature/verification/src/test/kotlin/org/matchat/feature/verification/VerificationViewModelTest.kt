@@ -68,4 +68,27 @@ class VerificationViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `a scanned or pasted recovery key is used like a typed one`() = runTest {
+        val key = "EsTj 3yST y93F SLpB jJsz eAXc 2XzA ygD3 w69H fGaN TKBj jXEd"
+        val vm = subject()
+        vm.navEvents.test {
+            vm.onAction(VerificationAction.RecoveryKeyFromCode("matchat:add?v=1&key=" + key.replace(" ", "%20")))
+            testScheduler.advanceUntilIdle()
+            assertEquals(VerificationNav.Verified, awaitItem())
+            assertEquals(key, session.lastRecoveryKey)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a paste with no recovery key in it says so and tries nothing`() = runTest {
+        val vm = subject()
+        vm.onAction(VerificationAction.RecoveryKeyFromCode("https://example.org"))
+        testScheduler.advanceUntilIdle()
+        assertEquals(Phase.RECOVERY_KEY, vm.state.value.phase)
+        assertTrue(vm.state.value.error != null)
+        assertEquals(null, session.lastRecoveryKey)
+    }
 }

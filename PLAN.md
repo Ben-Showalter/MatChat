@@ -226,6 +226,12 @@ Focus rules:
      (MAS). Ship it behind `policy.qrLoginEnabled`.
    - *Username + password*, homeserver pre-filled and **not editable** when
      `policy.pinnedHomeserver` is set.
+   - *Setup code* (built, docs/adr/0010): a QR code or link made on a computer
+     with the offline page in `tools/setup-code/`, holding the homeserver,
+     username, password and/or recovery key. Scanned with MatChat's own camera
+     screen (ZXing) or pasted; shown first with secrets hidden, used only on
+     "Sign in"; its recovery key is applied right after. The same scanner
+     reads recovery keys (S7) and addresses (S12, S21).
 3. **Encryption setup**: verify against an existing device (emoji SAS) or enter
    an admin-issued recovery key. Recovery-key entry on a keypad is brutal — the
    field accepts the key in 4-char groups with auto-advance, and Options →
@@ -419,7 +425,7 @@ avoid duplicates); it never reads the phone's contacts as a source of people.
 | **M5** — Reach (2 wk) | Invitations (S18/S19), new message → contacts / recents / typed address (S20–S22), DM creation, `:core:contacts`, managed-configuration policy read + live reload, Settings "managed by" line | An invite from another homeserver can be accepted on the phone; a DM to a typed federated address works; pushing a new `allowedDomains` from the EMM blocks it without a restart |
 | **M6** — Polish (2 wk) | Empty/error/offline states, battery tuning, Help screen, accessibility pass, string review | Battery target met on hardware; screenshot suite green |
 | **M7** — Pilot (1 wk) | Signed APK, sideload + enrollment doc, 5-device field pilot, feedback loop | 5 users run it for a week; crash-free sessions > 99 % |
-| **v1.1 candidates** | QR sign-in, image send/receive, per-room mute, contact QR/short codes, KaiOS shell (reuse `:core:model` + UX spec only) | — |
+| **v1.1 candidates** | QR sign-in (MSC4108 device linking; setup codes are built), image send/receive, per-room mute, contact QR/short codes, KaiOS shell (reuse `:core:model` + UX spec only) | — |
 
 ~12 weeks of focused work. Every milestone ends with an install on real hardware;
 emulator-only milestones are not milestones.

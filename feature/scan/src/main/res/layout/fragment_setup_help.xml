@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S33 "Make a setup code" (UX-SPEC §S33). The steps, the one focusable row
+     (save the setup page to Download), then a line saying where it went or
+     what went wrong. Save to SD card / Send by Bluetooth are under Options.
+     ScrollView so the steps can grow at the largest font scale; it scrolls
+     with the D-pad because the row is its only focus target. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/content_pad">
+
+        <TextView
+            android:id="@+id/setup_help_save"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_help_save"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/setup_help_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorTextSecondary"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:text="@string/setup_help_body"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary" />
+    </LinearLayout>
+</ScrollView>

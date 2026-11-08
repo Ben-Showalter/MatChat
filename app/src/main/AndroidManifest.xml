@@ -47,6 +47,9 @@
     <!-- Optional: Settings > "Save contacts to phone" (UX-SPEC S13/S30). Asked
          for only when the user turns it on; without it every contact still
          lives in MatChat. READ is only used to avoid adding a duplicate. -->
+    <!-- Scan QR setup codes, recovery keys and addresses (S31, docs/adr/0010):
+         MatChat's own camera screen, asked for on first scan. -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
 

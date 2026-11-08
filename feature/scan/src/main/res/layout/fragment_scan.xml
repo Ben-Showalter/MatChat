@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S31 Scan (UX-SPEC §S31, docs/adr/0010): the camera picture fitted to the
+     area above (ScanLayout keeps its shape), one status line, and the one
+     focusable row ("Scan again" / "Try again"). Focus order = XML order; the
+     preview is not focusable. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/scan_area"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="?attr/colorSurfaceInverse"
+        android:focusable="false">
+
+        <SurfaceView
+            android:id="@+id/scan_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:focusable="false"
+            android:focusableInTouchMode="false" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/scan_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:paddingStart="@dimen/content_pad"
+        android:paddingEnd="@dimen/content_pad"
+        android:paddingTop="4dp"
+        android:textSize="?attr/textSizeLabel"
+        android:textColor="?attr/colorTextPrimary" />
+
+    <TextView
+        android:id="@+id/scan_again"
+        style="@style/Widget.MatChat.Row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/scan_again"
+        android:textSize="?attr/textSizeLabel"
+        android:textColor="?attr/colorTextOnFocus" />
+</LinearLayout>

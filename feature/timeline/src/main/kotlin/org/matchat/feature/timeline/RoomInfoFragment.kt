@@ -13,12 +13,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.matchat.core.model.setup.ScanKind
 import org.matchat.core.ui.contacts.PhoneContactIntents
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.menu.MenuItem
 import org.matchat.core.ui.menu.MenuSheet
 import org.matchat.core.ui.menu.TextPromptSheet
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.nav.ScanRequest
 import org.matchat.core.ui.theme.themeDimenPx
 
 /** S12 Room Info + basic edits. Everything is in the focusable list (fields open a
@@ -70,6 +72,7 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
                 launch { viewModel.navEvents.collect(::onNav) }
             }
         }
+        ScanRequest.listen(this, viewLifecycleOwner, ScanKind.ADDRESS) { viewModel.addMember(it) }
         FocusEngine.requestInitialFocus(rv)
     }
 
@@ -173,6 +176,8 @@ class RoomInfoFragment : org.matchat.core.ui.softkey.SoftkeyFragment() {
                 TextPromptSheet.show(requireContext(), getString(R.string.roominfo_add_member), "@") {
                     viewModel.addMember(it)
                 }
+            // An address from a QR code (UX-SPEC S12): the same invite as typing it.
+            RoomInfoViewModel.KEY_ADD_QR -> navigator.toScan(ScanKind.ADDRESS)
             RoomInfoViewModel.KEY_LEAVE -> confirmLeave()
         }
     }

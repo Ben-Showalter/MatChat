@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- S31 Scan: the camera screen that reads QR codes (setup codes,
+         recovery keys, addresses). -->
+    <string name="scan_title">Scan QR code</string>
+    <string name="scan_starting">Opening the camera…</string>
+    <string name="scan_point">Point the camera at the QR code.</string>
+    <!-- Shown when the camera read a QR code that isn't what this screen wants. -->
+    <string name="scan_not_a_setup_code">That QR code isn\'t a MatChat setup code.</string>
+    <string name="scan_not_a_recovery_key">That QR code doesn\'t hold a recovery key.</string>
+    <string name="scan_not_an_address">That QR code doesn\'t hold a Matrix address.</string>
+    <string name="scan_too_new">That code was made for a newer MatChat. Update MatChat first.</string>
+    <string name="scan_no_camera">The camera isn\'t available. Type it in instead.</string>
+    <string name="scan_no_permission">MatChat isn\'t allowed to use the camera.</string>
+    <!-- The one row on S31, and an Options item. -->
+    <string name="scan_again">Scan again</string>
+    <string name="scan_try_again">Try again</string>
+    <!-- Options item: opens S33, how to make a setup code. -->
+    <string name="scan_help">How to make a setup code</string>
+
+    <!-- S33 "Make a setup code" (UX-SPEC §S33). -->
+    <string name="setup_help_title">Make a setup code</string>
+    <string name="setup_help_body">A setup code is a QR code holding your sign-in details or recovery key, so you don\'t type them on the keypad.\n\n1. Save the setup page to this phone.\n2. Move it to a computer (USB cable, Bluetooth or SD card).\n3. Open it in a browser and fill it in. It works offline and sends nothing anywhere.\n4. Scan the QR code it shows with MatChat.</string>
+    <string name="setup_help_save">Save setup page to phone</string>
+    <string name="setup_help_save_sd">Save to SD card</string>
+    <string name="setup_help_send_bluetooth">Send by Bluetooth</string>
+    <!-- After saving; %1$s is where it went, e.g. "Download › matchat-setup.html". -->
+    <string name="setup_help_saved">Saved to %1$s</string>
+    <string name="setup_help_save_failed">Couldn\'t save the setup page. Try again.</string>
+    <string name="setup_help_no_sd">There\'s no SD card in this phone.</string>
+    <string name="setup_help_no_share">This phone can\'t send the file that way.</string>
+    <string name="setup_help_needs_storage">MatChat needs storage access to save the page.</string>
+</resources>

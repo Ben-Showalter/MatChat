@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- S3 Sign in. Focus order: Username → Password → Sign in. Homeserver row is
-     read-only (not focusable) when pinned. -->
+     read-only (not focusable) when pinned. S32 "Setup code found" replaces the
+     form while a setup code is shown; its order: Sign in → Use these and type
+     the rest → Cancel. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,113 +10,177 @@
     android:orientation="vertical"
     android:padding="@dimen/content_pad">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/signin_homeserver_label"
-        android:textSize="?attr/textSizeMeta"
-        android:textColor="?attr/colorTextSecondary" />
-
-    <EditText
-        android:id="@+id/homeserver_field"
+    <!-- The password form (hidden while S32 is shown). -->
+    <LinearLayout
+        android:id="@+id/sign_in_form"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/focus_selector"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:inputType="textUri"
-        android:importantForAutofill="no"
-        android:textSize="?attr/textSizeBody"
-        android:textColor="?attr/colorTextPrimary"
-        tools:text="chats.carpathianserver.org" />
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/signin_homeserver_label"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorTextSecondary" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/signin_username"
-        android:textSize="?attr/textSizeMeta"
-        android:textColor="?attr/colorTextSecondary" />
+        <EditText
+            android:id="@+id/homeserver_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/focus_selector"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:inputType="textUri"
+            android:importantForAutofill="no"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary"
+            tools:text="chats.carpathianserver.org" />
 
-    <EditText
-        android:id="@+id/username"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/signin_username"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorTextSecondary" />
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/focus_selector"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:inputType="text"
+            android:autofillHints="username"
+            android:importantForAutofill="no"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary"
+            android:hint="@string/signin_username" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/signin_password"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorTextSecondary" />
+
+        <!-- textVisiblePassword, not textPassword: on the keypad IMEs these phones
+             ship, the password variation forces alpha multi-tap and swallows the
+             number keys, so a password containing digits can't be typed. The
+             masking is restored in code with a PasswordTransformationMethod (the
+             IME reads inputType, the view reads the transformation), so the field
+             still shows dots. Same reason the recovery-key field uses it. -->
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/focus_selector"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:inputType="textVisiblePassword"
+            android:importantForAutofill="no"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary"
+            android:hint="@string/signin_password" />
+
+        <!-- Directly below the password: a focus stop that toggles masking. Label
+             text is set in render() from state.showPassword. -->
+        <TextView
+            android:id="@+id/toggle_password"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/signin_show_password"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorError"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sign_in_button"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/signin_submit"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <!-- Opens Options (UX-SPEC S3): the T9 keyboard owns the softkeys while a
+             text box is focused, so this row is the D-pad route to the menu. -->
+        <TextView
+            android:id="@+id/more_options"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/signin_more_options"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+    </LinearLayout>
+    <!-- S32 "Setup code found" (UX-SPEC §S32): shown in place of the form
+         while a scanned or pasted setup code waits to be used. The password
+         and recovery key are never shown; nothing is used until "Sign in". -->
+    <LinearLayout
+        android:id="@+id/setup_found"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/focus_selector"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:inputType="text"
-        android:autofillHints="username"
-        android:importantForAutofill="no"
-        android:textSize="?attr/textSizeBody"
-        android:textColor="?attr/colorTextPrimary"
-        android:hint="@string/signin_username" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/signin_password"
-        android:textSize="?attr/textSizeMeta"
-        android:textColor="?attr/colorTextSecondary" />
-
-    <!-- textVisiblePassword, not textPassword: on the keypad IMEs these phones
-         ship, the password variation forces alpha multi-tap and swallows the
-         number keys, so a password containing digits can't be typed. The
-         masking is restored in code with a PasswordTransformationMethod (the
-         IME reads inputType, the view reads the transformation), so the field
-         still shows dots. Same reason the recovery-key field uses it. -->
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/focus_selector"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:inputType="textVisiblePassword"
-        android:importantForAutofill="no"
-        android:textSize="?attr/textSizeBody"
-        android:textColor="?attr/colorTextPrimary"
-        android:hint="@string/signin_password" />
-
-    <!-- Directly below the password: a focus stop that toggles masking. Label
-         text is set in render() from state.showPassword. -->
-    <TextView
-        android:id="@+id/toggle_password"
-        style="@style/Widget.MatChat.Row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/signin_show_password"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
-
-    <TextView
-        android:id="@+id/error"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textSize="?attr/textSizeMeta"
-        android:textColor="?attr/colorError"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/sign_in_button"
-        style="@style/Widget.MatChat.Row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/signin_submit"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
-
-    <!-- Opens Options (UX-SPEC S3): the T9 keyboard owns the softkeys while a
-         text box is focused, so this row is the D-pad route to the menu. -->
-    <TextView
-        android:id="@+id/more_options"
-        style="@style/Widget.MatChat.Row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/signin_more_options"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:orientation="vertical"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_found_title"
+            android:textStyle="bold"
+            android:textSize="?attr/textSizeHeading"
+            android:textColor="?attr/colorTextPrimary" />
+        <TextView
+            android:id="@+id/setup_found_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary" />
+        <TextView
+            android:id="@+id/setup_found_problem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorError"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/setup_found_sign_in"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/signin_submit"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+        <TextView
+            android:id="@+id/setup_found_fill"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_found_fill"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+        <TextView
+            android:id="@+id/setup_found_cancel"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_found_cancel"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+    </LinearLayout>
 </LinearLayout>

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup Code</title>
+<!--
+  Setup-code page for a keypad-phone app (Flip-DumbPhoneGuide, docs/text-input.md).
+
+  Someone opens this one file in a browser on a computer, fills in the settings
+  (server, account, password, API key...), and gets a QR code and a link. The
+  phone app scans the QR code or has the link pasted in, so nobody types
+  secrets on a T9 keypad.
+
+  - Works offline: the QR library is inlined below. No network requests.
+  - Nothing is stored. Closing or reloading the page forgets everything.
+
+  TO USE IN AN APP: edit only the CONFIG block below, then build the final file
+  with the one-line build in README.md (it inlines the QR library).
+
+  Link format, version 1:  <scheme>:add?v=1&<key>=<value>&...
+  Every value is URL-encoded and empty fields are left out.
+-->
+<style>
+:root {
+  --bg: #0B0B0C; --panel: #18181B; --field: #232327; --line: #3A3A3E;
+  --text: #F2F2F2; --muted: #B8B8B8; --bar: #333338; --accent: #9CC9FF;
+  --focus: #6FB1FF; --ok: #1E7A34; --warn-bg: #3A1418; --warn-line: #7A2A31;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+header { background: var(--bar); padding: 14px 20px; }
+header h1 { margin: 0; font-size: 22px; }
+header p { margin: 2px 0 0; color: #DADADA; font-size: 14px; }
+main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; display: flex; flex-wrap: wrap; gap: 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+  flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+h2 { margin: 0 0 4px; font-size: 18px; color: var(--accent); }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.req { color: var(--accent); }
+input, select { font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 10px; width: 100%; }
+input:focus, select:focus, button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.pass { display: flex; gap: 8px; } .pass input { flex: 1; }
+button { font: inherit; cursor: pointer; color: var(--text); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; }
+button.primary { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 600; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+.warn { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+#qr { align-self: center; background: #fff; border-radius: 10px; padding: 12px; width: 300px; max-width: 100%;
+  aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; color: #444;
+  text-align: center; font-size: 14px; }
+#qr svg { width: 100%; height: 100%; display: block; }
+#qrLabel { text-align: center; font-weight: 600; min-height: 1.4em; }
+#link { font: 13px/1.4 ui-monospace, Consolas, monospace; background: var(--field); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; word-break: break-all; min-height: 3em; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#status { font-size: 14px; color: #9BE7A9; min-height: 1.3em; margin: 0; }
+ol { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
+@media print {
+  header, form, .actions, .warn, ol, #link, #status, .hint, h2 { display: none !important; }
+  body, main, .card { background: #fff !important; color: #000 !important; border: 0 !important; }
+  #qr { width: 70mm; padding: 0; } #qrLabel { color: #000; font-size: 16pt; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Setup code</h1>
+  <p>Works offline. Nothing you type leaves this computer.</p>
+</header>
+<main>
+  <form class="card" id="form" autocomplete="off" onsubmit="return false">
+    <h2>Details</h2>
+    <div id="fields"></div>
+    <p class="hint" id="formHint"></p>
+    <div class="actions"><button type="button" id="clear">Clear all</button></div>
+  </form>
+  <section class="card" aria-live="polite">
+    <h2>Setup code</h2>
+    <div id="qr"></div>
+    <div id="qrLabel"></div>
+    <div class="warn" id="secretWarning" hidden><strong>This code contains a secret.</strong> Treat it like a password: don't post it, and delete it after the phone is set up.</div>
+    <label>Setup link <div id="link"></div></label>
+    <div class="actions">
+      <button type="button" class="primary" id="copy" disabled>Copy link</button>
+      <button type="button" id="png" disabled>Save QR as image</button>
+      <button type="button" id="print" disabled>Print QR</button>
+    </div>
+    <p id="status"></p>
+    <ol id="steps"></ol>
+  </section>
+</main>
+
+<script>
+/* ======================= CONFIG: edit this block per app ======================= */
+var CONFIG = {
+  appName: 'MatChat',                // shown in the page title and on the QR label
+  scheme: 'matchat',                 // link becomes  matchat:add?v=1&...
+  fileName: 'matchat-setup',         // saved image: matchat-setup-<label>.png
+  labelFields: ['user'],             // fields joined with " · " under the QR code
+  hint: 'Fill in what the phone needs: the sign-in details, the recovery key, or both.',
+  steps: [                           // instructions shown under the QR code (HTML allowed)
+    'On the phone: <strong>Sign in with setup code › Scan QR setup code</strong>. ' +
+      'For a recovery key alone: <strong>Recovery key › Options › Scan recovery key</strong>.',
+    'Point the camera at this screen, or send yourself the link and choose <strong>Paste setup link</strong>.',
+    'Check the details on the phone, then choose <strong>Sign in</strong>.'
+  ],
+  // type: text | password | number | select.  secret: true shows the warning.
+  fields: [
+    { key: 'server', label: 'Homeserver', placeholder: 'matrix.example.org' },
+    { key: 'user',   label: 'Username', placeholder: 'sam' },
+    { key: 'pass',   label: 'Password', type: 'password', secret: true },
+    { key: 'key',    label: 'Recovery key (optional)', type: 'password', secret: true,
+      placeholder: 'EsTj 3yST y93F ...' }
+  ]
+};
+/* ============================ end of CONFIG ==================================== */
+</script>
+<script>
+/*__QRCODE_LIBRARY__*/
+</script>
+<script>
+(function () {
+  'use strict';
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+  function $(id) { return document.getElementById(id); }
+  var inputs = {};
+  var current = '';
+
+  document.title = CONFIG.appName + ' Setup Code';
+  $('title').textContent = CONFIG.appName + ' setup code';
+  $('formHint').textContent = CONFIG.hint || '';
+  CONFIG.steps.forEach(function (s) { var li = document.createElement('li'); li.innerHTML = s; $('steps').appendChild(li); });
+
+  // Build the form from CONFIG.fields.
+  CONFIG.fields.forEach(function (f) {
+    var label = document.createElement('label');
+    var caption = document.createElement('span');
+    caption.textContent = f.label + ' ';
+    if (f.required) { var r = document.createElement('span'); r.className = 'req'; r.textContent = '(required)'; caption.appendChild(r); }
+    label.appendChild(caption);
+    var input;
+    if (f.type === 'select') {
+      input = document.createElement('select');
+      f.options.forEach(function (o) { var opt = document.createElement('option'); opt.value = o[0]; opt.textContent = o[1]; input.appendChild(opt); });
+      if (f.value) input.value = f.value;
+      label.appendChild(input);
+    } else {
+      input = document.createElement('input');
+      input.type = f.type === 'password' ? 'password' : 'text';
+      if (f.type === 'number') input.inputMode = 'numeric';
+      input.spellcheck = false;
+      if (f.placeholder) input.placeholder = f.placeholder;
+      if (f.type === 'password') {
+        var wrap = document.createElement('span'); wrap.className = 'pass';
+        var show = document.createElement('button'); show.type = 'button'; show.textContent = 'Show';
+        show.setAttribute('aria-pressed', 'false');
+        show.addEventListener('click', function () {
+          var on = input.type === 'password';
+          input.type = on ? 'text' : 'password'; show.textContent = on ? 'Hide' : 'Show';
+          show.setAttribute('aria-pressed', String(on));
+        });
+        wrap.appendChild(input); wrap.appendChild(show); label.appendChild(wrap);
+      } else {
+        label.appendChild(input);
+      }
+    }
+    input.addEventListener('input', render);
+    input.addEventListener('change', render);
+    inputs[f.key] = input;
+    $('fields').appendChild(label);
+  });
+  $('fields').style.display = 'flex';
+  $('fields').style.flexDirection = 'column';
+  $('fields').style.gap = '12px';
+
+  function val(f) { var v = inputs[f.key].value; return f.type === 'password' ? v : v.trim(); }
+
+  function problem() {
+    for (var i = 0; i < CONFIG.fields.length; i++) {
+      var f = CONFIG.fields[i], v = val(f);
+      if (f.required && !v) return 'Fill in ' + f.label + ' to make a code.';
+      if (f.type === 'number' && v && !/^\d+$/.test(v)) return f.label + ' must be a number.';
+    }
+    return '';
+  }
+
+  function buildLink() {
+    return CONFIG.scheme + ':add?v=1&' + CONFIG.fields
+      .filter(function (f) { return val(f) !== ''; })
+      .map(function (f) { return f.key + '=' + encodeURIComponent(val(f)); })
+      .join('&');
+  }
+
+  function makeQr(text) { var q = qrcode(0, 'M'); q.addData(text, 'Byte'); q.make(); return q; }
+
+  function labelText() {
+    var parts = CONFIG.labelFields.map(function (k) { return inputs[k] ? inputs[k].value.trim() : ''; })
+      .filter(function (s) { return s; });
+    return parts.length ? parts.join(' · ') : CONFIG.appName;
+  }
+
+  function render() {
+    var p = problem();
+    current = p ? '' : buildLink();
+    $('copy').disabled = $('png').disabled = $('print').disabled = !current;
+    $('status').textContent = '';
+    $('secretWarning').hidden = !CONFIG.fields.some(function (f) { return f.secret && val(f) !== ''; });
+    if (!current) { $('qr').textContent = p; $('qrLabel').textContent = ''; $('link').textContent = ''; return; }
+    $('qr').innerHTML = makeQr(current).createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    var svg = $('qr').querySelector('svg');
+    if (svg) { svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', CONFIG.appName + ' setup QR code'); }
+    $('qrLabel').textContent = labelText();
+    $('link').textContent = current;
+  }
+
+  $('clear').addEventListener('click', function () {
+    CONFIG.fields.forEach(function (f) { inputs[f.key].value = f.type === 'select' ? (f.value || f.options[0][0]) : ''; });
+    render();
+  });
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta); return ok;
+  }
+  $('copy').addEventListener('click', function () {
+    if (!current) return;
+    var done = function () { $('status').textContent = 'Link copied.'; };
+    var failed = function () {
+      if (fallbackCopy(current)) done(); else $('status').textContent = 'Couldn’t copy automatically. Select the link above and copy it.';
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(current).then(done, failed); else failed();
+  });
+
+  $('png').addEventListener('click', function () {
+    if (!current) return;
+    var q = makeQr(current), cell = 10, margin = 4, n = q.getModuleCount();
+    var size = n * cell + margin * 2 * cell;
+    var c = document.createElement('canvas'); c.width = size; c.height = size + 60;
+    var g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
+    for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(margin * cell + k * cell, margin * cell + r * cell, cell, cell);
+    g.font = 'bold 26px Arial, sans-serif'; g.textAlign = 'center'; g.fillText(labelText(), size / 2, size + 36);
+    var a = document.createElement('a'); a.href = c.toDataURL('image/png');
+    a.download = CONFIG.fileName + '-' + labelText().replace(/[^A-Za-z0-9_-]+/g, '-') + '.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    $('status').textContent = 'Image saved. Delete it once the phone is set up.';
+  });
+
+  $('print').addEventListener('click', function () { if (current) window.print(); });
+
+  render();
+  var first = CONFIG.fields[0]; if (first) inputs[first.key].focus();
+})();
+</script>
+</body>
+</html>

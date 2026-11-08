@@ -18,6 +18,11 @@ import org.junit.runner.RunWith
  * adds its entry here (AGENTS.md §6 "Focus order or a new screen"). It is a
  * connected test — it runs on the emulator in the nightly `traversal` workflow,
  * not in the per-PR JVM suite.
+ *
+ * Screens still waiting for their entry here (the harness is a placeholder):
+ * S4 Sign in with setup code, S31 Scan (its one row: Scan again / Try again),
+ * S32 Setup code found (Sign in → Use these and type the rest → Cancel) and
+ * S33 Make a setup code (docs/adr/0010).
  */
 @RunWith(AndroidJUnit4::class)
 class TraversalTest {

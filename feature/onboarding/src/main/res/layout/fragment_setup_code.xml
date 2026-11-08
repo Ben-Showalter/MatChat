@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S4 "Sign in with setup code" (UX-SPEC §S4): the question, three rows in
+     fixed order (Scan QR setup code → Paste setup link → No, help me set it
+     up), then a line after a paste that wasn't a setup code. Focus order =
+     XML order. ScrollView so the text can grow at the largest font scale. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/content_pad">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:focusable="false"
+            android:text="@string/setup_code_question"
+            android:textSize="?attr/textSizeBody"
+            android:textColor="?attr/colorTextPrimary" />
+
+        <TextView
+            android:id="@+id/setup_code_scan"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_code_scan"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/setup_code_paste"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_paste"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/setup_code_help"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_code_help"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
+
+        <TextView
+            android:id="@+id/setup_code_problem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:paddingTop="4dp"
+            android:textSize="?attr/textSizeMeta"
+            android:textColor="?attr/colorError"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

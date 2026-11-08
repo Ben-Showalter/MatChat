@@ -32,7 +32,7 @@ class WelcomeFragment : SoftkeyFragment() {
         val b = FragmentWelcomeBinding.bind(content)
         binding = b
         setTitle(getString(org.matchat.core.ui.R.string.softkey_blank))
-        b.welcomeQr.setOnClickListener { viewModel.onAction(WelcomeAction.SignInWithQr) }
+        b.welcomeQr.setOnClickListener { viewModel.onAction(WelcomeAction.SignInWithSetupCode) }
         b.welcomePassword.setOnClickListener { viewModel.onAction(WelcomeAction.SignInWithPassword) }
         b.welcomeHelp.setOnClickListener { viewModel.onAction(WelcomeAction.Help) }
 
@@ -55,7 +55,8 @@ class WelcomeFragment : SoftkeyFragment() {
     private fun navigate(nav: WelcomeNav) {
         when (nav) {
             // QR (S4) is a v1.1 candidate; both routes go to password sign-in in v1.
-            WelcomeNav.Password, WelcomeNav.Qr -> navigator.toSignIn()
+            WelcomeNav.Password -> navigator.toSignIn()
+            WelcomeNav.SetupCode -> navigator.toSetupCode()
             WelcomeNav.Help -> navigator.toHelp()
         }
     }

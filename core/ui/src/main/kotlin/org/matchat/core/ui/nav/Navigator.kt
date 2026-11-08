@@ -3,6 +3,7 @@ package org.matchat.core.ui.nav
 import org.matchat.core.model.EventId
 import org.matchat.core.model.RoomId
 import org.matchat.core.model.UserId
+import org.matchat.core.model.setup.ScanKind
 
 /**
  * Cross-screen navigation. Features depend on this interface, never on each
@@ -59,6 +60,15 @@ interface Navigator {
     /** S27: the one-time "hide the running notification" prompt after sign-in
      *  (docs/adr/0008). */
     fun toBackgroundHelper()
+
+    /** S31: scan a QR code of [kind]; the text comes back via [ScanRequest]. */
+    fun toScan(kind: ScanKind)
+
+    /** S33: how to make a setup code, and saving the setup page to the phone. */
+    fun toSetupHelp()
+
+    /** S4: "Do you have a QR setup code ready?" (Welcome > Sign in with setup code). */
+    fun toSetupCode()
 
     /** S30: the one-time "save contacts to this phone?" prompt after sign-in. */
     fun toContactsPrompt()

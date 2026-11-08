@@ -9,8 +9,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.matchat.core.model.ErrorText
+import org.matchat.core.model.setup.ScanKind
 import org.matchat.core.ui.focus.FocusEngine
 import org.matchat.core.ui.nav.Navigator
+import org.matchat.core.ui.nav.ScanRequest
 import org.matchat.core.ui.softkey.SoftkeyFragment
 import org.matchat.feature.newchat.databinding.FragmentTypeAddressBinding
 
@@ -37,6 +39,11 @@ class TypeAddressFragment : SoftkeyFragment() {
         }
         b.confirmStart.setOnClickListener { viewModel.onAction(TypeAddressAction.Confirm) }
         b.confirmChange.setOnClickListener { viewModel.onAction(TypeAddressAction.Change) }
+        b.scanAddress.setOnClickListener { navigator.toScan(ScanKind.ADDRESS) }
+        // A scanned address is checked exactly like a typed one (shape, policy, profile).
+        ScanRequest.listen(this, viewLifecycleOwner, ScanKind.ADDRESS) { address ->
+            viewModel.onAction(TypeAddressAction.Continue(address))
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

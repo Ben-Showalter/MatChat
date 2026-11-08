@@ -70,11 +70,13 @@ feature/invites/         Invitation list, invitation detail, accept / decline
 feature/newchat/         Contacts (send message, save, phone contact), recents, type an address, blocked address
 feature/settings/        Settings, help, sign out
 feature/verification/    Emoji SAS, recovery key
+feature/scan/            QR scanning (S31) + "Make a setup code" (S33); ZXing core (docs/adr/0010)
 stubs/kyocera-sublcd/    Compile-only declaration of Kyocera's cover-screen callback (docs/adr/0009).
                          :app uses it compileOnly (only CoverScreenCallback); never packaged.
                          Nothing else may depend on it.
 docs/                    ARCHITECTURE.md, UX-SPEC.md, MDM.md, SERVER.md, DEVICE-SETUP.md, adr/
 config/                  detekt.yml, ktlint config
+tools/setup-code/        Offline setup-code page (QR + link); built copy shipped in :feature:scan assets
 ```
 
 ### Dependency rules (Konsist tests enforce these — they will fail your PR)

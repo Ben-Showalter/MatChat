@@ -1,8 +1,9 @@
 package org.matchat.feature.onboarding
 
 /**
- * S2 Welcome. The QR button is hidden when QR login is off — in v1 it is a v1.1
- * candidate (PLAN.md §7), so it defaults off and the password path is primary.
+ * S2 Welcome. [qrEnabled] shows "Sign in with setup code" (S4, a QR code or
+ * link holding the sign-in details — docs/adr/0010). Matrix's own
+ * device-linking QR login (MSC4108) is still a later option (PLAN.md §7).
  */
 data class WelcomeState(
     val qrEnabled: Boolean = false,

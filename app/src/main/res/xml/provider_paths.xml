@@ -7,4 +7,6 @@
     <cache-path name="notification_sounds" path="notification_sounds/" />
     <!-- Downloaded update APKs handed to the system installer (:core:update). -->
     <cache-path name="updates" path="updates/" />
+    <!-- The offline setup page sent by Bluetooth (S33, :feature:scan). -->
+    <cache-path name="setup" path="setup/" />
 </paths>

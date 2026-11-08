@@ -61,6 +61,7 @@ include(":feature:newchat")
 include(":feature:settings")
 include(":feature:verification")
 include(":feature:call")
+include(":feature:scan")
 
 // Compile-only declarations of OEM APIs; never packaged (docs/adr/0009).
 include(":stubs:kyocera-sublcd")

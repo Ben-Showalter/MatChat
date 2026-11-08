@@ -38,4 +38,7 @@
     <string name="type_address_error_malformed">That does not look like an address.</string>
     <string name="type_address_error_not_found">No one at that address.</string>
     <string name="type_address_error_unreachable">Could not reach that server.</string>
+    <!-- S21 row: read the address from a QR code (an @user:server address, a
+         matrix.to link, or a MatChat setup code) instead of typing it. -->
+    <string name="type_address_scan">Scan address QR code</string>
 </resources>
