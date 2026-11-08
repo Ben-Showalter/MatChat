@@ -50,6 +50,7 @@ class SignInFragment : SoftkeyFragment() {
         b.setupFoundSignIn.setOnClickListener { viewModel.onAction(SignInAction.ConfirmSetupCode) }
         b.setupFoundFill.setOnClickListener { viewModel.onAction(SignInAction.FillFromSetupCode) }
         b.setupFoundCancel.setOnClickListener { viewModel.onAction(SignInAction.CancelSetupCode) }
+        b.setupFoundTogglePassword.setOnClickListener { viewModel.onAction(SignInAction.ToggleShowPassword) }
         ScanRequest.listen(this, viewLifecycleOwner, ScanKind.SETUP_CODE) {
             viewModel.onAction(SignInAction.SetupCodeReceived(it))
         }
@@ -129,19 +130,24 @@ class SignInFragment : SoftkeyFragment() {
                 R.string.setup_found_details,
                 found.server,
                 found.user ?: notIncluded,
-                if (found.hasPassword) getString(R.string.setup_found_hidden) else notIncluded,
+                found.password ?: notIncluded,
                 if (found.hasRecoveryKey) getString(R.string.setup_found_included) else notIncluded,
             )
             // A failed sign-in from here stays here with its error; Sign in retries.
-            b.setupFoundProblem.isVisible = !found.canSignIn || state.error != null
+            b.setupFoundProblem.isVisible = !found.canSignIn || state.error != null || found.passwordHasEdgeSpace
             b.setupFoundProblem.text = when {
                 state.error != null -> messageFor(state.error)
+                found.canSignIn && found.passwordHasEdgeSpace -> getString(R.string.setup_found_edge_space)
                 found.blockedServer != null ->
                     getString(R.string.setup_found_blocked_server, found.blockedServer, found.server)
                 else -> getString(R.string.setup_found_incomplete)
             }
             b.setupFoundSignIn.isVisible = found.canSignIn
             b.setupFoundSignIn.isEnabled = !state.isSubmitting
+            b.setupFoundTogglePassword.isVisible = found.hasPassword
+            b.setupFoundTogglePassword.setText(
+                if (state.showPassword) R.string.signin_hide_password else R.string.signin_show_password,
+            )
             b.setupFoundFill.isVisible = !found.isComplete && found.blockedServer == null
             if (!wasShowing) {
                 FocusEngine.requestInitialFocus(if (found.canSignIn) b.setupFoundSignIn else b.setupFoundCancel)

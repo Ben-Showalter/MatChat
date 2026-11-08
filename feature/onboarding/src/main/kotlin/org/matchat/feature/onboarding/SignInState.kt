@@ -27,13 +27,22 @@ data class SetupFound(
     val server: String,
     /** null = the code has no username. */
     val user: String?,
-    val hasPassword: Boolean,
+    /** One dot per character of the code's password — or the password itself
+     *  while "Show password" is on — so it can be checked; null = no password. */
+    val password: String?,
     val hasRecoveryKey: Boolean,
     /** The code's server when policy pins a different one: explained, never used. */
     val blockedServer: String? = null,
+    /** The password starts or ends with a space — usually pasted by accident. */
+    val passwordHasEdgeSpace: Boolean = false,
 ) {
+    val hasPassword: Boolean get() = password != null
     val isComplete: Boolean get() = user != null && hasPassword
     val canSignIn: Boolean get() = isComplete && blockedServer == null
+
+    // Never print a shown password into a log or crash report (AGENTS.md §9).
+    override fun toString(): String =
+        "SetupFound(server=$server, user=$user, hasPassword=$hasPassword, hasRecoveryKey=$hasRecoveryKey)"
 }
 
 /** Values to copy into the form once; [id] changes each time so render can

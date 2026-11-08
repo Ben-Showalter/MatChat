@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- S3 Sign in. Focus order: Username → Password → Sign in. Homeserver row is
      read-only (not focusable) when pinned. S32 "Setup code found" replaces the
-     form while a setup code is shown; its order: Sign in → Use these and type
-     the rest → Cancel. -->
+     form while a setup code is shown; its order: Show password → Sign in → Use
+     these and type the rest → Cancel. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -157,6 +157,16 @@
             android:textSize="?attr/textSizeMeta"
             android:textColor="?attr/colorError"
             android:visibility="gone" />
+        <!-- Shows the code's password in place of its dots, to check it
+             before signing in (one dot per character otherwise). -->
+        <TextView
+            android:id="@+id/setup_found_toggle_password"
+            style="@style/Widget.MatChat.Row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/signin_show_password"
+            android:textSize="?attr/textSizeLabel"
+            android:textColor="?attr/colorTextOnFocus" />
         <TextView
             android:id="@+id/setup_found_sign_in"
             style="@style/Widget.MatChat.Row"

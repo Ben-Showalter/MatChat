@@ -69,8 +69,9 @@
     <string name="setup_found_title">Setup code found</string>
     <!-- %1$s server, %2$s username, %3$s password state, %4$s recovery-key state. -->
     <string name="setup_found_details">Server: %1$s\nUsername: %2$s\nPassword: %3$s\nRecovery key: %4$s</string>
-    <!-- The password is never shown, only that the code has one. -->
-    <string name="setup_found_hidden">••••••</string>
+    <!-- S32 warning: a space at the start or end of the code's password is
+         usually copied in by accident and makes the password wrong. -->
+    <string name="setup_found_edge_space">The password starts or ends with a space. If sign-in fails, make a new code without it.</string>
     <string name="setup_found_included">included</string>
     <string name="setup_found_not_included">not included</string>
     <!-- %1$s the code's server, %2$s the one the organization requires. -->

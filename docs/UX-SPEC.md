@@ -728,8 +728,11 @@ Softkeys: Options | Select | Back.
 ### S32 — Setup code found
 Shown inside S3 in place of the form, after a setup code is scanned or pasted.
 Nothing is used until `Sign in`.
-Content: "Setup code found", then Server · Username · Password `••••••` (never
-shown) · Recovery key `included` / `not included`.
+Content: "Setup code found", then Server · Username · Password (one dot per
+character, so its length can be checked; a `Show password` row reveals it, as on
+S3) · Recovery key `included` / `not included`. A password that starts or ends
+with a space gets a warning line ("…usually copied in by accident"); the setup
+page warns about the same thing before the code is made.
 Rows: `Sign in` (when the code has a username and password) · `Use these and
 type the rest` (when it doesn't: copies the server and username into the form;
 a recovery key in the code is still used after sign-in) · `Cancel`.

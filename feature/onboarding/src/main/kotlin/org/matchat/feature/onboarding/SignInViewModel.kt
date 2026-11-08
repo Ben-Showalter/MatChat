@@ -65,8 +65,18 @@ class SignInViewModel @Inject constructor(
             is SignInAction.Submit ->
                 submit(action.username.trim(), action.password, action.homeserver.trim())
             SignInAction.DismissError -> _state.update { it.copy(error = null, setupProblem = null) }
-            SignInAction.ToggleShowPassword ->
-                _state.update { it.copy(showPassword = !it.showPassword) }
+            SignInAction.ToggleShowPassword -> _state.update {
+                val shown = !it.showPassword
+                // S32 shows the code's password the same way the form does.
+                val setup = code
+                val found = it.found
+                val refreshed = if (setup != null && found != null) {
+                    found.copy(password = shownPassword(setup, shown))
+                } else {
+                    found
+                }
+                it.copy(showPassword = shown, found = refreshed)
+            }
             is SignInAction.SetupCodeReceived -> onSetupCode(action.text)
             SignInAction.ConfirmSetupCode -> confirmSetupCode()
             SignInAction.FillFromSetupCode -> fillFromSetupCode()
@@ -101,15 +111,21 @@ class SignInViewModel @Inject constructor(
                 found = SetupFound(
                     server = if (pinned != null) pinned else codeServer ?: it.homeserver,
                     user = setup.user,
-                    hasPassword = setup.password != null,
+                    password = shownPassword(setup, it.showPassword),
                     hasRecoveryKey = setup.recoveryKey != null,
                     blockedServer = blocked,
+                    passwordHasEdgeSpace = setup.password?.let { p -> p != p.trim() } ?: false,
                 ),
                 setupProblem = null,
                 error = null,
             )
         }
     }
+
+    /** The code's password as S32 shows it: one dot per character, or the
+     *  text itself while "Show password" is on. */
+    private fun shownPassword(setup: SetupCode, shown: Boolean): String? =
+        setup.password?.let { if (shown) it else MASK.repeat(it.length) }
 
     private fun confirmSetupCode() {
         val setup = code ?: return
@@ -196,5 +212,6 @@ class SignInViewModel @Inject constructor(
         // Homeserver assumed from the sign-in mockup (PLAN.md §12 open question 1).
         const val DEFAULT_HOMESERVER = "chats.carpathianserver.org"
         const val MAX_MSG = 200
+        const val MASK = "•"
     }
 }

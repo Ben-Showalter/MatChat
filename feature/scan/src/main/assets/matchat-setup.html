@@ -82,6 +82,7 @@ ol { margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
     <h2>Setup code</h2>
     <div id="qr"></div>
     <div id="qrLabel"></div>
+    <div class="warn" id="spaceWarning" hidden><strong>A secret field starts or ends with a space.</strong> That is usually copied in by accident and makes the password or key wrong. Remove it unless it really belongs there.</div>
     <div class="warn" id="secretWarning" hidden><strong>This code contains a secret.</strong> Treat it like a password: don't post it, and delete it after the phone is set up.</div>
     <label>Setup link <div id="link"></div></label>
     <div class="actions">
@@ -2507,6 +2508,8 @@ var qrcode = function() {
     $('copy').disabled = $('png').disabled = $('print').disabled = !current;
     $('status').textContent = '';
     $('secretWarning').hidden = !CONFIG.fields.some(function (f) { return f.secret && val(f) !== ''; });
+    // Secret fields are not trimmed (a space can be part of a password), so say so when one has a stray space.
+    $('spaceWarning').hidden = !CONFIG.fields.some(function (f) { var v = val(f); return f.secret && v !== v.trim(); });
     if (!current) { $('qr').textContent = p; $('qrLabel').textContent = ''; $('link').textContent = ''; return; }
     $('qr').innerHTML = makeQr(current).createSvgTag({ cellSize: 4, margin: 2, scalable: true });
     var svg = $('qr').querySelector('svg');

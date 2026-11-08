@@ -153,4 +153,24 @@ class SignInSetupCodeTest {
         assertEquals("EsTj 3ySTy93F", session.lastRecoveryKey) // the key survived the retry
         assertNull(vm.state.value.found)
     }
+
+    @Test
+    fun `the code's password shows one dot per character, and Show password reveals it`() {
+        val vm = subject()
+        vm.onAction(SignInAction.SetupCodeReceived(full)) // pass=hunter2, 7 characters
+        assertEquals("•••••••", vm.state.value.found?.password)
+        vm.onAction(SignInAction.ToggleShowPassword)
+        assertEquals("hunter2", vm.state.value.found?.password)
+        assertFalse(vm.state.value.found.toString().contains("hunter2"))
+        vm.onAction(SignInAction.ToggleShowPassword)
+        assertEquals("•••••••", vm.state.value.found?.password)
+    }
+
+    @Test
+    fun `a stray space at the end of the password is pointed out`() {
+        val vm = subject()
+        vm.onAction(SignInAction.SetupCodeReceived("matchat:add?v=1&user=sam&pass=hunter2%20"))
+        assertTrue(vm.state.value.found!!.passwordHasEdgeSpace)
+        assertEquals(8, vm.state.value.found!!.password!!.length)
+    }
 }
