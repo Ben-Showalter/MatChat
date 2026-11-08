@@ -132,13 +132,16 @@ class SignInFragment : SoftkeyFragment() {
                 if (found.hasPassword) getString(R.string.setup_found_hidden) else notIncluded,
                 if (found.hasRecoveryKey) getString(R.string.setup_found_included) else notIncluded,
             )
-            b.setupFoundProblem.isVisible = !found.canSignIn
+            // A failed sign-in from here stays here with its error; Sign in retries.
+            b.setupFoundProblem.isVisible = !found.canSignIn || state.error != null
             b.setupFoundProblem.text = when {
+                state.error != null -> messageFor(state.error)
                 found.blockedServer != null ->
                     getString(R.string.setup_found_blocked_server, found.blockedServer, found.server)
                 else -> getString(R.string.setup_found_incomplete)
             }
             b.setupFoundSignIn.isVisible = found.canSignIn
+            b.setupFoundSignIn.isEnabled = !state.isSubmitting
             b.setupFoundFill.isVisible = !found.isComplete && found.blockedServer == null
             if (!wasShowing) {
                 FocusEngine.requestInitialFocus(if (found.canSignIn) b.setupFoundSignIn else b.setupFoundCancel)
@@ -164,6 +167,7 @@ class SignInFragment : SoftkeyFragment() {
     private fun messageFor(error: ErrorText): CharSequence = when (error.key) {
         ErrorText.Key.NETWORK -> getString(R.string.signin_error_network)
         ErrorText.Key.BAD_CREDENTIALS -> getString(R.string.signin_error_credentials)
+        ErrorText.Key.STORAGE_UNAVAILABLE -> getString(R.string.signin_error_storage)
         else -> getString(R.string.signin_error_generic, error.args.firstOrNull().orEmpty())
     }
 

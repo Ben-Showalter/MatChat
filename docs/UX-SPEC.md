@@ -126,7 +126,10 @@ or pasted setup code shows S32 in place of the form. The row is the route while 
 focused: the phone's T9 keyboard owns the softkeys then (its typing-mode menu
 on the left; it can swallow the right one — Flip-DumbPhoneGuide keys.md).
 Errors: inline under the field, red, plain language — "That username or password
-did not work." / "No network. Check signal and try again."
+did not work." / "No network. Check signal and try again." / "MatChat can't save
+on this phone. Open Settings › Apps › MatChat › Storage and clear it, or
+uninstall and reinstall MatChat, then try again." (the phone refused MatChat
+its own storage — usually a data folder left over from an earlier install).
 
 ### S4 — Sign in with setup code
 Reached from S2 `Sign in with setup code`. A setup code is a QR code or link,
@@ -733,6 +736,8 @@ a recovery key in the code is still used after sign-in) · `Cancel`.
 With a pinned homeserver (policy) and a code for a different server: "This code
 is for X. Your organization only allows Y." and no `Sign in` — explained, never
 silently swapped.
+If sign-in fails, S32 stays on screen with the error under it and `Sign in`
+tries again with the same code — no need to scan again.
 After `Sign in`, a recovery key in the code is applied straight away, so
 encrypted history is readable without the encryption setup screens. If the key
 doesn't work, sign-in still completes and S7 opens with "Signed in, but that

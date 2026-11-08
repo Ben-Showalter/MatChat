@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.matchat.core.model.ErrorText
 import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeMatrixAuth
 import org.matchat.core.testing.FakeMatrixSession
@@ -132,5 +133,24 @@ class SignInSetupCodeTest {
         val vm = subject(pending = pending)
         assertEquals("sam", vm.state.value.found?.user)
         assertNull(pending.take()) // taken once
+    }
+
+    @Test
+    fun `a failed sign-in stays on Setup code found, and Sign in retries`() = runTest {
+        val refused = "Failed to build the client: Permission denied (os error 13)"
+        auth.signInResult = Result.failure(IllegalStateException(refused))
+        val vm = subject()
+        vm.onAction(SignInAction.SetupCodeReceived(full))
+        vm.onAction(SignInAction.ConfirmSetupCode)
+        assertEquals("sam", vm.state.value.found?.user)
+        assertEquals(ErrorText.Key.STORAGE_UNAVAILABLE, vm.state.value.error?.key)
+
+        auth.signInResult = Result.success(Unit)
+        vm.navEvents.test {
+            vm.onAction(SignInAction.ConfirmSetupCode)
+            assertEquals(SignInNav.Success, awaitItem())
+        }
+        assertEquals("EsTj 3ySTy93F", session.lastRecoveryKey) // the key survived the retry
+        assertNull(vm.state.value.found)
     }
 }

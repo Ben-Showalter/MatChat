@@ -48,7 +48,10 @@ class SignInViewModel @Inject constructor(
     val navEvents: Flow<SignInNav> = navChannel.receiveAsFlow()
 
     // The setup code on screen (S32), and a recovery key waiting for sign-in.
+    // A confirmed code is kept until sign-in succeeds, so a failure goes back
+    // to S32 with the error and "Sign in" retries without scanning again.
     private var code: SetupCode? = null
+    private var confirmed: SetupFound? = null
     private var pendingRecoveryKey: String? = null
     private var fillCount = 0
 
@@ -69,6 +72,7 @@ class SignInViewModel @Inject constructor(
             SignInAction.FillFromSetupCode -> fillFromSetupCode()
             SignInAction.CancelSetupCode -> {
                 code = null
+                confirmed = null
                 pendingRecoveryKey = null
                 _state.update { it.copy(found = null, recoveryKeyPending = false) }
             }
@@ -110,10 +114,9 @@ class SignInViewModel @Inject constructor(
     private fun confirmSetupCode() {
         val setup = code ?: return
         val found = _state.value.found ?: return
-        if (!found.canSignIn) return
+        if (!found.canSignIn || _state.value.isSubmitting) return
         pendingRecoveryKey = setup.recoveryKey
-        code = null
-        _state.update { it.copy(found = null, recoveryKeyPending = pendingRecoveryKey != null) }
+        confirmed = found
         submit(setup.user.orEmpty(), setup.password.orEmpty(), found.server)
     }
 
@@ -124,6 +127,7 @@ class SignInViewModel @Inject constructor(
         if (found.blockedServer != null) return
         pendingRecoveryKey = setup.recoveryKey
         code = null
+        confirmed = null
         fillCount++
         _state.update {
             it.copy(
@@ -146,8 +150,9 @@ class SignInViewModel @Inject constructor(
             result.fold(
                 onSuccess = { navChannel.send(afterSignIn()) },
                 onFailure = { cause ->
+                    // From S32: stay there with the error, so "Sign in" retries.
                     _state.update {
-                        it.copy(isSubmitting = false, error = mapError(cause))
+                        it.copy(isSubmitting = false, error = mapError(cause), found = confirmed ?: it.found)
                     }
                 },
             )
@@ -158,8 +163,10 @@ class SignInViewModel @Inject constructor(
     private suspend fun afterSignIn(): SignInNav {
         val key = pendingRecoveryKey
         pendingRecoveryKey = null
+        code = null
+        confirmed = null
         val recovered = key == null || session.recoverEncryption(key).isSuccess
-        _state.update { it.copy(isSubmitting = false, recoveryKeyPending = false) }
+        _state.update { it.copy(isSubmitting = false, recoveryKeyPending = false, found = null) }
         return if (recovered) SignInNav.Success else SignInNav.RecoveryKeyFailed
     }
 
@@ -167,6 +174,10 @@ class SignInViewModel @Inject constructor(
         val message = cause.message.orEmpty()
         return when {
             cause is java.io.IOException -> ErrorText(ErrorText.Key.NETWORK, retryable = true)
+            // The phone refused MatChat its own data folder (EACCES): no
+            // network or password problem — say how to fix it on the phone.
+            listOf("os error 13", "EACCES").any { message.contains(it, ignoreCase = true) } ->
+                ErrorText(ErrorText.Key.STORAGE_UNAVAILABLE)
             // Clear auth rejections read as a wrong username/password.
             listOf("forbidden", "unauthorized", "password", "m_forbidden", "invalid")
                 .any { message.contains(it, ignoreCase = true) } ->

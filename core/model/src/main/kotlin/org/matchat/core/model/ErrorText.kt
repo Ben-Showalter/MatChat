@@ -16,6 +16,10 @@ data class ErrorText(
         SERVER_UNREACHABLE,
         BAD_CREDENTIALS,
         SIGN_IN_FAILED,
+
+        /** The phone refused MatChat its own storage (e.g. a stale data
+         *  folder from an earlier install): clear storage or reinstall. */
+        STORAGE_UNAVAILABLE,
         MALFORMED_ADDRESS,
         ADDRESS_NOT_FOUND,
         DOMAIN_NOT_ALLOWED,

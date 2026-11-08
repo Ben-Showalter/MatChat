@@ -21,6 +21,9 @@
     <!-- Errors: what happened, then what to do (UX-SPEC §4). -->
     <string name="signin_error_credentials">That username or password did not work.</string>
     <string name="signin_error_network">No network. Check signal and try again.</string>
+    <!-- The phone refused MatChat its own storage (a leftover data folder from
+         an earlier install); the fix is on the phone, not the network or password. -->
+    <string name="signin_error_storage">MatChat can\'t save on this phone. Open Settings › Apps › MatChat › Storage and clear it, or uninstall and reinstall MatChat, then try again.</string>
     <!-- %1$s is the underlying failure message (bad server, certificate, etc.). -->
     <string name="signin_error_generic">Could not sign in: %1$s</string>
 

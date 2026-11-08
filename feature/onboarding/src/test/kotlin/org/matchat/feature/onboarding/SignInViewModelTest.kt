@@ -75,4 +75,23 @@ class SignInViewModelTest {
         testScheduler.advanceUntilIdle()
         assertEquals(ErrorText.Key.NETWORK, vm.state.value.error?.key)
     }
+
+    @Test
+    fun `storage refused by the phone is explained, not shown raw`() = runTest {
+        val refused = "Failed to build the client: Permission denied (os error 13)"
+        val auth = FakeMatrixAuth(signInResult = Result.failure(IllegalStateException(refused)))
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
+        vm.onAction(SignInAction.Submit("wayne", "hunter2", "srv.example"))
+        testScheduler.advanceUntilIdle()
+        assertEquals(ErrorText.Key.STORAGE_UNAVAILABLE, vm.state.value.error?.key)
+    }
+
+    @Test
+    fun `a rejected password is still a bad password`() = runTest {
+        val auth = FakeMatrixAuth(signInResult = Result.failure(IllegalStateException("M_FORBIDDEN: Invalid password")))
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
+        vm.onAction(SignInAction.Submit("wayne", "wrong", "srv.example"))
+        testScheduler.advanceUntilIdle()
+        assertEquals(ErrorText.Key.BAD_CREDENTIALS, vm.state.value.error?.key)
+    }
 }
