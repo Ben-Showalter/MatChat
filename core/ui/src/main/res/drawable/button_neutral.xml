@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A neutral button (Widget.MatChat.Button), BusyCall-style per the user:
+     a rounded box; focused, the accent's tint with an accent ring
+     (lightened in Dark so it reads on black). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorSurfaceFocused" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorFocusAccent" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorBubbleStripeVeil" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorSurfaceFocused" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorFocusAccent" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorBubbleStripeVeil" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorButton" />
+            <corners android:radius="@dimen/button_corner" />
+        </shape>
+    </item>
+</selector>

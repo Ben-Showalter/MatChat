@@ -25,29 +25,23 @@
 
     <TextView
         android:id="@+id/welcome_qr"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/welcome_qr"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/welcome_password"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/welcome_password"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:text="@string/welcome_password" />
 
     <TextView
         android:id="@+id/welcome_help"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/welcome_help"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:text="@string/welcome_help" />
 </LinearLayout>

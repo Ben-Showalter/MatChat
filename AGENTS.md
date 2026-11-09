@@ -188,6 +188,13 @@ The full key map is in `docs/UX-SPEC.md §2`. What you must obey in code:
     bar; the row's own background is left transparent. This is the only
     screen that does this — do not extend the pattern elsewhere without
     the same kind of explicit direction, and update it here again if so.
+  - **Named exception: buttons** (per explicit user direction, matching
+    BusyCall). A standalone action button uses `style="@style/Widget.MatChat.Button"`
+    (or `.Primary` for the screen's main action, `.Danger` for Decline / "They
+    do not match"): a rounded box whose own drawable (`button_neutral`/
+    `button_primary`/`button_danger` in `:core:ui`) carries the focus ring. Still
+    shared, never per-screen. List and settings rows keep `Widget.MatChat.Row`
+    and `focus_selector` — don't turn rows into buttons.
 - Focus order follows XML order. If you need `nextFocusDown`/`nextFocusUp`, add a
   comment on the same line explaining why the visual order differs.
 - Every screen sets deterministic initial focus in `onViewCreated` and restores

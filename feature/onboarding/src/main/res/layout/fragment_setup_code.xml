@@ -24,30 +24,24 @@
 
         <TextView
             android:id="@+id/setup_code_scan"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setup_code_scan"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/setup_code_scan" />
 
         <TextView
             android:id="@+id/setup_code_paste"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setup_paste"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/setup_paste" />
 
         <TextView
             android:id="@+id/setup_code_help"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setup_code_help"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/setup_code_help" />
 
         <TextView
             android:id="@+id/setup_code_problem"

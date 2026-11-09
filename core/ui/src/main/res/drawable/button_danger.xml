@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Decline / They do not match (Widget.MatChat.Button.Danger), like
+     BusyCall's red End: an error-red box; focused, a ring in the text colour. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorError" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorTextPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorError" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorTextPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorError" />
+            <corners android:radius="@dimen/button_corner" />
+        </shape>
+    </item>
+</selector>

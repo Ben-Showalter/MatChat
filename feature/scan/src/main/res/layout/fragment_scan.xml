@@ -38,10 +38,8 @@
 
     <TextView
         android:id="@+id/scan_again"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/scan_again"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:text="@string/scan_again" />
 </LinearLayout>

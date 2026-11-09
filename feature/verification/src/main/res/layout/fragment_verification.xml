@@ -48,21 +48,17 @@
 
             <TextView
                 android:id="@+id/choose_device"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/verify_with_device"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_with_device" />
 
             <TextView
                 android:id="@+id/choose_recovery"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/verify_use_recovery"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_use_recovery" />
         </LinearLayout>
 
         <!-- WAITING -->
@@ -91,22 +87,18 @@
 
             <TextView
                 android:id="@+id/sas_match"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/verify_match"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_match" />
 
             <TextView
                 android:id="@+id/sas_no_match"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button.Danger"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/verify_no_match"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_no_match" />
         </LinearLayout>
 
         <!-- RECOVERY KEY -->
@@ -132,33 +124,27 @@
 
             <TextView
                 android:id="@+id/recovery_submit"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/verify_continue"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_continue" />
 
             <!-- Rows, not Options items: while the key field has focus the T9
                  keyboard owns the softkeys (UX-SPEC S7, as S3's More options). -->
             <TextView
                 android:id="@+id/recovery_scan"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/verify_scan_key"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_scan_key" />
 
             <TextView
                 android:id="@+id/recovery_paste"
-                style="@style/Widget.MatChat.Row"
+                style="@style/Widget.MatChat.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/verify_paste_key"
-                android:textSize="?attr/textSizeLabel"
-                android:textColor="?attr/colorTextOnFocus" />
+                android:text="@string/verify_paste_key" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

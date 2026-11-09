@@ -63,20 +63,16 @@
 
     <TextView
         android:id="@+id/detail_accept"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button.Primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/invite_accept"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:text="@string/invite_accept" />
 
     <TextView
         android:id="@+id/detail_decline"
-        style="@style/Widget.MatChat.Row"
+        style="@style/Widget.MatChat.Button.Danger"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/invite_decline"
-        android:textSize="?attr/textSizeLabel"
-        android:textColor="?attr/colorTextOnFocus" />
+        android:text="@string/invite_decline" />
 </LinearLayout>

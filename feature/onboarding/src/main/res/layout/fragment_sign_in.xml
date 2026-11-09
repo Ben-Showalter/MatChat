@@ -89,12 +89,10 @@
              text is set in render() from state.showPassword. -->
         <TextView
             android:id="@+id/toggle_password"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/signin_show_password"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/signin_show_password" />
 
         <TextView
             android:id="@+id/error"
@@ -107,24 +105,20 @@
 
         <TextView
             android:id="@+id/sign_in_button"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/signin_submit"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/signin_submit" />
 
         <!-- Opens Options (UX-SPEC S3): the T9 keyboard owns the softkeys while a
              text box is focused, so this row is the D-pad route to the menu. -->
         <TextView
             android:id="@+id/more_options"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/signin_more_options"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/signin_more_options" />
     </LinearLayout>
     <!-- S32 "Setup code found" (UX-SPEC §S32): shown in place of the form
          while a scanned or pasted setup code waits to be used. The password
@@ -161,36 +155,28 @@
              before signing in (one dot per character otherwise). -->
         <TextView
             android:id="@+id/setup_found_toggle_password"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/signin_show_password"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/signin_show_password" />
         <TextView
             android:id="@+id/setup_found_sign_in"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/signin_submit"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/signin_submit" />
         <TextView
             android:id="@+id/setup_found_fill"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setup_found_fill"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/setup_found_fill" />
         <TextView
             android:id="@+id/setup_found_cancel"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/setup_found_cancel"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/setup_found_cancel" />
     </LinearLayout>
 </LinearLayout>

@@ -43,6 +43,7 @@
         <item name="colorScrim">@color/scrim</item>
         <item name="colorBubbleReceived">@color/palette_bubble_received_light</item>
         <item name="colorBubbleBorder">@color/palette_line</item>
+        <item name="colorButton">@color/palette_line_soft</item>
         <item name="colorBubbleStripeVeil">@android:color/transparent</item>
         <item name="colorBubbleOwnVeil">@color/bubble_own_veil_light</item>
 
@@ -75,6 +76,7 @@
         <item name="colorScrim">@color/scrim</item>
         <item name="colorBubbleReceived">@color/palette_tt_raised</item>
         <item name="colorBubbleBorder">@android:color/transparent</item>
+        <item name="colorButton">@color/palette_tt_surface</item>
         <item name="colorBubbleStripeVeil">@color/bubble_stripe_veil_dark</item>
         <item name="colorBubbleOwnVeil">@color/bubble_own_veil_dark</item>
 
@@ -294,6 +296,35 @@
         <item name="android:paddingStart">@dimen/content_pad</item>
         <item name="android:paddingEnd">@dimen/content_pad</item>
         <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <!-- A standalone action button (BusyCall-style, per the user): a rounded
+         box with centred text and a focus ring — not a list row. List and
+         settings rows keep Widget.MatChat.Row. Primary = the screen's main
+         action (accent fill, like BusyCall's green Call/Save); Danger =
+         Decline / They do not match (like BusyCall's red End). Every button
+         still has its text label; colour is never the only signal. -->
+    <style name="Widget.MatChat.Button" parent="">
+        <item name="android:background">@drawable/button_neutral</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:minHeight">?attr/rowMinHeightCompact</item>
+        <item name="android:layout_marginTop">@dimen/button_gap</item>
+        <item name="android:paddingStart">@dimen/content_pad</item>
+        <item name="android:paddingEnd">@dimen/content_pad</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">?attr/textSizeLabel</item>
+        <item name="android:textColor">?attr/colorTextPrimary</item>
+    </style>
+
+    <style name="Widget.MatChat.Button.Primary" parent="Widget.MatChat.Button">
+        <item name="android:background">@drawable/button_primary</item>
+        <item name="android:textColor">?attr/colorTextOnInverse</item>
+    </style>
+
+    <style name="Widget.MatChat.Button.Danger" parent="Widget.MatChat.Button">
+        <item name="android:background">@drawable/button_danger</item>
+        <item name="android:textColor">?attr/colorTextOnInverse</item>
     </style>
 
     <!-- Text.* use parent="" for the same implicit-parent reason as above. -->

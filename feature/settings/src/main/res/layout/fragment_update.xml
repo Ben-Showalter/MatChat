@@ -45,10 +45,8 @@
 
         <TextView
             android:id="@+id/update_action"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </ScrollView>

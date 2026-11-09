@@ -26,12 +26,10 @@
 
         <TextView
             android:id="@+id/background_helper_open"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/background_helper_open"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/background_helper_open" />
 
         <TextView
             android:id="@+id/background_helper_status"

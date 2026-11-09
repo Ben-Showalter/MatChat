@@ -45,6 +45,11 @@
          an own bubble's accent fill (Light: paper, giving the pale wash;
          Dark: a little black, keeping white text >= 7:1 on every accent). -->
     <attr name="colorBubbleBorder" format="color" />
+    <!-- Buttons (button_*.xml, Widget.MatChat.Button — BusyCall-style, per the
+         user): a neutral button's fill, per mode. Their focus ring is the
+         accent under colorBubbleStripeVeil (lightened in Dark, as the bubble
+         stripe is) so it reads on black. -->
+    <attr name="colorButton" format="color" />
     <attr name="colorBubbleStripeVeil" format="color" />
     <attr name="colorBubbleOwnVeil" format="color" />
 

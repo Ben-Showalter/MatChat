@@ -59,25 +59,21 @@
 
         <TextView
             android:id="@+id/continue_button"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/type_address_continue"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/type_address_continue" />
 
         <!-- A row, not an Options item: the T9 keyboard owns the softkeys while
              the address field has focus. A scanned address goes through the same
              checks as a typed one (UX-SPEC S21). -->
         <TextView
             android:id="@+id/scan_address"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/type_address_scan"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/type_address_scan" />
     </LinearLayout>
 
     <!-- Confirmation group (S21 step 4) -->
@@ -114,21 +110,17 @@
 
         <TextView
             android:id="@+id/confirm_start"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/type_address_start"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/type_address_start" />
 
         <TextView
             android:id="@+id/confirm_change"
-            style="@style/Widget.MatChat.Row"
+            style="@style/Widget.MatChat.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/type_address_change"
-            android:textSize="?attr/textSizeLabel"
-            android:textColor="?attr/colorTextOnFocus" />
+            android:text="@string/type_address_change" />
     </LinearLayout>
 </LinearLayout>

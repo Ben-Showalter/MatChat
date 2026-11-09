@@ -84,6 +84,12 @@
 
     <dimen name="content_pad">8dp</dimen>
 
+    <!-- Buttons (Widget.MatChat.Button, BusyCall's measurements): rounded
+         corners, a 2dp focus ring, and a gap between stacked buttons. -->
+    <dimen name="button_corner">8dp</dimen>
+    <dimen name="button_focus_stroke">2dp</dimen>
+    <dimen name="button_gap">6dp</dimen>
+
     <!-- S9 message bubbles (item_message.xml, item_message_image.xml). Max
          width reaches nearly the full row width (reference-device
          screenshot — only a hairline gap on the unoccupied side), on the

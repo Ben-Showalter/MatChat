@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The screen's main action (Widget.MatChat.Button.Primary), like BusyCall's
+     green Call/Save: an accent-filled box; focused, a ring in the text colour
+     (dark on Light, white on Dark) so the focus shows against the fill. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorFocusAccent" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorTextPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/colorFocusAccent" />
+                    <corners android:radius="@dimen/button_corner" />
+                    <stroke android:width="@dimen/button_focus_stroke" android:color="?attr/colorTextPrimary" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorFocusAccent" />
+            <corners android:radius="@dimen/button_corner" />
+        </shape>
+    </item>
+</selector>

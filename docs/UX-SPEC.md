@@ -94,6 +94,18 @@ bug (found via screenshot: the room-list selection highlight stayed green
 under the Blue/Amber/Plum accents). The same tint drives S9's
 `colorBubbleOwn` (below) for the same reason.
 
+**Buttons** (per the user, matching BusyCall): a standalone action — Sign in,
+Verify, Continue, Accept, Scan again, the Welcome choices — is a rounded box
+(8 dp corners) with centred text, not a list row. Neutral buttons sit on
+`?attr/colorButton`; focused, they take the accent tint with a 2 dp accent
+ring (lightened in Dark so it reads on black). The screen's main action is a
+**primary** button, filled with the accent (like BusyCall's green Call/Save);
+Decline and "They do not match" are **danger** buttons, filled red (like
+BusyCall's End). A focused primary or danger button gets a ring in the text
+colour. Every button keeps its text label — colour is never the only signal.
+List and settings rows (room list, Settings, Theme, Text size, Help…) keep the
+row highlight above.
+
 ## 3. Screen inventory
 
 Each screen lists: purpose · content · focus order · softkeys · Options menu ·
