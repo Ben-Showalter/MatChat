@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.matrix.MatrixSession
 import org.matchat.core.model.ErrorText
+import org.matchat.core.model.ServerConnectionException
 import org.matchat.core.model.setup.SetupCode
 import org.matchat.core.model.setup.SetupCodeParser
 import org.matchat.core.policy.PolicyProvider
@@ -189,6 +190,12 @@ class SignInViewModel @Inject constructor(
     private fun mapError(cause: Throwable): ErrorText {
         val message = cause.message.orEmpty()
         return when {
+            // The server couldn't be reached; :core:matrix checked why (S3 errors).
+            cause is ServerConnectionException -> ErrorText(
+                ErrorText.Key.SERVER_UNREACHABLE,
+                args = listOf(cause.host, cause.problem.name, cause.detail),
+                retryable = true,
+            )
             cause is java.io.IOException -> ErrorText(ErrorText.Key.NETWORK, retryable = true)
             // The phone refused MatChat its own data folder (EACCES): no
             // network or password problem — say how to fix it on the phone.

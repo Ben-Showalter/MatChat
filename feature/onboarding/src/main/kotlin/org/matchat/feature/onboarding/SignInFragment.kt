@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.matchat.core.model.ConnectionProblem
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.setup.ScanKind
 import org.matchat.core.ui.clipboard.SecretClipboard
@@ -174,7 +175,24 @@ class SignInFragment : SoftkeyFragment() {
         ErrorText.Key.NETWORK -> getString(R.string.signin_error_network)
         ErrorText.Key.BAD_CREDENTIALS -> getString(R.string.signin_error_credentials)
         ErrorText.Key.STORAGE_UNAVAILABLE -> getString(R.string.signin_error_storage)
+        ErrorText.Key.SERVER_UNREACHABLE -> unreachableText(error.args)
         else -> getString(R.string.signin_error_generic, error.args.firstOrNull().orEmpty())
+    }
+
+    /** args = host, [ConnectionProblem] name, technical detail (SignInViewModel). */
+    private fun unreachableText(args: List<String>): CharSequence {
+        val host = args.getOrNull(0).orEmpty()
+        val detail = args.getOrNull(2).orEmpty()
+        val problem = ConnectionProblem.entries.firstOrNull { it.name == args.getOrNull(1) }
+        val text = when (problem) {
+            ConnectionProblem.NO_ADDRESS -> R.string.signin_unreachable_no_address
+            ConnectionProblem.REFUSED -> R.string.signin_unreachable_refused
+            ConnectionProblem.TIMED_OUT -> R.string.signin_unreachable_timed_out
+            ConnectionProblem.SECURE_CONNECTION -> R.string.signin_unreachable_secure
+            ConnectionProblem.LIBRARY_ONLY -> R.string.signin_unreachable_library_only
+            ConnectionProblem.OTHER, null -> R.string.signin_unreachable_other
+        }
+        return getString(R.string.signin_unreachable_with_detail, getString(text, host), detail)
     }
 
     /** The Options softkey, or the "More options" row — the route while a

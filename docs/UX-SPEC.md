@@ -142,6 +142,14 @@ did not work." / "No network. Check signal and try again." / "MatChat can't save
 on this phone. Open Settings › Apps › MatChat › Storage and clear it, or
 uninstall and reinstall MatChat, then try again." (the phone refused MatChat
 its own storage — usually a data folder left over from an earlier install).
+When the server can't be reached ("error sending request" from the Matrix
+library, which hides the reason), MatChat fetches that same address once with
+Android's own networking and says which step failed, naming the server: it
+can't find the address / turned the connection away / did not answer in time /
+couldn't make a secure connection (check the phone's date and time) / the phone
+can reach it but MatChat's Matrix connection failed. A "Details:" line follows
+with the technical reason so it can be reported. Only the address the user
+typed or scanned is fetched — no discovery.
 
 ### S4 — Sign in with setup code
 Reached from S2 `Sign in with setup code`. A setup code is a QR code or link,

@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.matchat.core.model.ConnectionProblem
 import org.matchat.core.model.ErrorText
+import org.matchat.core.model.ServerConnectionException
 import org.matchat.core.policy.Policy
 import org.matchat.core.testing.FakeMatrixAuth
 import org.matchat.core.testing.FakeMatrixSession
@@ -74,6 +76,27 @@ class SignInViewModelTest {
         // Let the launched coroutine run.
         testScheduler.advanceUntilIdle()
         assertEquals(ErrorText.Key.NETWORK, vm.state.value.error?.key)
+    }
+
+    @Test
+    fun `an unreachable server says why, with the technical detail`() = runTest {
+        val cause = ServerConnectionException(
+            "chats.example.org",
+            ConnectionProblem.NO_ADDRESS,
+            "UnknownHostException: Unable to resolve host",
+        )
+        val auth = FakeMatrixAuth(signInResult = Result.failure(cause))
+        val vm = SignInViewModel(auth, FakeMatrixSession(), FakePolicyProvider(), PendingSetupCode())
+        vm.onAction(SignInAction.Submit("wayne", "hunter2", "chats.example.org"))
+        testScheduler.advanceUntilIdle()
+        val error = vm.state.value.error
+        assertEquals(ErrorText.Key.SERVER_UNREACHABLE, error?.key)
+        assertEquals(
+            listOf("chats.example.org", "NO_ADDRESS", "UnknownHostException: Unable to resolve host"),
+            error?.args,
+        )
+        assertTrue(error?.retryable == true)
+        assertEquals(false, vm.state.value.isSubmitting)
     }
 
     @Test

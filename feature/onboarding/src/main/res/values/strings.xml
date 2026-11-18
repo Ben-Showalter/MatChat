@@ -24,6 +24,17 @@
     <!-- The phone refused MatChat its own storage (a leftover data folder from
          an earlier install); the fix is on the phone, not the network or password. -->
     <string name="signin_error_storage">MatChat can\'t save on this phone. Open Settings › Apps › MatChat › Storage and clear it, or uninstall and reinstall MatChat, then try again.</string>
+    <!-- Sign-in could not reach the server; MatChat checked why with the phone's
+         own networking. %1$s is the server's address, e.g. chats.example.org. -->
+    <string name="signin_unreachable_no_address">This phone can\'t find %1$s. Check the address, and that the phone has signal or Wi-Fi.</string>
+    <string name="signin_unreachable_refused">%1$s turned the connection away. The server may be down. Try again later.</string>
+    <string name="signin_unreachable_timed_out">%1$s did not answer in time. Check signal or Wi-Fi and try again.</string>
+    <string name="signin_unreachable_secure">Couldn\'t make a secure connection to %1$s. Check the phone\'s date and time are right. If they are, the server\'s certificate may have a problem.</string>
+    <string name="signin_unreachable_library_only">This phone can reach %1$s, but MatChat\'s Matrix connection to it failed.</string>
+    <string name="signin_unreachable_other">Couldn\'t connect to %1$s.</string>
+    <!-- %1$s is one of the sentences above; %2$s is the technical reason, kept
+         so the user can report it (not translated). -->
+    <string name="signin_unreachable_with_detail">%1$s\n\nDetails: %2$s</string>
     <!-- %1$s is the underlying failure message (bad server, certificate, etc.). -->
     <string name="signin_error_generic">Could not sign in: %1$s</string>
 

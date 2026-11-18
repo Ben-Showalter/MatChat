@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.matchat.core.matrix.MatrixAuth
 import org.matchat.core.model.ErrorText
 import org.matchat.core.model.QrLoginStep
+import org.matchat.core.model.ServerConnectionException
 import org.matchat.core.policy.PolicyProvider
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +23,7 @@ internal class RustMatrixAuth @Inject constructor(
 
     override suspend fun signIn(user: String, password: String, homeserver: String): Result<Unit> {
         val target = (policyProvider.policy.value.pinnedHomeserver ?: homeserver).trim()
-        return runCatching {
+        val result = runCatching {
             holder.buildClient(target)
             holder.requireClient().login(user, password, DEVICE_NAME, null)
             holder.persistSession()
@@ -31,6 +32,13 @@ internal class RustMatrixAuth @Inject constructor(
             // No credentials or tokens in logs (AGENTS.md §9); message only.
             Log.w(TAG, "sign-in failed for '$target': ${e.message}")
         }
+        val failure = result.exceptionOrNull() ?: return result
+        // "error sending request" hides why; ask Android's own networking.
+        val url = ServerProbe.failedUrl(failure.message) ?: return result
+        val (problem, detail) = ServerProbe.probe(url)
+        Log.w(TAG, "connection check for '$url': $problem ($detail)")
+        val host = runCatching { java.net.URI(url).host }.getOrNull() ?: target
+        return Result.failure(ServerConnectionException(host, problem, detail))
     }
 
     // QR sign-in (S4) is a v1.1 candidate; not wired in M1.
