@@ -6,7 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import org.matchat.core.model.setup.ScanKind
 
 /**
- * How a scanned QR code (S31, docs/adr/0010) gets back to the screen that
+ * How a scanned QR code (S31, docs/adr/0011) gets back to the screen that
  * asked for it: the scan screen accepts only a QR code of the asked-for
  * [ScanKind], then hands its text to the caller through the Fragment Result
  * API and closes. The text

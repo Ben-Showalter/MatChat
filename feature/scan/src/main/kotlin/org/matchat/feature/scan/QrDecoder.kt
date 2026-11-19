@@ -11,7 +11,7 @@ import com.google.zxing.qrcode.QRCodeReader
 /**
  * Finds a QR code in one camera preview frame (NV21: the luminance plane comes
  * first, which is all ZXing needs). ZXing core, pure Java, offline — never ML
- * Kit, which needs Play services (docs/adr/0010). The frame is never stored.
+ * Kit, which needs Play services (docs/adr/0011). The frame is never stored.
  * Ported from BusyCall's QrDecoder.
  */
 internal object QrDecoder {

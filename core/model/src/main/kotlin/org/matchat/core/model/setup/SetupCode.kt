@@ -3,7 +3,7 @@ package org.matchat.core.model.setup
 import java.net.URLDecoder
 
 /**
- * What a MatChat setup code carries (docs/adr/0010, UX-SPEC S4/S32): any of
+ * What a MatChat setup code carries (docs/adr/0011, UX-SPEC S4/S32): any of
  * homeserver, username, password and recovery key, so none of them has to be
  * typed on a T9 keypad. [toString] hides the secrets, so a stray log line or
  * crash report can never carry them (AGENTS.md §9).
@@ -28,7 +28,7 @@ class SetupCode(
 
 /**
  * The one place that reads setup codes (Flip-DumbPhoneGuide "Setup codes",
- * docs/adr/0010). Pure Kotlin, unit-tested, never logs anything it reads.
+ * docs/adr/0011). Pure Kotlin, unit-tested, never logs anything it reads.
  *
  * Accepted: `matchat:add?v=1&server=…&user=…&pass=…&key=…` (values
  * URL-encoded, empty fields left out), and the same after `#` in an https link

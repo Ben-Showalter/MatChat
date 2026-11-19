@@ -1,4 +1,4 @@
-# ADR 0010 — QR setup codes: our own scanner (ZXing + the classic camera API)
+# ADR 0011 — QR setup codes: our own scanner (ZXing + the classic camera API)
 
 **Status:** Accepted · **Date:** 2026-11
 

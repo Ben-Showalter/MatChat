@@ -2,7 +2,7 @@
 
 One offline HTML file that turns sign-in details (homeserver, username,
 password) and/or a recovery key into a **QR code and a link**, so nobody types
-them on a T9 keypad. Rules and reasons: docs/adr/0010 and the
+them on a T9 keypad. Rules and reasons: docs/adr/0011 and the
 Flip-DumbPhoneGuide's "Setup codes" (`docs/text-input.md`).
 
 - Open `matchat-setup.html` in a browser, fill in what the phone needs, and

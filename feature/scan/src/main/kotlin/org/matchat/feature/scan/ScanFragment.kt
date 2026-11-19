@@ -30,7 +30,7 @@ import org.matchat.feature.scan.databinding.FragmentScanBinding
 import org.matchat.core.ui.R as UiR
 
 /**
- * S31 Scan: MatChat's own camera screen (docs/adr/0010) — never a scanner app,
+ * S31 Scan: MatChat's own camera screen (docs/adr/0011) — never a scanner app,
  * never ML Kit. The classic camera API (the one every target flip phone runs)
  * feeds preview frames to [QrDecoder] on a background thread, one at a time;
  * frames are never saved. What a decoded code *means* is [ScanViewModel]'s call;

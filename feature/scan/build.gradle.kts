@@ -1,4 +1,4 @@
-// :feature:scan — QR setup codes (docs/adr/0010): the camera scan screen (S31)
+// :feature:scan — QR setup codes (docs/adr/0011): the camera scan screen (S31)
 // and "Make a setup code" (S33). Callers reach it through Navigator.toScan and
 // get the scanned text back as a Fragment result (core/ui ScanRequest).
 plugins {

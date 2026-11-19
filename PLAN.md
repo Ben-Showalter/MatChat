@@ -226,7 +226,7 @@ Focus rules:
      (MAS). Ship it behind `policy.qrLoginEnabled`.
    - *Username + password*, homeserver pre-filled and **not editable** when
      `policy.pinnedHomeserver` is set.
-   - *Setup code* (built, docs/adr/0010): a QR code or link made on a computer
+   - *Setup code* (built, docs/adr/0011): a QR code or link made on a computer
      with the offline page in `tools/setup-code/`, holding the homeserver,
      username, password and/or recovery key. Scanned with MatChat's own camera
      screen (ZXing) or pasted; shown first with secrets hidden, used only on

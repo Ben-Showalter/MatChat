@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- S31 Scan (UX-SPEC §S31, docs/adr/0010): the camera picture fitted to the
+<!-- S31 Scan (UX-SPEC §S31, docs/adr/0011): the camera picture fitted to the
      area above (ScanLayout keeps its shape), one status line, and the one
      focusable row ("Scan again" / "Try again"). Focus order = XML order; the
      preview is not focusable. -->

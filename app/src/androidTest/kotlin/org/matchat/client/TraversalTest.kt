@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
  * Screens still waiting for their entry here (the harness is a placeholder):
  * S4 Sign in with setup code, S31 Scan (its one row: Scan again / Try again),
  * S32 Setup code found (Sign in → Use these and type the rest → Cancel) and
- * S33 Make a setup code (docs/adr/0010).
+ * S33 Make a setup code (docs/adr/0011).
  */
 @RunWith(AndroidJUnit4::class)
 class TraversalTest {

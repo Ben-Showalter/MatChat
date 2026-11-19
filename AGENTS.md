@@ -70,7 +70,7 @@ feature/invites/         Invitation list, invitation detail, accept / decline
 feature/newchat/         Contacts (send message, save, phone contact), recents, type an address, blocked address
 feature/settings/        Settings, help, sign out
 feature/verification/    Emoji SAS, recovery key
-feature/scan/            QR scanning (S31) + "Make a setup code" (S33); ZXing core (docs/adr/0010)
+feature/scan/            QR scanning (S31) + "Make a setup code" (S33); ZXing core (docs/adr/0011)
 stubs/kyocera-sublcd/    Compile-only declaration of Kyocera's cover-screen callback (docs/adr/0009).
                          :app uses it compileOnly (only CoverScreenCallback); never packaged.
                          Nothing else may depend on it.

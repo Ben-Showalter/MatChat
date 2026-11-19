@@ -123,7 +123,7 @@ Focus order: `Sign in with setup code` → `Sign in with password` → `Help`.
 Softkeys: Options | Select | Exit.
 Options: Help · Software update. (An About screen is a v1.1 candidate, not
 built. Matrix's own device-linking QR sign-in, MSC4108, is a later option —
-docs/adr/0010; `Sign in with setup code` is a different thing, S4.)
+docs/adr/0011; `Sign in with setup code` is a different thing, S4.)
 
 ### S3 — Sign in (password)
 Content: homeserver row (read-only when pinned, shown as grey text with a lock
@@ -153,7 +153,7 @@ typed or scanned is fetched — no discovery.
 
 ### S4 — Sign in with setup code
 Reached from S2 `Sign in with setup code`. A setup code is a QR code or link,
-made on a computer with the offline setup page (S33, docs/adr/0010), holding
+made on a computer with the offline setup page (S33, docs/adr/0011), holding
 the homeserver, username, password and/or recovery key — so none of it is
 typed on the keypad.
 Content: "Do you have a QR setup code ready?", then three rows: `Scan QR setup
@@ -739,7 +739,7 @@ Initial focus: the row. Softkeys: (blank) | Select | Back. Back means "not
 now"; S13's row remains the way to turn it on later.
 
 ### S31 — Scan QR code
-MatChat's own camera screen (docs/adr/0010) — never a scanner app, never ML
+MatChat's own camera screen (docs/adr/0011) — never a scanner app, never ML
 Kit. Opened from S3, S4, S7, S12 and S21, each asking for one kind of value:
 a setup code, a recovery key, or an address.
 Content: the camera picture fitted to the space above (never squashed), one
